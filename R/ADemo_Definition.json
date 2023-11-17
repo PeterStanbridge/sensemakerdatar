@@ -1,0 +1,1128 @@
+{
+    "definition_version": [513],
+    "name": ["ADemo"],
+    "code": ["ADemo"],
+    "description": ["ADemo - The original ADemo engagement from US server."],
+    "id": ["b1ad76ca-d60a-4c9d-9b63-de3d7893784b"],
+    "language": ["en"],
+    "version": [0.31],
+    "starts": [1420070400000],
+    "expires": [1917497601],
+    "max_fragment": [99999],
+    "server": ["fd13cdf6-01f5-467b-b28b-919a13ae933f"],
+    "fragment_signifier_id": ["ca82ba5d-6102-4f69-94da-76c38c28ce9b"],
+    "exclude_fragments": [false],
+    "public_access": [false],
+    "signifiers": [
+        {
+            "id": "2e9da270-62f5-4f7b-802e-4f57a2922b39",
+            "name": "Name",
+            "type": "label",
+            "order": 1,
+            "title": "New Project Element",
+            "tooltip": "I'm a Label",
+            "allow_na": false,
+            "fragment": false,
+            "required": false,
+            "sticky": false,
+            "public": false,
+            "content": {
+                "text": "<h4><i>&lt;font color='blue'&gt;You are looking at a demonstration setup for safetySCAN on the desktop. safetySCAN is initially launching for computer or smartphone browser access.<\/i><\/h4><p><br><i>Note: Mobile app support to follow.<\/i><br><br><i>Your licensed safetySCAN setup will be placed on one of our secure production servers for your specific use. Three customisations are available:<\/i><br><br>&nbsp;<\/p><ol><li><i>your logo to the webpage<\/i><\/li><li><i>additional introductory text after the paragraph ending 'Please contribute frequently!'<\/i><\/li><li><i>ONE (1) multi-choice question about the respondent at the end<\/i><\/li><\/ol><p><i>All questions are fixed. In this demonstration, providing answers are all set as optional. In the live collection site, most questions will be mandatory for respondents to answer.&nbsp;<\/i><br><br><i>Respondents will not see the text here in blue; they will start their session with the introduction below in black:<\/i>&lt;/font&gt;<\/p>",
+                "parameters": {},
+                "items": {},
+                "axis": {
+                    "x": {},
+                    "y": {}
+                },
+                "stones": {},
+                "labels": {}
+            }
+        },
+        {
+            "id": "6b63b93e-bb75-4bbe-ae0a-db75da3fa08c",
+            "name": "Name",
+            "type": "label",
+            "order": 1,
+            "title": "New Project Element",
+            "tooltip": "I'm a Label",
+            "allow_na": false,
+            "fragment": false,
+            "required": false,
+            "sticky": false,
+            "public": false,
+            "content": {
+                "text": "<h3>Thank you for sharing your experience!<\/h3><br><h5>Please be sure to save your experience. (click SAVE below).<\/h5>",
+                "parameters": {},
+                "items": {},
+                "axis": {
+                    "x": {},
+                    "y": {}
+                },
+                "stones": {},
+                "labels": {}
+            }
+        },
+        {
+            "id": "262f5a30-a69c-40ac-bebf-4ae006c60561",
+            "name": "Name",
+            "type": "label",
+            "order": 2,
+            "title": "New Project Element",
+            "tooltip": "I'm a Label",
+            "allow_na": false,
+            "fragment": false,
+            "required": false,
+            "sticky": false,
+            "public": false,
+            "content": {
+                "text": "<p><strong>&lt;font size='5'&gt;Thank-you for participating in safetySCAN!&lt;/font&gt;<\/strong><br><br>The <i>safetySCAN<\/i> website allows many individuals to record everyday experiences and observations on a regular basis. The insights from <i>safetySCAN<\/i> help make workplaces safer for everyone.<br><br>All contributions are anonymous and we ask everyone to refrain from naming or identifying individuals. Only share details you are comfortable with providing.<br><br><strong>Please use the <\/strong><i><strong>safetySCAN<\/strong><\/i><strong> webpage daily to record your experiences, as this will allow us to learn and improve together.&nbsp;<\/strong><br><br>Your first entry may take 8 to 10 minutes. After that you should be able to make entries in less than 5 min. Please contribute frequently!<br>&nbsp;<\/p>",
+                "parameters": {},
+                "items": {},
+                "axis": {
+                    "x": {},
+                    "y": {}
+                },
+                "stones": {},
+                "labels": {}
+            }
+        },
+        {
+            "id": "c30978fe-dda1-4eb0-8816-301f00472e07",
+            "name": "Name",
+            "type": "save",
+            "order": 2,
+            "title": "<h5>SAVE<\/h5>",
+            "tooltip": "I'm a save button",
+            "allow_na": false,
+            "fragment": false,
+            "required": false,
+            "sticky": false,
+            "public": false,
+            "content": {
+                "page_order": 1,
+                "parameters": [""],
+                "redirect_to": "",
+                "submit_another": false,
+                "items": {},
+                "axis": {
+                    "x": {},
+                    "y": {}
+                },
+                "stones": {},
+                "labels": {}
+            }
+        },
+        {
+            "id": "824efbd7-9c26-4e04-b114-bf4b489f9789",
+            "name": "Name",
+            "type": "label",
+            "order": 3,
+            "title": "New Project Element",
+            "tooltip": "I'm a Label",
+            "allow_na": false,
+            "fragment": false,
+            "required": false,
+            "sticky": false,
+            "public": false,
+            "content": {
+                "text": "<h5>&lt;font color='blue'&gt;This ends your demonstration. To purchase <b>safetyScan<\/b> please click <a href=\"https://www.eventbrite.com.au/e/culturescan-tickets-15400590581\">here<\/a>.&lt;/font&gt;<\/h5>",
+                "parameters": {},
+                "items": {},
+                "axis": {
+                    "x": {},
+                    "y": {}
+                },
+                "stones": {},
+                "labels": {}
+            }
+        },
+        {
+            "id": "34036c12-d36a-4808-bfab-c42538cc9bdf",
+            "name": "Name",
+            "type": "list",
+            "order": 3,
+            "title": "Every day, or a few times a week, share ONE situation at work that either:",
+            "tooltip": "I'm a ListType",
+            "allow_na": false,
+            "fragment": false,
+            "required": true,
+            "sticky": false,
+            "public": false,
+            "error": "Please select one of the prompts to continue.",
+            "content": {
+                "parameters": {},
+                "items": [
+                    {
+                        "id": "d6e63de2-08ab-46b1-b8cd-63dc4f8667a0",
+                        "image": "",
+                        "title": "worried or concerned you, OR<br><br>",
+                        "tooltip": ""
+                    },
+                    {
+                        "id": "a871eae1-1b42-422c-b58e-4b8b207c2941",
+                        "image": "",
+                        "title": "gave you confidence in how work is being done.",
+                        "tooltip": ""
+                    }
+                ],
+                "other_text": "Other",
+                "max_responses": 1,
+                "min_responses": 0,
+                "axis": {
+                    "x": {},
+                    "y": {}
+                },
+                "stones": {},
+                "labels": {}
+            }
+        },
+        {
+            "id": "fd50ad10-1935-41ac-9ae1-9ab80b88d286",
+            "name": "Name",
+            "type": "navigation",
+            "order": 4,
+            "title": "New Project Element",
+            "tooltip": "Move to previous or next page",
+            "allow_na": false,
+            "fragment": false,
+            "required": false,
+            "sticky": false,
+            "public": false,
+            "content": {
+                "parameters": {},
+                "items": {},
+                "direction": "previous",
+                "axis": {
+                    "x": {},
+                    "y": {}
+                },
+                "stones": {},
+                "labels": {}
+            }
+        },
+        {
+            "id": "ca82ba5d-6102-4f69-94da-76c38c28ce9b",
+            "name": "Name",
+            "type": "freetext",
+            "order": 4,
+            "title": "Briefly describe what happened:",
+            "tooltip": "I'm a freetext",
+            "allow_na": false,
+            "fragment": true,
+            "required": true,
+            "sticky": false,
+            "public": false,
+            "error": "",
+            "content": {
+                "parameters": {},
+                "items": {},
+                "default": "",
+                "multiline": true,
+                "axis": {
+                    "x": {},
+                    "y": {}
+                },
+                "stones": {},
+                "labels": {}
+            }
+        },
+        {
+            "id": "6ed2b61d-77ff-4efc-a834-23c23e2eb4dc",
+            "name": "Name",
+            "type": "list",
+            "order": 5,
+            "title": "Access Control",
+            "tooltip": "I'm a ListType",
+            "allow_na": false,
+            "fragment": false,
+            "required": false,
+            "sticky": false,
+            "public": false,
+            "error": "",
+            "content": {
+                "parameters": {},
+                "items": [{
+                    "id": "0e83e44d-e9f2-4b50-8b04-55946d1c95cd",
+                    "image": "",
+                    "title": "If you prefer that only the <i>safetySCAN<\/i> service provider has access to your entry above, please check this box.",
+                    "tooltip": ""
+                }],
+                "other_text": "Other",
+                "max_responses": 1,
+                "min_responses": 0,
+                "axis": {
+                    "x": {},
+                    "y": {}
+                },
+                "stones": {},
+                "labels": {}
+            }
+        },
+        {
+            "id": "a058fcb5-09cb-4f9a-ab39-d4ab39b91e3a",
+            "name": "Name",
+            "type": "freetext",
+            "order": 6,
+            "title": "If your entry above had a news headline what would it say?",
+            "tooltip": "I'm a freetext",
+            "allow_na": false,
+            "fragment": false,
+            "required": true,
+            "sticky": false,
+            "public": false,
+            "error": "",
+            "content": {
+                "parameters": {},
+                "items": {},
+                "default": "",
+                "multiline": false,
+                "axis": {
+                    "x": {},
+                    "y": {}
+                },
+                "stones": {},
+                "labels": {}
+            }
+        },
+        {
+            "id": "567bc704-5ce0-41a2-be56-6f55e1d328ae",
+            "name": "Name",
+            "type": "stones",
+            "order": 7,
+            "title": "Topic marker indicating the level of risk",
+            "tooltip": "I'm Stones",
+            "allow_na": false,
+            "fragment": false,
+            "required": false,
+            "sticky": false,
+            "public": false,
+            "error": "",
+            "content": {
+                "parameters": {},
+                "items": {},
+                "axis": {
+                    "x": {
+                        "name": "",
+                        "end_label": "",
+                        "start_label": ""
+                    },
+                    "y": {
+                        "name": "",
+                        "end_label": "",
+                        "start_label": ""
+                    }
+                },
+                "stones": [
+                    {
+                        "id": "19d77b68-f00b-46c6-824f-530d17999815",
+                        "image": "ADemo/1-People.png",
+                        "title": "1. People",
+                        "tooltip": "1. People"
+                    },
+                    {
+                        "id": "47ef7121-eccd-4878-96ea-31600ba4c622",
+                        "image": "ADemo/2-Productivity.png",
+                        "title": "2. Productivity",
+                        "tooltip": "2. Productivity"
+                    },
+                    {
+                        "id": "f08a3687-cb7b-4359-8ef8-3c38fb0e9273",
+                        "image": "ADemo/3-Company_property.png",
+                        "title": "3. Company property",
+                        "tooltip": "3. Company property"
+                    }
+                ],
+                "background_image": "ADemo/safetySCANStonesCanvas5.jpg",
+                "labels": {}
+            }
+        },
+        {
+            "id": "984e97ef-c057-474d-a679-827d3d26fce0",
+            "name": "Name",
+            "type": "label",
+            "order": 8,
+            "title": "New Project Element",
+            "tooltip": "I'm a Label",
+            "allow_na": false,
+            "fragment": false,
+            "required": false,
+            "sticky": false,
+            "public": false,
+            "content": {
+                "text": "<p><i>Drag the ball in each triangle to a position that best describes the experience shared. The closer the ball to any one corner, the stronger that quality is in the context of the experience. If a triangle topic does not relate to your experience, check the N/A box.<\/i><\/p>",
+                "parameters": {},
+                "items": {},
+                "axis": {
+                    "x": {},
+                    "y": {}
+                },
+                "stones": {},
+                "labels": {}
+            }
+        },
+        {
+            "id": "dee85953-7226-45c5-9add-c146e5f4096f",
+            "name": "Name",
+            "type": "triad",
+            "order": 9,
+            "title": "Influences on this situation were...",
+            "tooltip": "I'm a Triad",
+            "allow_na": true,
+            "fragment": false,
+            "required": true,
+            "sticky": false,
+            "public": false,
+            "error": "",
+            "content": {
+                "parameters": {},
+                "items": {},
+                "axis": {
+                    "x": {},
+                    "y": {}
+                },
+                "stones": {},
+                "background_image": "ADemo/GreyTriad2LT.png",
+                "labels": [
+                    {
+                        "id": "0330c0c8-1800-4fc5-94b3-4712ba07d610",
+                        "text": "quality<br>demands"
+                    },
+                    {
+                        "id": "0f3db059-9f30-4b84-917b-b3023e8e4bfb",
+                        "text": "schedule<br>pressures"
+                    },
+                    {
+                        "id": "6acdf566-f930-4268-9ffe-a314aa21caf7",
+                        "text": "resource<br>tensions"
+                    }
+                ],
+                "pointer_image": "Collector/Pointers/shapeSliderPointer.png"
+            }
+        },
+        {
+            "id": "5d5594cd-7244-4c23-a8eb-c44e220bc177",
+            "name": "Name",
+            "type": "triad",
+            "order": 10,
+            "title": "Attention or improvement was needed on...",
+            "tooltip": "I'm a Triad",
+            "allow_na": true,
+            "fragment": false,
+            "required": true,
+            "sticky": false,
+            "public": false,
+            "error": "",
+            "content": {
+                "parameters": {},
+                "items": {},
+                "axis": {
+                    "x": {},
+                    "y": {}
+                },
+                "stones": {},
+                "background_image": "ADemo/GreyTriad2LT.png",
+                "labels": [
+                    {
+                        "id": "a54fd1a1-04cc-4813-9401-8e940e3738b6",
+                        "text": "processes or <br>procedures"
+                    },
+                    {
+                        "id": "c796e987-846e-48ee-9d8c-92e188772200",
+                        "text": "tools, equipment, <br>or technology"
+                    },
+                    {
+                        "id": "ab539118-95d4-4f68-81aa-2e58ed44c54a",
+                        "text": "people<br>(skills, behaviours, relationships)"
+                    }
+                ],
+                "pointer_image": "Collector/Pointers/shapeSliderPointer.png"
+            }
+        },
+        {
+            "id": "579be782-038d-4d71-92d5-1cbff91ac2fc",
+            "name": "Name",
+            "type": "triad",
+            "order": 11,
+            "title": "This situation reflects how our company...",
+            "tooltip": "I'm a Triad",
+            "allow_na": true,
+            "fragment": false,
+            "required": true,
+            "sticky": false,
+            "public": false,
+            "error": "",
+            "content": {
+                "parameters": {},
+                "items": {},
+                "axis": {
+                    "x": {},
+                    "y": {}
+                },
+                "stones": {},
+                "background_image": "ADemo/GreyTriad2LT.png",
+                "labels": [
+                    {
+                        "id": "c41a0bcc-157c-4ccc-98b7-9074eb0f901b",
+                        "text": "is in the <br>PRESENT"
+                    },
+                    {
+                        "id": "d386f1a8-3a15-4d7b-9d05-9bb2cf7c5f9d",
+                        "text": "has been in the <br>PAST"
+                    },
+                    {
+                        "id": "9cef2924-cbb6-40e2-b7ca-17f559078ef5",
+                        "text": "likely to be in the FUTURE"
+                    }
+                ],
+                "pointer_image": "Collector/Pointers/shapeSliderPointer.png"
+            }
+        },
+        {
+            "id": "25055cfd-2b03-44af-a80e-2bfd62e455cc",
+            "name": "Name",
+            "type": "triad",
+            "order": 12,
+            "title": "Work tasks in this situation were done\u2026",
+            "tooltip": "I'm a Triad",
+            "allow_na": true,
+            "fragment": false,
+            "required": true,
+            "sticky": false,
+            "public": false,
+            "error": "",
+            "content": {
+                "parameters": {},
+                "items": {},
+                "axis": {
+                    "x": {},
+                    "y": {}
+                },
+                "stones": {},
+                "background_image": "ADemo/GreyTriad2LT.png",
+                "labels": [
+                    {
+                        "id": "eb41c214-70d4-4e11-a056-822bcc77a81c",
+                        "text": "according to rules,<br>policies, or procedures"
+                    },
+                    {
+                        "id": "f63bde9b-c513-44a7-ad1a-88ee451f8a16",
+                        "text": "with a high level<br>of confidence"
+                    },
+                    {
+                        "id": "92457379-1102-4481-b0c2-77642d214260",
+                        "text": "with considerable<br>care or caution"
+                    }
+                ],
+                "pointer_image": "Collector/Pointers/shapeSliderPointer.png"
+            }
+        },
+        {
+            "id": "085f37d9-5819-4cc0-8538-e05ff0bd0e2c",
+            "name": "Name",
+            "type": "triad",
+            "order": 13,
+            "title": "Pressure in this situation was...",
+            "tooltip": "I'm a Triad",
+            "allow_na": true,
+            "fragment": false,
+            "required": true,
+            "sticky": false,
+            "public": false,
+            "error": "",
+            "content": {
+                "parameters": {},
+                "items": {},
+                "axis": {
+                    "x": {},
+                    "y": {}
+                },
+                "stones": {},
+                "background_image": "ADemo/GreyTriad2LT.png",
+                "labels": [
+                    {
+                        "id": "c15c20b4-2400-482e-bda5-38de291868dc",
+                        "text": "<br>from co-workers"
+                    },
+                    {
+                        "id": "69ed19b7-f9b4-490f-a190-669c4a899eed",
+                        "text": "from supervisors or <br>managers"
+                    },
+                    {
+                        "id": "c1ee2c1f-cad9-48dd-b88f-1accabca771c",
+                        "text": "self-imposed"
+                    }
+                ],
+                "pointer_image": "Collector/Pointers/shapeSliderPointer.png"
+            }
+        },
+        {
+            "id": "b662e7f4-41b0-4525-8685-26c2a685d67d",
+            "name": "Name",
+            "type": "dyad",
+            "order": 14,
+            "title": "This situation was...",
+            "tooltip": "I'm a Slider",
+            "allow_na": true,
+            "fragment": false,
+            "required": false,
+            "sticky": true,
+            "public": false,
+            "error": "",
+            "content": {
+                "parameters": {},
+                "items": {},
+                "axis": {
+                    "x": {},
+                    "y": {}
+                },
+                "stones": {},
+                "background_image": "ADemo/slider_blkgrey_thin2.png",
+                "labels": [
+                    {
+                        "id": "410d59fd-ee4b-4383-b16d-b9f10fb4a788",
+                        "text": "<div>heavily<br> micro-managed<\/div>"
+                    },
+                    {
+                        "id": "82a858b9-fe4f-4df7-aefb-001110e0e23a",
+                        "text": "<div>not given any<br>guidance or direction<\/div>"
+                    }
+                ],
+                "pointer_image": "Collector/Pointers/shapeSliderPointer.png"
+            }
+        },
+        {
+            "id": "4c3c1b34-980c-4bda-815a-2979d5ddcd45",
+            "name": "Name",
+            "type": "dyad",
+            "order": 15,
+            "title": "In this situation people had to...",
+            "tooltip": "I'm a Slider",
+            "allow_na": true,
+            "fragment": false,
+            "required": false,
+            "sticky": true,
+            "public": false,
+            "error": "",
+            "content": {
+                "parameters": {},
+                "items": {},
+                "axis": {
+                    "x": {},
+                    "y": {}
+                },
+                "stones": {},
+                "background_image": "ADemo/slider_blkgrey_thin2.png",
+                "labels": [
+                    {
+                        "id": "f6b2c668-88dd-45a7-9320-8001dc10a457",
+                        "text": "<div>twist work to<br>fit the rules<\/div>"
+                    },
+                    {
+                        "id": "73bc62c7-dd57-4161-baad-0d855a68484b",
+                        "text": "<div>twist rules to<br>fit the work<\/div>"
+                    }
+                ],
+                "pointer_image": "Collector/Pointers/shapeSliderPointer.png"
+            }
+        },
+        {
+            "id": "42c7f92c-1cff-4f60-991e-0753c1b2b417",
+            "name": "Name",
+            "type": "dyad",
+            "order": 16,
+            "title": "Peoples' attitudes were...",
+            "tooltip": "I'm a Slider",
+            "allow_na": true,
+            "fragment": false,
+            "required": false,
+            "sticky": true,
+            "public": false,
+            "error": "",
+            "content": {
+                "parameters": {},
+                "items": {},
+                "axis": {
+                    "x": {},
+                    "y": {}
+                },
+                "stones": {},
+                "background_image": "ADemo/slider_blkgrey_thin2.png",
+                "labels": [
+                    {
+                        "id": "b2428870-7cfc-4174-adaf-2bf580e28f72",
+                        "text": "<div>fixed and<br> unchangeable<\/div>"
+                    },
+                    {
+                        "id": "568beb13-f1ae-4a94-a180-a05e6d6ca7f2",
+                        "text": "<div>changing and<br> shifting<\/div>"
+                    }
+                ],
+                "pointer_image": "Collector/Pointers/shapeSliderPointer.png"
+            }
+        },
+        {
+            "id": "ab569302-2b56-4754-bd9d-fcd93728f97d",
+            "name": "Name",
+            "type": "label",
+            "order": 17,
+            "title": "New Project Element",
+            "tooltip": "I'm a Label",
+            "allow_na": false,
+            "fragment": false,
+            "required": false,
+            "sticky": false,
+            "public": false,
+            "content": {
+                "text": "<p><i>Now we have some questions that also relate to the experience you shared.<\/i><\/p>",
+                "parameters": {},
+                "items": {},
+                "axis": {
+                    "x": {},
+                    "y": {}
+                },
+                "stones": {},
+                "labels": {}
+            }
+        },
+        {
+            "id": "e533b24f-1ac4-4506-8b10-0b1169cc7282",
+            "name": "Name",
+            "type": "list",
+            "order": 18,
+            "title": "This experience makes you feel (pick up to 3):",
+            "tooltip": "I'm a ListType",
+            "allow_na": false,
+            "fragment": false,
+            "required": true,
+            "sticky": false,
+            "public": false,
+            "error": "",
+            "content": {
+                "parameters": {},
+                "items": [
+                    {
+                        "id": "b14c0538-4fdb-4516-95c7-b9b793516c47",
+                        "image": "",
+                        "title": "glad",
+                        "tooltip": ""
+                    },
+                    {
+                        "id": "931c7eac-48f0-4a58-8a80-b56d8dabc87e",
+                        "image": "",
+                        "title": "angry",
+                        "tooltip": ""
+                    },
+                    {
+                        "id": "f9451e09-38b7-4598-85be-f88fa119244b",
+                        "image": "",
+                        "title": "excited",
+                        "tooltip": ""
+                    },
+                    {
+                        "id": "70816258-bc0d-427c-a76c-ed834fc961ed",
+                        "image": "",
+                        "title": "stressed",
+                        "tooltip": ""
+                    },
+                    {
+                        "id": "3d8991f9-8673-489f-affd-d3a0046e5e89",
+                        "image": "",
+                        "title": "confident",
+                        "tooltip": ""
+                    },
+                    {
+                        "id": "d9808c29-c914-4ee9-9aec-3a9d1d879407",
+                        "image": "",
+                        "title": "informed",
+                        "tooltip": ""
+                    },
+                    {
+                        "id": "a288f177-7b81-4502-8e4d-c700076a511b",
+                        "image": "",
+                        "title": "uncertain",
+                        "tooltip": ""
+                    },
+                    {
+                        "id": "41df55c7-2045-45a6-9e64-062d0d65ca5a",
+                        "image": "",
+                        "title": "disappointed",
+                        "tooltip": ""
+                    },
+                    {
+                        "id": "ab9d4470-622c-41b8-a849-880ec752a8ea",
+                        "image": "",
+                        "title": "hopeful",
+                        "tooltip": ""
+                    },
+                    {
+                        "id": "6dcae5a4-110b-434d-b22d-8da9b280a175",
+                        "image": "",
+                        "title": "sad",
+                        "tooltip": ""
+                    },
+                    {
+                        "id": "7aa159c5-3d43-40e0-8117-3bc500be996e",
+                        "image": "",
+                        "title": "relieved",
+                        "tooltip": ""
+                    },
+                    {
+                        "id": "3965f13e-906f-4e32-8050-3d45cdf4b4f5",
+                        "image": "",
+                        "title": "frustrated",
+                        "tooltip": ""
+                    },
+                    {
+                        "id": "946c3e8f-1c86-4bb5-982d-b87069380de7",
+                        "image": "",
+                        "title": "indifferent",
+                        "tooltip": ""
+                    },
+                    {
+                        "id": "aa468b0d-c783-476b-b57c-5a71df821218",
+                        "image": "",
+                        "title": "surprised",
+                        "tooltip": ""
+                    },
+                    {
+                        "id": "fdb140ad-3bd1-4e83-9e18-479f9e83430c",
+                        "image": "",
+                        "title": "not sure",
+                        "tooltip": ""
+                    }
+                ],
+                "other_text": "Other",
+                "max_responses": 3,
+                "min_responses": 1,
+                "axis": {
+                    "x": {},
+                    "y": {}
+                },
+                "stones": {},
+                "labels": {}
+            }
+        },
+        {
+            "id": "70b147f8-1e73-4a8d-86ff-4d9e47f2b4f9",
+            "name": "Name",
+            "type": "list",
+            "order": 19,
+            "title": "This is something you will...",
+            "tooltip": "I'm a ListType",
+            "allow_na": false,
+            "fragment": false,
+            "required": true,
+            "sticky": false,
+            "public": false,
+            "error": "",
+            "content": {
+                "parameters": {},
+                "items": [
+                    {
+                        "id": "b3913cbd-cd92-4bf6-8c9e-a65199a0bb64",
+                        "image": "",
+                        "title": "never forget",
+                        "tooltip": ""
+                    },
+                    {
+                        "id": "75cd6901-70bb-4ab8-b063-56b6a4fa629c",
+                        "image": "",
+                        "title": "remember for a while",
+                        "tooltip": ""
+                    },
+                    {
+                        "id": "e8a8a883-52f8-44ec-8ef5-5a60e86dc8ad",
+                        "image": "",
+                        "title": "remember for a short time",
+                        "tooltip": ""
+                    },
+                    {
+                        "id": "5345dbc1-c15e-4d00-b3e0-20e920a4db20",
+                        "image": "",
+                        "title": "likely to forget soon",
+                        "tooltip": ""
+                    },
+                    {
+                        "id": "40fa39b2-a775-4fea-b466-8cadb2d27ab3",
+                        "image": "",
+                        "title": "not sure",
+                        "tooltip": ""
+                    }
+                ],
+                "other_text": "Other",
+                "max_responses": 1,
+                "min_responses": 1,
+                "axis": {
+                    "x": {},
+                    "y": {}
+                },
+                "stones": {},
+                "labels": {}
+            }
+        },
+        {
+            "id": "96c70934-24a2-40e3-98d8-692878fbc26c",
+            "name": "Name",
+            "type": "list",
+            "order": 20,
+            "title": "Overall would you say this is...",
+            "tooltip": "I'm a ListType",
+            "allow_na": false,
+            "fragment": false,
+            "required": true,
+            "sticky": false,
+            "public": false,
+            "error": "",
+            "content": {
+                "parameters": {},
+                "items": [
+                    {
+                        "id": "d41722e7-0f09-439a-bc40-a549544fb2e7",
+                        "image": "",
+                        "title": "strongly positive",
+                        "tooltip": ""
+                    },
+                    {
+                        "id": "eb462061-1f07-4dd5-8a42-f5325eda3e61",
+                        "image": "",
+                        "title": "positive",
+                        "tooltip": ""
+                    },
+                    {
+                        "id": "38203f7d-3195-4ae4-8ecb-29737ddd441d",
+                        "image": "",
+                        "title": "neutral",
+                        "tooltip": ""
+                    },
+                    {
+                        "id": "e95b09c3-3abb-4f6d-9eab-9fa493671f9e",
+                        "image": "",
+                        "title": "negative",
+                        "tooltip": ""
+                    },
+                    {
+                        "id": "3d25055c-90f2-4f3a-8985-eebafbaadde4",
+                        "image": "",
+                        "title": "strongly negative",
+                        "tooltip": ""
+                    },
+                    {
+                        "id": "0a4c2f63-e865-4aa9-b102-2a28d1bc11a4",
+                        "image": "",
+                        "title": "not sure",
+                        "tooltip": ""
+                    }
+                ],
+                "other_text": "Other",
+                "max_responses": 1,
+                "min_responses": 1,
+                "axis": {
+                    "x": {},
+                    "y": {}
+                },
+                "stones": {},
+                "labels": {}
+            }
+        },
+        {
+            "id": "533ac2ab-ff1b-4b15-8b39-f1037635cc65",
+            "name": "Name",
+            "type": "label",
+            "order": 21,
+            "title": "New Project Element",
+            "tooltip": "I'm a Label",
+            "allow_na": false,
+            "fragment": false,
+            "required": false,
+            "sticky": false,
+            "public": false,
+            "content": {
+                "text": "<p><i>A few questions about you.<\/i><\/p>",
+                "parameters": {},
+                "items": {},
+                "axis": {
+                    "x": {},
+                    "y": {}
+                },
+                "stones": {},
+                "labels": {}
+            }
+        },
+        {
+            "id": "28b77770-d9ed-4ee8-81ba-0cb6cbab4416",
+            "name": "Name",
+            "type": "list",
+            "order": 22,
+            "title": "How long have you worked for this company?",
+            "tooltip": "I'm a ListType",
+            "allow_na": false,
+            "fragment": false,
+            "required": true,
+            "sticky": true,
+            "public": false,
+            "error": "",
+            "content": {
+                "parameters": {},
+                "items": [
+                    {
+                        "id": "72faa6c2-ff40-4e63-bec7-e5f4dec7e297",
+                        "image": "",
+                        "title": "less than 1 year",
+                        "tooltip": ""
+                    },
+                    {
+                        "id": "7de664b4-7eea-4ed7-88ce-1e3475b9783d",
+                        "image": "",
+                        "title": "21 - 30 years",
+                        "tooltip": ""
+                    },
+                    {
+                        "id": "0ab8bcd3-8b91-408d-bfd1-2d0743af7a45",
+                        "image": "",
+                        "title": "1 to 4 years",
+                        "tooltip": ""
+                    },
+                    {
+                        "id": "cb5c1cb4-4209-4d7f-bad7-797df1e1c589",
+                        "image": "",
+                        "title": "more than 30 years",
+                        "tooltip": ""
+                    },
+                    {
+                        "id": "985bcec9-0b1b-42d7-9560-0f943c994e7a",
+                        "image": "",
+                        "title": "5 to 10 years",
+                        "tooltip": ""
+                    },
+                    {
+                        "id": "1f4fcd35-166e-45f7-8d8a-6c4485a1d196",
+                        "image": "",
+                        "title": "prefer not to say",
+                        "tooltip": ""
+                    },
+                    {
+                        "id": "2d0e0e3b-0c71-4b0d-9a1b-d59878793a79",
+                        "image": "",
+                        "title": "11 to 20 years",
+                        "tooltip": ""
+                    }
+                ],
+                "other_text": "Other",
+                "max_responses": 1,
+                "min_responses": 1,
+                "axis": {
+                    "x": {},
+                    "y": {}
+                },
+                "stones": {},
+                "labels": {}
+            }
+        },
+        {
+            "id": "7e8de9fa-1eac-4aef-95a8-7565e907eaeb",
+            "name": "Name",
+            "type": "list",
+            "order": 23,
+            "title": "Gender?",
+            "tooltip": "I'm a ListType",
+            "allow_na": false,
+            "fragment": false,
+            "required": true,
+            "sticky": true,
+            "public": false,
+            "error": "",
+            "content": {
+                "parameters": {},
+                "items": [
+                    {
+                        "id": "92ae82dc-b6dd-4eed-81b7-809194893b90",
+                        "image": "",
+                        "title": "Female",
+                        "tooltip": ""
+                    },
+                    {
+                        "id": "5dcc8b01-4807-4e4d-870f-5f656c8a761f",
+                        "image": "",
+                        "title": "Male",
+                        "tooltip": ""
+                    },
+                    {
+                        "id": "cb5f1efd-09c3-46fd-84d8-1ea576c617da",
+                        "image": "",
+                        "title": "Other",
+                        "tooltip": ""
+                    },
+                    {
+                        "id": "a25e3c6b-69bb-4b58-8069-97c1e5fd000a",
+                        "image": "",
+                        "title": "Prefer not to say",
+                        "tooltip": ""
+                    }
+                ],
+                "other_text": "Other",
+                "max_responses": 1,
+                "min_responses": 1,
+                "axis": {
+                    "x": {},
+                    "y": {}
+                },
+                "stones": {},
+                "labels": {}
+            }
+        },
+        {
+            "id": "5259205f-0caf-40c5-aecd-b043ec755d75",
+            "name": "Name",
+            "type": "label",
+            "order": 24,
+            "title": "New Project Element",
+            "tooltip": "I'm a Label",
+            "allow_na": false,
+            "fragment": false,
+            "required": false,
+            "sticky": false,
+            "public": false,
+            "content": {
+                "text": "",
+                "parameters": {},
+                "items": {},
+                "axis": {
+                    "x": {},
+                    "y": {}
+                },
+                "stones": {},
+                "labels": {}
+            }
+        },
+        {
+            "id": "95d9457f-7cbc-466e-8b89-73854406bfc1",
+            "name": "Name",
+            "type": "navigation",
+            "order": 25,
+            "title": "New Project Element",
+            "tooltip": "Move to previous or next page",
+            "allow_na": false,
+            "fragment": false,
+            "required": false,
+            "sticky": false,
+            "public": false,
+            "content": {
+                "parameters": {},
+                "items": {},
+                "direction": "next",
+                "axis": {
+                    "x": {},
+                    "y": {}
+                },
+                "stones": {},
+                "labels": {}
+            }
+        }
+    ],
+    "linked_frameworks": [],
+    "rules": [],
+    "data_policies": {
+        "storage": [],
+        "retrieval": []
+    }
+}
