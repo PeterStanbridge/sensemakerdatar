@@ -54,22 +54,34 @@ Data <- R6::R6Class("Data",
                       title_use = NULL,
                       #' @field sm_framework the framework definition if it is passed in
                       sm_framework = NULL,
-                      #' @field dashboard_definition The dashboard json because we need to do work with it after declaring it
-                      dashboard_definition = NULL,
+                      #' @field dashboard_definition_v1 The dashboard json for version 1 because we need to do work with it after declaring it
+                      dashboard_definition_v1 = NULL,
+                      #' @field dashboard_definition_v2 The dashboard json for version 2 because we need to do work with it after declaring it
+                      dashboard_definition_v2 = NULL,
+                      #' @field dashboard_layout_v2 The dashboard layout json for version 2 because we need to do work with it after declaring it
+                      dashboard_layout_v2 = NULL,
+                      #' @field dashboard_filters_v2 The dashboard filters json for version 2 because we need to do work with it after declaring it
+                      dashboard_filters_v2 = NULL,
+                      #' @field framework_id The framework id
+                      framework_id = NULL,
+                      #' @field dashboard_id The dashboard id
+                      dashboard_id = NULL,
+                      #' @field dashboard_version The dashboard version - whether 1 or 2
+                      dashboard_version = NULL,
                       #' @description
                       #' Create a new `data` object.
                       #' @details
                       #' The csv is downloaded or passed or read and processed to prepare data for analytical work
                       #' @param csvfilename if loading directly from a pre-existing csv file on disk. The file is an id, not label/title file.
                       #' @param csvfiledf if passing in an already read csv file data frame.
-                      #' @param frameworkid The id of the framework to load.
-                      #' @param dashboardid The id of the dashboard to load (if framework or dashboard id passed, only one not the other must be non NULL).
-                      #' @param token if using the platform security, the token to gain access to the data. Used only when frameworkid or dashboardid passed.
+                      #' @param framework_id The id of the framework to load.
+                      #' @param dashboard_id The id of the dashboard to load (if framework or dashboard id passed, only one not the other must be non NULL).
+                      #' @param token if using the platform security, the token to gain access to the data. Used only when framework_id or dashboard_id passed.
                       #' @param sensemakerframeworkrobject - optional sensemakerframeworkr R6 class object which would be added to based on data loaded (e.g. meta columns)
                       #' @return A new `signifier` R6 class object and fields type by signifier id, signifier ids by type, and
-                      initialize = function(csvfilename = NA, csvfiledf = NA, frameworkid = NA, dashboardid = NA,
+                      initialize = function(csvfilename = NA, csvfiledf = NA, framework_id = NA, dashboard_id = NA,
                                             token = NA, sensemakerframeworkrobject = NA) {
-                        sensemakerdata <- private$get_data(csvfilename, csvfiledf, frameworkid, dashboardid, token, sensemakerframeworkrobject)
+                        sensemakerdata <- private$get_data(csvfilename, csvfiledf, framework_id, dashboard_id, token, sensemakerframeworkrobject)
 
                       }
 
@@ -77,22 +89,27 @@ Data <- R6::R6Class("Data",
 
                     private = list(
                       # function handling the initialisation - get the data, process the data and load appropriate fields
-                      get_data = function(csvfilename = NA, csvfiledf = NA, frameworkid = NA, dashboardid = NA, token = NA, sensemakerframeworkrobject = NA) {
+                      get_data = function(csvfilename = NA, csvfiledf = NA, framework_id = NA, dashboard_id = NA, token = NA, sensemakerframeworkrobject = NA) {
                         # checking that the parameters are correct.
-                        # either one of filename/csvfiledf OR frameworkid/dashboardid
-                        # if dashboardid or frameworkid then must have token.
+                        # either one of filename/csvfiledf OR framework_id/dashboard_id
+                        # if dashboard_id or framework_id then must have token.
                         # we don't worry about testing if token when csvfile or dataframe passed - just not used.
                         end_point <- "openapi"
-                        token <- "eyJhbGciOiJFUzUxMiIsInR5cCI6IkpXVCIsImtpZCI6IjIzYjM4ZjE4OGMzY2IzOWYwOGZkOTdmZTdiNmJlZDAzYjRmNGM5M2MifQ.eyJhdWQiOiJodHRwczovL3BsYXRmb3JtLnNlbnNlbWFrZXItc3VpdGUuY29tIiwiZXhwIjoxNzAwNDYyODQ5LCJpYXQiOjE3MDA0NTkyNDksImlzcyI6Imh0dHBzOi8vYXBpLnNpbmd1bGFyaXR5LmljYXRhbHlzdC5jb20vdjEvaXNzdWVyLzg5NjlhM2I4LWU5YmEtNGQ2ZC1iNjA4LTc0YzVjOTI5NmUxNCIsInN1YiI6IjI1YTAzM2NlYWFkOWU4NzA0MTFkNDdkOGNlOTU3ZWI2ZGE2NTc0MWM2Y2YwMzkyNzcwYmYzMGRjM2FiODRkZDciLCJub25jZSI6MC4xNjM2ODA3Njk5MDg4ODE5Miwic2NvcGUiOiJhdXRoIHByb2ZpbGUiLCJjbGllbnRfaWQiOiI4OTY5YTNiOC1lOWJhLTRkNmQtYjYwOC03NGM1YzkyOTZlMTQiLCJncmFudF90eXBlIjoiYXV0aG9yaXphdGlvbl9jb2RlIiwicmVkaXJlY3RfdXJpIjoiaHR0cHM6Ly9vcGVuYXBpLnNlbnNlbWFrZXItc3VpdGUuY29tL3Npbmd1bGFyaXR5L3Rva2VuIiwicmVmcmVzaF90b2tlbiI6IjAzM2UzNDZhLTFkYzMtNDM1Zi04MDQwLWQ2YjY4MjA5NDg4MCJ9.AYqmT1_VLMkN4mQZcyPh3u4goEMzBCvhn6J6QRGlSl7iQDcIhrLAL9KkDXqkVtBDNGFLcCMI_gNFy9EYTFUbeyuVAS6JXb3J9m_H9vFMloPJmOUAQk3gYv51SasIIP5_XErzzEtq8B7ElPBW-VDPB_SMauVFcH6FrmxC-KL6k10UBED4"
-                        assertive::assert_any_are_not_na(c(csvfilename, csvfiledf, frameworkid, dashboardid, token), severity = "stop")
+                        token <- "eyJhbGciOiJFUzUxMiIsInR5cCI6IkpXVCIsImtpZCI6IjIzYjM4ZjE4OGMzY2IzOWYwOGZkOTdmZTdiNmJlZDAzYjRmNGM5M2MifQ.eyJhdWQiOiJodHRwczovL3BsYXRmb3JtLnNlbnNlbWFrZXItc3VpdGUuY29tIiwiZXhwIjoxNzAxMDcwMTg1LCJpYXQiOjE3MDEwNjY1ODUsImlzcyI6Imh0dHBzOi8vYXBpLnNpbmd1bGFyaXR5LmljYXRhbHlzdC5jb20vdjEvaXNzdWVyLzg5NjlhM2I4LWU5YmEtNGQ2ZC1iNjA4LTc0YzVjOTI5NmUxNCIsInN1YiI6IjI1YTAzM2NlYWFkOWU4NzA0MTFkNDdkOGNlOTU3ZWI2ZGE2NTc0MWM2Y2YwMzkyNzcwYmYzMGRjM2FiODRkZDciLCJub25jZSI6MC4yNjAzODMyOTE4OTA2NTE1Nywic2NvcGUiOiJhdXRoIHByb2ZpbGUiLCJjbGllbnRfaWQiOiI4OTY5YTNiOC1lOWJhLTRkNmQtYjYwOC03NGM1YzkyOTZlMTQiLCJncmFudF90eXBlIjoiYXV0aG9yaXphdGlvbl9jb2RlIiwicmVkaXJlY3RfdXJpIjoiaHR0cHM6Ly9wbGF0Zm9ybS5zZW5zZW1ha2VyLXN1aXRlLmNvbS9jYXB0dXJlcy9iMWFkNzZjYS1kNjBhLTRjOWQtOWI2My1kZTNkNzg5Mzc4NGIvZGFzaGJvYXJkLzc3NGU4NTUyLTAzNTItNDZlZS05NGU2LTEwM2RlOTRhNWJkNiIsInJlZnJlc2hfdG9rZW4iOiJmOWE2OGNkOC02YTEzLTQ1M2QtYjhkNy04ZDcxMDRjYTljNDIifQ.AFob2upoRWI-lp8yK9lCcF_d3oafzQyKZDLBCcuEiwWZyp9t3cm0k0WcaO4fYcbtIYSrdX0bjaWlaCGEc-L-U6cPABCyzPb8vSb4Kd_ACPQiu3354nqL8L4baI6k26CTQMxHLcEyoPGEc-eKR2DQ6xL_XpEYf63jAK2mVAsAVcCaM2U5"
+                        assertive::assert_any_are_not_na(c(csvfilename, csvfiledf, framework_id, dashboard_id, token), severity = "stop")
                         assertive::assert_any_are_na(c(csvfilename, csvfiledf), severity = "stop")
-                        assertive::assert_any_are_na(c(frameworkid, dashboardid), severity = "stop")
-                        if  (length(which(!is.na(c(csvfilename, csvfiledf)) == TRUE)) == 1 & length(which(!is.na(c(frameworkid, dashboardid)) == TRUE)) >= 1) {
+                        assertive::assert_any_are_na(c(framework_id, dashboard_id), severity = "stop")
+                        if  (length(which(!is.na(c(csvfilename, csvfiledf)) == TRUE)) == 1 & length(which(!is.na(c(framework_id, dashboard_id)) == TRUE)) >= 1) {
                           print("you cannot have file name or file while also passing framework id or dashboard id")
                           stop()
                         }
 
-                        if (length(which(!is.na(c(frameworkid, dashboardid)))) == 1 & is.na(token)) {
+                        if (any(c(csvfilename, csvfiledf, framework_id, dashboard_id) == "", na.rm = TRUE)) {
+                          print("no parameter should be a blank string")
+                          stop()
+                        }
+
+                        if (length(which(!is.na(c(framework_id, dashboard_id)))) == 1 & is.na(token)) {
                           print("if providing a framework id or dashboard id you must provide a token")
                           stop()
                         }
@@ -130,46 +147,66 @@ Data <- R6::R6Class("Data",
                           df <- csvfiledf
                         }
 
-                        if (!is.na(frameworkid)) {
+                        if (!is.na(framework_id)) {
                           # is this a demonstrator account
                           is_demonstrator <- private$is_demonstrator(token)
-                          df <- private$get_API_framework_data(end_point, frameworkid, token, is_demonstrator)
+                          df <- private$get_API_framework_data(end_point, framework_id, token, is_demonstrator)
+                          self$framework_id <- framework_id
                         }
                         # preliminary process of the dashboard - get the framework id and the frqmework data.
-                        if (!is.na(dashboardid)) {
+                        if (!is.na(dashboard_id)) {
                           # get the dashboard definition.
-                          dashboard_definition <- private$getDashboardDefinition(end_point, dashboardid, token)
-                          # add to the field as we need to use this later.
-                          self$dashboard_definition <- dashboard_definition
-                          # pick out the parent framework definition and get the data.
-                          frameworkid <- dashboard_definition$framework_id
-                          is_demonstrator <- private$is_demonstrator(token)
-                          df <- private$get_API_framework_data(end_point, frameworkid, token, is_demonstrator)
+                          # try version one of the dashboard
+                          dashboard_definition <- private$get_v1_DashboardDefinition(end_point, dashboard_id, token)
+                          if (!is.null(dashboard_definition$framework_id)) {
+                            self$dashboard_definition_v1 <- dashboard_definition
+                            self$framework_id <- dashboard_definition$framework_id
+                            self$dashboard_id <- dashboard_id
+                            self$dashboard_version <- "v1"
+                          } else {
+
+                          # try version 2
+                              dashboard_definition <- private$get_v2_DashboardDefinition(end_point, dashboard_id, token)
+                              self$dashboard_definition_v2 <- dashboard_definition[["v2_definition"]]
+                              self$framework_id <- self$dashboard_definition_v2$frameworkID
+                              self$dashboard_id <- dashboard_id
+                              self$dashboard_layout_v2 <- dashboard_definition[["v2_layout"]]
+                              self$dashboard_filters_v2 <- dashboard_definition[["v2_filters"]]
+                              self$dashboard_version = "v2"
+                          }
+
                         }
 
+                        # Get the data
+                        is_demonstrator <- private$is_demonstrator(token)
+                        df <- private$get_API_framework_data(end_point, self$framework_id, token, is_demonstrator)
+
                         # Now we have df as the data frame required for processing - but does the dataframe match the definition
-                        # get the frameworkid if not present
-                        if (is.na(frameworkid)) {
-                          frameworkid <- df[1, "project_id"]
+                        # get the framework_id if not present
+                        if (is.na(framework_id)) {
+                          framework_id <- df[1, "project_id"]
                         }
 
                         # get the sensemakerframeworkr object if it hasn't been passed
                         if (!("Signifiers" %in% class(sensemakerframeworkrobject))) {
-                          sensemakerframeworkrobject <- sensemakerframeworkr::Signifiers$new(jsonfilename = NULL, layoutfilename = NULL, parsedjson = NULL, parsedlayout = NULL, workbenchid = frameworkid, token = token)
+                          sensemakerframeworkrobject <- sensemakerframeworkr::Signifiers$new(jsonfilename = NULL, layoutfilename = NULL, parsedjson = NULL, parsedlayout = NULL, workbenchid = framework_id, token = token)
                         }
 
                         # check that the sensemakerframeworkr projectid is the same as the project id passed in or obtained in the data
-                        if (frameworkid != sensemakerframeworkrobject$get_parent_framework_id()) {
-                         print(paste("the frameworkid", frameworkid, "passed or obtained from the data, not the same as", sensemakerframeworkrobject$get_parent_framework_id(), "in the sensemakerframeworkr package object"))
+                        if (framework_id != sensemakerframeworkrobject$get_parent_framework_id()) {
+                         print(paste("the framework_id", framework_id, "passed or obtained from the data, not the same as", sensemakerframeworkrobject$get_parent_framework_id(), "in the sensemakerframeworkr package object"))
                           stop()
                         }
-                        # now process the dashboard completely - this function has side affects on self$dashboard_definition
-                        if (!is.na(dashboardid)) {
-                          private$get_API_dashboard_data(df, frameworkid, end_point, dashboardid, token, is_demonstrator)
-
+                        # now process the dashboard completely - this function has side effects on the dashboard definition,
+                        # data and framework definition
+                        if (!is.na(dashboard_id)) {
+                          do.call(paste0("process_dashboard_definition_", self$dashboard_version), args = list(df, framework_id, end_point, dashboard_id, token, is_demonstrator, sensemakerframeworkrobject), envir = private)
                         }
-                        # assign the sensemaker framework field
+
+                        # assign the sensemaker framework
                         self$sm_framework <- sensemakerframeworkrobject
+
+
 
                         # start processing data
                         private$process_data(df, sensemakerframeworkrobject)
@@ -184,10 +221,11 @@ Data <- R6::R6Class("Data",
 
                       },
 
-                      get_API_framework_data = function(end_point, frameworkID, token, isDemonstratorAccount = FALSE) {
+                      get_API_framework_data = function(end_point, framework_id, token, isDemonstratorAccount = FALSE) {
+
                         # Get the data from the API saving to temp folder, read csv into dataframe, remove temp file and return dataframe
                         df1FileName <- tempfile(pattern = "", fileext = ".csv")
-                        r1 <- httr::GET(paste0("http://", end_point, ".sensemaker-suite.com/apis/capture/", frameworkID,"/?type=csv", sep=""),
+                        r1 <- httr::GET(paste0("http://", end_point, ".sensemaker-suite.com/apis/capture/", framework_id,"/?type=csv", sep=""),
                                   httr::add_headers(.headers = c('Authorization'= paste('Bearer ', token))),
                                   httr::write_disk(df1FileName, overwrite=TRUE), httr::verbose())
                         DF1I <- read.csv(df1FileName, stringsAsFactors = FALSE, encoding = 'UTF-8', na.strings = "", as.is = TRUE, check.names = FALSE, nrows = ifelse(isDemonstratorAccount, 20, -5))
@@ -195,13 +233,21 @@ Data <- R6::R6Class("Data",
                         return(DF1I)
                       },
 
-                      # Get the dashboard data - df already contains the parent data.
-                      #  1. Remove any primary framework signifier definitions that are not defined to the framework
+                      # Process the dashboad definition. This has side effects on the data and framework definition object
+                      #  1. Set include FALSE for any signifier not defined to the dashboard
                       #  2. Add any linked framework signifier definitions if this is a linked dashboard, if they are included in the secondary definitions
                       #  3. Add linked framework data to the data frame mapping ids where required
-                      #. 2. Filter the data if any filters defined
+                      #. 4. Filter the data if any filters defined
+                      process_dashboard_definition_v1 = function(df, framework_id, end_point, dashboard_id, token, is_demonstrator, sensemakerframeworkrobject) {
 
-                      get_API_dashboard_data = function(df, frameworkid, end_point, dashboardid, token, is_demonstrator) {
+                      dashboard_definition <- self$dashboard_definition_v1
+
+                      # Set include FALSE for any signifier not defined to the dashboard.
+                      framework_signifier_ids <- sensemakerframeworkrobject$get_all_signifier_ids(keep_only_include = TRUE)
+                      dashboard_signifiers <- dashboard_definition$layout$attribute_id[which(!is.na(dashboard_definition$layout$attribute_id) & dashboard_definition$layout$attribute_id != "00000000-0000-0000-0000-000000000000")]
+                      framework_signifiers_missing <- framework_signifier_ids[which(!(framework_signifier_ids %in% dashboard_signifiers))]
+                      purrr::walk(framework_signifiers_missing, ~ {sensemakerframeworkrobject$change_signifier_include(.x, value = FALSE)}, sensemakerframeworkrobject)
+
 
 
 
@@ -209,31 +255,75 @@ Data <- R6::R6Class("Data",
 
                       },
 
-                      getDashboardDefinition = function(end_point, dashboardid, token) {
+
+                      process_dashboard_definition_v2 = function(df, framework_id, end_point, dashboard_id, token, is_demonstrator) {
+
+
+                        print("processing v2 of the dashboard")
+
+
+
+
+                      },
+
+                      get_v1_DashboardDefinition = function(end_point, dashboard_id, token) {
+                        # we are in the get dashboard definition
 
                         out <- try( {
                           # get the json from the returned project definition
 
                           return(jsonlite::fromJSON(httr::content(httr::GET(
-                            paste0("https://", end_point, ".sensemaker-suite.com/apis/dashboards/",  dashboardid),
+                            paste0("https://", end_point, ".sensemaker-suite.com/apis/dashboards/",  dashboard_id),
                             httr::add_headers(.headers = c('Authorization' = paste("Bearer", token, sep = " ")
                                                      , 'Content-Type' = 'application/json'))
                           ), as = 'text', encoding = 'utf-8'), simplifyVector = TRUE, simplifyDataFrame = TRUE ,flatten = FALSE))
-
                         }
                         )
                         if(inherits(out, "try-error"))
                         {
+                          print("we are in the error")
                           return(NULL)
                         }
                         if(inherits(out, "try-warning"))
                         {
+                          print("we are in the warning")
                           return(NULL)
                         }
-
-
                         return(out)
                       },
+
+                      get_v2_DashboardDefinition = function(end_point, dashboard_id, token) {
+                        # we are in the get dashboard definition
+
+
+                          # get the json from the returned project definition
+
+                          v2_definition <- jsonlite::fromJSON(httr::content(httr::GET(
+                            paste0("https://api-gateway.sensemaker-suite.com/v2/dashboards/", dashboard_id),
+                            httr::add_headers(.headers = c('Authorization' = paste("Bearer", token, sep = " ")
+                                                           , 'Content-Type' = 'application/json')),  httr::verbose()
+                          ), as = 'text', encoding = 'utf-8'), simplifyVector = TRUE, simplifyDataFrame = TRUE ,flatten = FALSE)
+
+                          v2_layout <- jsonlite::fromJSON(httr::content(httr::GET(
+                            paste0("https://api-gateway.sensemaker-suite.com/v2/dashboards/", dashboard_id, "/layouts"),
+                            httr::add_headers(.headers = c('Authorization' = paste("Bearer", token, sep = " ")
+                                                           , 'Content-Type' = 'application/json')),  httr::verbose()
+                          ), as = 'text', encoding = 'utf-8'), simplifyVector = TRUE, simplifyDataFrame = TRUE ,flatten = FALSE)
+
+                          # get the json from the returned project definition
+
+                          v2_filters <- jsonlite::fromJSON(httr::content(httr::GET(
+                            paste0("https://api-gateway.sensemaker-suite.com/v2/dashboards/", dashboard_id, "/filters"),
+                            httr::add_headers(.headers = c('Authorization' = paste("Bearer", token, sep = " ")
+                                                           , 'Content-Type' = 'application/json')),  httr::verbose()
+                          ), as = 'text', encoding = 'utf-8'), simplifyVector = TRUE, simplifyDataFrame = TRUE ,flatten = FALSE)
+
+                          ret_list <- list(v2_definition = v2_definition, v2_layout = v2_layout, v2_filters = v2_filters)
+
+                        return(ret_list)
+                      },
+
+
 
                       is_demonstrator = function(trToken) {
 
