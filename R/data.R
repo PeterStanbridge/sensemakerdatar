@@ -38,6 +38,8 @@
 #' triad_01_image <- pt$get_triad_background_image(fw_triads[[1]])
 Data <- R6::R6Class("Data",
                     public = list(
+                      #' @field is_demonstrator Boolean - TRUE if the token is a demonstrator account.
+                      is_demonstrator = NULL,
                       # this will be a list of lists containing the data.
                       #' @field data The full list of data
                       data = list(NULL),
@@ -52,8 +54,10 @@ Data <- R6::R6Class("Data",
                       title_data = NULL,
                       #' @field title_use Filtered data containing titles not ids, used for display on a filter
                       title_use = NULL,
-                      #' @field sm_framework the framework definition if it is passed in
+                      #' @field sm_framework the framework definition
                       sm_framework = NULL,
+                      #' @field framework_definition The framework json for non-dashboard or dashbpard parent
+                      framework_definition = NULL,
                       #' @field dashboard_definition_v1 The dashboard json for version 1 because we need to do work with it after declaring it
                       dashboard_definition_v1 = NULL,
                       #' @field dashboard_definition_v2 The dashboard json for version 2 because we need to do work with it after declaring it
@@ -83,7 +87,43 @@ Data <- R6::R6Class("Data",
                                             token = NA, sensemakerframeworkrobject = NA) {
                         sensemakerdata <- private$get_data(csvfilename, csvfiledf, framework_id, dashboard_id, token, sensemakerframeworkrobject)
 
+                      },
+                      get_is_dashboard = function() {
+                        if (!is.null(self$dashboard_id)) {return(TRUE)}
+                        return(FALSE)
+                      },
+
+                      get_dashboard_definition = function() {
+                        if (self$get_dashboard_version() == "v1") {
+                          return(self$dashboard_definition_v1) } else {
+                            return(self$dashboard_definition_v2)
+                          }
+
+                      },
+
+                      get_is_combined = function() {
+                        if (!self$get_is_dashboard()) {return(FALSE)}
+                        if (length(self$get_dashboard_definition()$config$frameworks_mapping) > 0) {
+                          return(TRUE)
+                        } else {
+                          return(FALSE)
+                        }
+                      },
+                      get_has_filters = function() {
+
+                        return(any(self$dashboard_definition_v1$filters$showFilter == TRUE))
+
+                      },
+
+                      get_dashboard_version = function() {
+                        if (!self$get_is_dashboard()) {return(NULL)}
+                        return(self$dashboard_version)
+                      },
+
+                      get_dashboard_combined_mappings = function() {
+                        return(self$get_dashboard_definition()$config$frameworks_mapping)
                       }
+
 
                     ),
 
@@ -95,7 +135,7 @@ Data <- R6::R6Class("Data",
                         # if dashboard_id or framework_id then must have token.
                         # we don't worry about testing if token when csvfile or dataframe passed - just not used.
                         end_point <- "openapi"
-                        token <- "eyJhbGciOiJFUzUxMiIsInR5cCI6IkpXVCIsImtpZCI6IjIzYjM4ZjE4OGMzY2IzOWYwOGZkOTdmZTdiNmJlZDAzYjRmNGM5M2MifQ.eyJhdWQiOiJodHRwczovL3BsYXRmb3JtLnNlbnNlbWFrZXItc3VpdGUuY29tIiwiZXhwIjoxNzAxMDcwMTg1LCJpYXQiOjE3MDEwNjY1ODUsImlzcyI6Imh0dHBzOi8vYXBpLnNpbmd1bGFyaXR5LmljYXRhbHlzdC5jb20vdjEvaXNzdWVyLzg5NjlhM2I4LWU5YmEtNGQ2ZC1iNjA4LTc0YzVjOTI5NmUxNCIsInN1YiI6IjI1YTAzM2NlYWFkOWU4NzA0MTFkNDdkOGNlOTU3ZWI2ZGE2NTc0MWM2Y2YwMzkyNzcwYmYzMGRjM2FiODRkZDciLCJub25jZSI6MC4yNjAzODMyOTE4OTA2NTE1Nywic2NvcGUiOiJhdXRoIHByb2ZpbGUiLCJjbGllbnRfaWQiOiI4OTY5YTNiOC1lOWJhLTRkNmQtYjYwOC03NGM1YzkyOTZlMTQiLCJncmFudF90eXBlIjoiYXV0aG9yaXphdGlvbl9jb2RlIiwicmVkaXJlY3RfdXJpIjoiaHR0cHM6Ly9wbGF0Zm9ybS5zZW5zZW1ha2VyLXN1aXRlLmNvbS9jYXB0dXJlcy9iMWFkNzZjYS1kNjBhLTRjOWQtOWI2My1kZTNkNzg5Mzc4NGIvZGFzaGJvYXJkLzc3NGU4NTUyLTAzNTItNDZlZS05NGU2LTEwM2RlOTRhNWJkNiIsInJlZnJlc2hfdG9rZW4iOiJmOWE2OGNkOC02YTEzLTQ1M2QtYjhkNy04ZDcxMDRjYTljNDIifQ.AFob2upoRWI-lp8yK9lCcF_d3oafzQyKZDLBCcuEiwWZyp9t3cm0k0WcaO4fYcbtIYSrdX0bjaWlaCGEc-L-U6cPABCyzPb8vSb4Kd_ACPQiu3354nqL8L4baI6k26CTQMxHLcEyoPGEc-eKR2DQ6xL_XpEYf63jAK2mVAsAVcCaM2U5"
+                        token <- "eyJhbGciOiJFUzUxMiIsInR5cCI6IkpXVCIsImtpZCI6IjIzYjM4ZjE4OGMzY2IzOWYwOGZkOTdmZTdiNmJlZDAzYjRmNGM5M2MifQ.eyJhdWQiOiJodHRwczovL3BsYXRmb3JtLnNlbnNlbWFrZXItc3VpdGUuY29tIiwiZXhwIjoxNzAyNDU2OTQ4LCJpYXQiOjE3MDI0NTMzNDgsImlzcyI6Imh0dHBzOi8vYXBpLnNpbmd1bGFyaXR5LmljYXRhbHlzdC5jb20vdjEvaXNzdWVyLzg5NjlhM2I4LWU5YmEtNGQ2ZC1iNjA4LTc0YzVjOTI5NmUxNCIsInN1YiI6IjI1YTAzM2NlYWFkOWU4NzA0MTFkNDdkOGNlOTU3ZWI2ZGE2NTc0MWM2Y2YwMzkyNzcwYmYzMGRjM2FiODRkZDciLCJub25jZSI6MC41OTg3Mzg2MTA5NTMyMDY5LCJzY29wZSI6ImF1dGggcHJvZmlsZSIsImNsaWVudF9pZCI6Ijg5NjlhM2I4LWU5YmEtNGQ2ZC1iNjA4LTc0YzVjOTI5NmUxNCIsImdyYW50X3R5cGUiOiJhdXRob3JpemF0aW9uX2NvZGUiLCJyZWRpcmVjdF91cmkiOiJodHRwczovL3BsYXRmb3JtLnNlbnNlbWFrZXItc3VpdGUuY29tL2NhcHR1cmVzL2IxYWQ3NmNhLWQ2MGEtNGM5ZC05YjYzLWRlM2Q3ODkzNzg0Yi9kYXNoYm9hcmQvZWJhNGI0ZjQtZTI1OC00ZDUzLThmODMtYjhmYTYwYjU3ZDEyIiwicmVmcmVzaF90b2tlbiI6ImZlNjQ5YzAwLThlZjYtNDdmOS04YTg5LWEzNTcxYjE4ZTY1NiJ9.AUudUBPxffxhNDr0C0s3A6USih-VZUGz96S9E2KU30_aG3OSUv8Wqmi-bMwBhIRLf4AcXWwgF9neVYdosMiN03p8ADjhO9JtJUZPKFuTXqY1k47bK2Prl3uMlWuvTwk_9-EVIkFu3Ckl_2KOw44O6PXGvmwgAULMoe-NLGXh_Mw3kyKl"
                         assertive::assert_any_are_not_na(c(csvfilename, csvfiledf, framework_id, dashboard_id, token), severity = "stop")
                         assertive::assert_any_are_na(c(csvfilename, csvfiledf), severity = "stop")
                         assertive::assert_any_are_na(c(framework_id, dashboard_id), severity = "stop")
@@ -149,7 +189,8 @@ Data <- R6::R6Class("Data",
 
                         if (!is.na(framework_id)) {
                           # is this a demonstrator account
-                          is_demonstrator <- private$is_demonstrator(token)
+                          is_demonstrator <- private$get_is_demonstrator(token)
+                          self$is_demonstrator <- is_demonstrator
                           df <- private$get_API_framework_data(end_point, framework_id, token, is_demonstrator)
                           self$framework_id <- framework_id
                         }
@@ -165,20 +206,21 @@ Data <- R6::R6Class("Data",
                             self$dashboard_version <- "v1"
                           } else {
 
-                          # try version 2
-                              dashboard_definition <- private$get_v2_DashboardDefinition(end_point, dashboard_id, token)
-                              self$dashboard_definition_v2 <- dashboard_definition[["v2_definition"]]
-                              self$framework_id <- self$dashboard_definition_v2$frameworkID
-                              self$dashboard_id <- dashboard_id
-                              self$dashboard_layout_v2 <- dashboard_definition[["v2_layout"]]
-                              self$dashboard_filters_v2 <- dashboard_definition[["v2_filters"]]
-                              self$dashboard_version = "v2"
+                            # try version 2
+                            dashboard_definition <- private$get_v2_DashboardDefinition(end_point, dashboard_id, token)
+                            self$dashboard_definition_v2 <- dashboard_definition[["v2_definition"]]
+                            self$framework_id <- self$dashboard_definition_v2$frameworkID
+                            self$dashboard_id <- dashboard_id
+                            self$dashboard_layout_v2 <- dashboard_definition[["v2_layout"]]
+                            self$dashboard_filters_v2 <- dashboard_definition[["v2_filters"]]
+                            self$dashboard_version = "v2"
                           }
 
                         }
 
                         # Get the data
-                        is_demonstrator <- private$is_demonstrator(token)
+                        is_demonstrator <- private$get_is_demonstrator(token)
+                        self$is_demonstrator <- is_demonstrator
                         df <- private$get_API_framework_data(end_point, self$framework_id, token, is_demonstrator)
 
                         # Now we have df as the data frame required for processing - but does the dataframe match the definition
@@ -194,17 +236,21 @@ Data <- R6::R6Class("Data",
 
                         # check that the sensemakerframeworkr projectid is the same as the project id passed in or obtained in the data
                         if (framework_id != sensemakerframeworkrobject$get_parent_framework_id()) {
-                         print(paste("the framework_id", framework_id, "passed or obtained from the data, not the same as", sensemakerframeworkrobject$get_parent_framework_id(), "in the sensemakerframeworkr package object"))
+                          print(paste("the framework_id", framework_id, "passed or obtained from the data, not the same as", sensemakerframeworkrobject$get_parent_framework_id(), "in the sensemakerframeworkr package object"))
                           stop()
                         }
+
+                        self$framework_definition <- sensemakerframeworkrobject$framework_json
+
                         # now process the dashboard completely - this function has side effects on the dashboard definition,
                         # data and framework definition
                         if (!is.na(dashboard_id)) {
-                          do.call(paste0("process_dashboard_definition_", self$dashboard_version), args = list(df, framework_id, end_point, dashboard_id, token, is_demonstrator, sensemakerframeworkrobject), envir = private)
+                          df <- do.call(paste0("process_dashboard_definition_", self$dashboard_version), args = list(df, framework_id, end_point, dashboard_id, token, is_demonstrator, sensemakerframeworkrobject), envir = private)
                         }
 
                         # assign the sensemaker framework
                         self$sm_framework <- sensemakerframeworkrobject
+                        self$df1 <- df
 
 
 
@@ -226,32 +272,199 @@ Data <- R6::R6Class("Data",
                         # Get the data from the API saving to temp folder, read csv into dataframe, remove temp file and return dataframe
                         df1FileName <- tempfile(pattern = "", fileext = ".csv")
                         r1 <- httr::GET(paste0("http://", end_point, ".sensemaker-suite.com/apis/capture/", framework_id,"/?type=csv", sep=""),
-                                  httr::add_headers(.headers = c('Authorization'= paste('Bearer ', token))),
-                                  httr::write_disk(df1FileName, overwrite=TRUE), httr::verbose())
+                                        httr::add_headers(.headers = c('Authorization'= paste('Bearer ', token))),
+                                        httr::write_disk(df1FileName, overwrite=TRUE), httr::verbose())
                         DF1I <- read.csv(df1FileName, stringsAsFactors = FALSE, encoding = 'UTF-8', na.strings = "", as.is = TRUE, check.names = FALSE, nrows = ifelse(isDemonstratorAccount, 20, -5))
-                         unlink(df1FileName)
+                        unlink(df1FileName)
+
+                        if (nrow(DF1I) > 0) {
+                          # all meta-columns should be character
+                          if ("definition_version" %in% colnames(DF1I)) {
+                            DF1I[["definition_version"]] <- as.character(DF1I[["definition_version"]])
+                          }
+                          meta_cols <-  colnames(DF1I)[stringr::str_starts(colnames(DF1I), pattern = "meta_")]
+                          for (col in meta_cols) {
+                            DF1I[[col]] <- as.character( DF1I[[col]])
+                          }
+                        }
+
+
                         return(DF1I)
                       },
 
-                      # Process the dashboad definition. This has side effects on the data and framework definition object
+                      # Process the dashboad definition. This has side effects in the framework definition object and returns data
                       #  1. Set include FALSE for any signifier not defined to the dashboard
                       #  2. Add any linked framework signifier definitions if this is a linked dashboard, if they are included in the secondary definitions
                       #  3. Add linked framework data to the data frame mapping ids where required
                       #. 4. Filter the data if any filters defined
                       process_dashboard_definition_v1 = function(df, framework_id, end_point, dashboard_id, token, is_demonstrator, sensemakerframeworkrobject) {
 
-                      dashboard_definition <- self$dashboard_definition_v1
+                        dashboard_definition <- self$dashboard_definition_v1
 
-                      # Set include FALSE for any signifier not defined to the dashboard.
-                      framework_signifier_ids <- sensemakerframeworkrobject$get_all_signifier_ids(keep_only_include = TRUE)
-                      dashboard_signifiers <- dashboard_definition$layout$attribute_id[which(!is.na(dashboard_definition$layout$attribute_id) & dashboard_definition$layout$attribute_id != "00000000-0000-0000-0000-000000000000")]
-                      framework_signifiers_missing <- framework_signifier_ids[which(!(framework_signifier_ids %in% dashboard_signifiers))]
-                      purrr::walk(framework_signifiers_missing, ~ {sensemakerframeworkrobject$change_signifier_include(.x, value = FALSE)}, sensemakerframeworkrobject)
+                        # Set include FALSE for any signifier not defined to the dashboard.
+                        framework_signifier_ids <- sensemakerframeworkrobject$get_all_signifier_ids(keep_only_include = TRUE)
+                        dashboard_signifiers <- dashboard_definition$layout$attribute_id[which(!is.na(dashboard_definition$layout$attribute_id) & dashboard_definition$layout$attribute_id != "00000000-0000-0000-0000-000000000000")]
+                        framework_signifiers_missing <- framework_signifier_ids[which(!(framework_signifier_ids %in% dashboard_signifiers))]
+                        purrr::walk(framework_signifiers_missing, ~ {sensemakerframeworkrobject$change_signifier_include(.x, value = FALSE)}, sensemakerframeworkrobject)
+
+                        # if this is a combined dashboard, then get each mapping framework and process
+                        if (self$get_is_combined()) {
+                          df <- private$combine_data(df, framework_id, end_point, dashboard_id, token, is_demonstrator, sensemakerframeworkrobject)
+                        }
+
+                        if(self$get_has_filters()) {
+                          df <- private$filter_data(df, framework_id, end_point, dashboard_id, token, is_demonstrator, sensemakerframeworkrobject)
+                        }
+
+                        return(df)
+
+                      },
+
+                      filter_data = function(df, framework_id, end_point, dashboard_id, token, is_demonstrator, sensemakerframeworkrobject) {
+
+                        # Get the framework signifier ids that are set to show filters TRUE
+                        # signifier_ids <- unlist(unname(purrr::keep(unlist(unname(purrr::imap(self$dashboard_definition_v1$filters$attribute_id, ~ private$get_show_filters(.x, .y, self$dashboard_definition_v1$filters)))), ~ {!is.na(.x)})))
+
+                        # Filter out those that have showFilter
+                        filter_defs <- self$dashboard_definition_v1$filters %>% dplyr::filter(showFilter == TRUE)
+                        query_string <- NULL
+                        for (sig_id_idx in seq_along(filter_defs[, "attribute_id"]) ) {
+                          attribute_id <- filter_defs[sig_id_idx, "attribute_id"]
+                          if (sensemakerframeworkrobject$get_signifier_type(attribute_id) == "list") {
+                            qry <- paste0(paste0("`", attribute_id, "`"), " == ", paste0("\"", filter_defs[sig_id_idx, "value"][[1]][["id"]], "\""))
+                            query_string <-  ifelse(is.null(query_string), qry, paste(query_string, " & ", qry, collapse = ""))
+                          }
+
+                          if (sensemakerframeworkrobject$get_signifier_type(attribute_id) == "triad") {
+                           # qry <- paste0(attribute_id, " == ", filter_defs[sig_id_idx, "value"][[1]][["id"]])
+                            maxX <- filter_defs[sig_id_idx, "value"][[1]][["maxX"]]
+                            maxY <- filter_defs[sig_id_idx, "value"][[1]][["maxY"]]
+                            minX <- filter_defs[sig_id_idx, "value"][[1]][["minX"]]
+                            minY <- filter_defs[sig_id_idx, "value"][[1]][["minY"]]
+                            qry <- paste0(paste0("`", sensemakerframeworkrobject$get_triad_column_name(attribute_id, "X", original = TRUE), "`"), " >= ",  minX, " & ",
+                                                paste0("`", sensemakerframeworkrobject$get_triad_column_name(attribute_id, "Y", original = TRUE), "`"), " >= ", minY, " & ",
+                                                paste0("`", sensemakerframeworkrobject$get_triad_column_name(attribute_id, "X", original = TRUE), "`"), " <= ", maxX, " & ",
+                                                paste0("`", sensemakerframeworkrobject$get_triad_column_name(attribute_id, "Y", original = TRUE), "`"), " <= ", maxY)
+                            query_string <-  ifelse(is.null(query_string), qry, paste(query_string, " & ", qry, collapse = ""))
+                          }
+
+                          if (sensemakerframeworkrobject$get_signifier_type(attribute_id) == "dyad") {
+                            maxX <- filter_defs[sig_id_idx, "value"][[1]][["maxX"]]
+                            minX <- filter_defs[sig_id_idx, "value"][[1]][["minX"]]
+                            qry <- paste0(paste0("`", sensemakerframeworkrobject$get_dyad_column_name(attribute_id, "X", original = TRUE), "`"), " >= ",  minX, " & ",
+                                          paste0("`", sensemakerframeworkrobject$get_dyad_column_name(attribute_id, "X", original = TRUE), "`"), " <= ",  maxX)
+                            query_string <-  ifelse(is.null(query_string), qry, paste(query_string, " & ", qry, collapse = ""))
+                          }
+
+                          if (sensemakerframeworkrobject$get_signifier_type(attribute_id) == "stones") {
+                            maxX <- filter_defs[sig_id_idx, "value"][[1]][["maxX"]]
+                            maxY <- filter_defs[sig_id_idx, "value"][[1]][["maxY"]]
+                            minX <- filter_defs[sig_id_idx, "value"][[1]][["minX"]]
+                            minY <- filter_defs[sig_id_idx, "value"][[1]][["minY"]]
+                            qry <- NULL
+                            for (stone_item_id in sensemakerframeworkrobject$get_stones_items_ids(attribute_id)) {
+                              col_ids <- sensemakerframeworkrobject$get_stones_stone_compositional_column_names(attribute_id, stone_item_id, original = TRUE)
+                              qry_entry <- paste0( "`", col_ids[[1]], "`", " >= ", minX, " & ", "`",  col_ids[[1]], "`", " <= ", maxX, " & ",
+                                                 "`", col_ids[[2]], "`", " >= ", minY, " & ", "`",  col_ids[[2]], "`", " <= ", maxY, ")")
+                              qry <- ifelse(is.null(qry), paste0("((", qry_entry), paste0("(", qry, " | ", qry_entry))
+                            }
+                            qry <- paste0(qry, ")")
+                            query_string <-  ifelse(is.null(query_string), qry, paste(query_string," & ", qry, collapse = ""))
+                          }
+                        }
+
+                        # do the filtering
+                        df <- df %>% dplyr::filter(eval(parse(text = query_string)))
+                        return(df)
+
+                      },
+
+                      # return TRUE if the filter definition show filters value is TRUE otherwise FALSE (note - not currently used - maybe make public)
+                      get_show_filters = function(x, y, z) {
+                        return(ifelse(z[y, "showFilter"], z[y, "attribute_id"], NA))
+                      },
+
+                      combine_data = function(df, framework_id, end_point, dashboard_id, token, is_demonstrator, sensemakerframeworkrobject) {
+                        fw_mappings <- self$get_dashboard_combined_mappings()
+                        for (fw_id in names(fw_mappings)) {
+                          mcq_data <- NULL
+                          # get combined framework data and load definition (maybe not)
+                          fw_data <- private$get_API_framework_data(end_point, fw_id, token, self$is_demonstrator)
+
+                          # fw_json <- private$get_framework_definition(end_point, fw_id, token)
+
+                          if (nrow(fw_data) == 0) {next}
+                          # map the fields - "end" is primary and "start" is the combined. "_" means a list item
+                          for (i in seq_along(fw_mappings[[fw_id]][["end"]])) {
+                            # A non list item
+                            if (all(is.na(stringr::str_locate(fw_mappings[[fw_id]][i, "end"], "_")) == TRUE)) {
+                              if ((any(grepl(fw_mappings[[fw_id]][i, "end"], colnames(df), fixed = TRUE) == TRUE)) & (any(grepl(fw_mappings[[fw_id]][i, "start"], colnames(fw_data), fixed = TRUE) == TRUE))) {
+                                # if this is a multi-select list then process the underscore versions so next
+                                if (sensemakerframeworkrobject$get_signifier_type(fw_mappings[[fw_id]][i, "end"]) == "list" &&  sensemakerframeworkrobject$get_list_max_responses(fw_mappings[[fw_id]][i, "end"]) > 1) {next}
+                                # change the column names
+                                colnames(fw_data) <- stringr::str_replace_all(colnames(fw_data), fw_mappings[[fw_id]][i, "start"], fw_mappings[[fw_id]][i, "end"])
+                              }
+                            } else {
+                              # replace the column header if exists (will be multi-select)
+                              if ( (fw_mappings[[fw_id]][i, "start"] %in% colnames(fw_data)) && (fw_mappings[[fw_id]][i, "end"] %in% colnames(df))) {
+                                colnames(fw_data) <- stringr::str_replace_all(colnames(fw_data), fw_mappings[[fw_id]][i, "start"], fw_mappings[[fw_id]][i, "end"])
+                              } else {
+                                # single select - update the column and the data
+                                # split end and start
+                                end_sig_id <- unlist(stringi::stri_split(fw_mappings[[fw_id]][i, "end"], regex = "_"))[[1]]
+                                end_item_id <- unlist(stringi::stri_split(fw_mappings[[fw_id]][i, "end"], regex = "_"))[[2]]
+                                start_sig_id <- unlist(stringi::stri_split(fw_mappings[[fw_id]][i, "start"], regex = "_"))[[1]]
+                                start_item_id <- unlist(stringi::stri_split(fw_mappings[[fw_id]][i, "start"], regex = "_"))[[2]]
+                                if (is.null(mcq_data)) {
+                                  mcq_data <- data.frame(end_sig_id = end_sig_id, end_item_id = end_item_id, start_sig_id = start_sig_id, start_item_id = start_item_id)
+                                } else {
+                                  temp_data <- data.frame(end_sig_id = end_sig_id, end_item_id = end_item_id, start_sig_id = start_sig_id, start_item_id = start_item_id)
+                                  mcq_data <- dplyr::bind_rows(mcq_data, temp_data)
+                                }
+                              }
+                            }
+                          }
+
+
+                          mcq_item_list <- vector("list", length = length(unique(mcq_data[["start_sig_id"]]))  )
+                          names(mcq_item_list) <- unique(mcq_data[["start_sig_id"]])
+                          mcq_start_list <- unique(mcq_data[["start_sig_id"]]) #names(mcq_item_list)
+                          mcq_end_list <- unique(mcq_data[["end_sig_id"]])
+                          mcq_list <- data.frame(start = mcq_start_list, end = mcq_end_list)
+
+                          for (k in seq_along(mcq_list[["end"]])) {
+
+                            entries <- mcq_data %>% dplyr::filter(end_sig_id == mcq_list[k, "end"])
+
+
+
+                            sig_id  <- entries[1, "end_sig_id"]
+
+                            sig_col <- fw_data[[sig_id]]
+
+
+
+                            for (data_idx in seq_along(sig_col)) {
+
+
+                              sig_col[[data_idx]] <- entries %>% dplyr::filter(start_item_id == sig_col[[data_idx]]) %>% dplyr::select(end_item_id)
+
+
+                            }
+
+                            fw_data[[sig_id]] <- as.character(sig_col)
 
 
 
 
 
+                          }
+
+                          df <- dplyr::bind_rows(df, fw_data)
+
+                        }
+
+                        return(df)
 
                       },
 
@@ -266,6 +479,16 @@ Data <- R6::R6Class("Data",
 
                       },
 
+                      get_framework_definition = function(end_point, framework_id, token) {
+
+                        return(jsonlite::fromJSON(httr::content(httr::GET(
+                          paste0("https://", end_point, ".sensemaker-suite.com/apis/projectdefinition/",  framework_id),
+                          httr::add_headers(.headers = c('Authorization' = paste("Bearer", token, sep = " ")
+                                                         , 'Content-Type' = 'application/json'))
+                        ), as = 'text', encoding = 'utf-8'), simplifyVector = TRUE, simplifyDataFrame = TRUE ,flatten = FALSE))
+
+
+                      },
                       get_v1_DashboardDefinition = function(end_point, dashboard_id, token) {
                         # we are in the get dashboard definition
 
@@ -275,7 +498,7 @@ Data <- R6::R6Class("Data",
                           return(jsonlite::fromJSON(httr::content(httr::GET(
                             paste0("https://", end_point, ".sensemaker-suite.com/apis/dashboards/",  dashboard_id),
                             httr::add_headers(.headers = c('Authorization' = paste("Bearer", token, sep = " ")
-                                                     , 'Content-Type' = 'application/json'))
+                                                           , 'Content-Type' = 'application/json'))
                           ), as = 'text', encoding = 'utf-8'), simplifyVector = TRUE, simplifyDataFrame = TRUE ,flatten = FALSE))
                         }
                         )
@@ -296,36 +519,36 @@ Data <- R6::R6Class("Data",
                         # we are in the get dashboard definition
 
 
-                          # get the json from the returned project definition
+                        # get the json from the returned project definition
 
-                          v2_definition <- jsonlite::fromJSON(httr::content(httr::GET(
-                            paste0("https://api-gateway.sensemaker-suite.com/v2/dashboards/", dashboard_id),
-                            httr::add_headers(.headers = c('Authorization' = paste("Bearer", token, sep = " ")
-                                                           , 'Content-Type' = 'application/json')),  httr::verbose()
-                          ), as = 'text', encoding = 'utf-8'), simplifyVector = TRUE, simplifyDataFrame = TRUE ,flatten = FALSE)
+                        v2_definition <- jsonlite::fromJSON(httr::content(httr::GET(
+                          paste0("https://api-gateway.sensemaker-suite.com/v2/dashboards/", dashboard_id),
+                          httr::add_headers(.headers = c('Authorization' = paste("Bearer", token, sep = " ")
+                                                         , 'Content-Type' = 'application/json')),  httr::verbose()
+                        ), as = 'text', encoding = 'utf-8'), simplifyVector = TRUE, simplifyDataFrame = TRUE ,flatten = FALSE)
 
-                          v2_layout <- jsonlite::fromJSON(httr::content(httr::GET(
-                            paste0("https://api-gateway.sensemaker-suite.com/v2/dashboards/", dashboard_id, "/layouts"),
-                            httr::add_headers(.headers = c('Authorization' = paste("Bearer", token, sep = " ")
-                                                           , 'Content-Type' = 'application/json')),  httr::verbose()
-                          ), as = 'text', encoding = 'utf-8'), simplifyVector = TRUE, simplifyDataFrame = TRUE ,flatten = FALSE)
+                        v2_layout <- jsonlite::fromJSON(httr::content(httr::GET(
+                          paste0("https://api-gateway.sensemaker-suite.com/v2/dashboards/", dashboard_id, "/layouts"),
+                          httr::add_headers(.headers = c('Authorization' = paste("Bearer", token, sep = " ")
+                                                         , 'Content-Type' = 'application/json')),  httr::verbose()
+                        ), as = 'text', encoding = 'utf-8'), simplifyVector = TRUE, simplifyDataFrame = TRUE ,flatten = FALSE)
 
-                          # get the json from the returned project definition
+                        # get the json from the returned project definition
 
-                          v2_filters <- jsonlite::fromJSON(httr::content(httr::GET(
-                            paste0("https://api-gateway.sensemaker-suite.com/v2/dashboards/", dashboard_id, "/filters"),
-                            httr::add_headers(.headers = c('Authorization' = paste("Bearer", token, sep = " ")
-                                                           , 'Content-Type' = 'application/json')),  httr::verbose()
-                          ), as = 'text', encoding = 'utf-8'), simplifyVector = TRUE, simplifyDataFrame = TRUE ,flatten = FALSE)
+                        v2_filters <- jsonlite::fromJSON(httr::content(httr::GET(
+                          paste0("https://api-gateway.sensemaker-suite.com/v2/dashboards/", dashboard_id, "/filters"),
+                          httr::add_headers(.headers = c('Authorization' = paste("Bearer", token, sep = " ")
+                                                         , 'Content-Type' = 'application/json')),  httr::verbose()
+                        ), as = 'text', encoding = 'utf-8'), simplifyVector = TRUE, simplifyDataFrame = TRUE ,flatten = FALSE)
 
-                          ret_list <- list(v2_definition = v2_definition, v2_layout = v2_layout, v2_filters = v2_filters)
+                        ret_list <- list(v2_definition = v2_definition, v2_layout = v2_layout, v2_filters = v2_filters)
 
                         return(ret_list)
                       },
 
 
 
-                      is_demonstrator = function(trToken) {
+                      get_is_demonstrator = function(trToken) {
 
                         out <- try({
                           #
@@ -333,7 +556,7 @@ Data <- R6::R6Class("Data",
                           sessionDetails <- jsonlite::fromJSON(httr::content(httr::GET(
                             paste0("https://api.singularity.icatalyst.com/api/session"),
                             httr::add_headers(.headers = c('Authorization' = paste("Bearer", trToken, sep = " ")
-                                                     , 'Content-Type' = 'application/json'))
+                                                           , 'Content-Type' = 'application/json'))
                           ), as = 'text', encoding = 'utf-8'), simplifyVector = TRUE, simplifyDataFrame = TRUE ,flatten = FALSE)
 
                           # if there is only one true accessrole line here and the  accessrole:true and code for that is "f48150ea-ba3d-4108-9575-94408ff4cc99" then demonstrator true
