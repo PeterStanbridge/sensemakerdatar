@@ -103,15 +103,27 @@ Data <- R6::R6Class("Data",
 
                       get_is_combined = function() {
                         if (!self$get_is_dashboard()) {return(FALSE)}
-                        if (length(self$get_dashboard_definition()$config$frameworks_mapping) > 0) {
+                        if (self$get_dashboard_version() == "v1") {v_length = length(self$get_dashboard_definition()$config$frameworks_mapping)}
+                        if (self$get_dashboard_version() == "v2") {v_length = length(self$get_dashboard_definition()$settings$idMap)}
+                        if (v_length > 0) {
                           return(TRUE)
                         } else {
                           return(FALSE)
                         }
                       },
                       get_has_filters = function() {
+                        if (self$get_dashboard_version() == "v1") {
+                          ret_val <- any(self$dashboard_definition_v1$filters$showFilter == TRUE)
+                          if (!ret_val) {
+                            ret_val <- nrow(self$dashboard_definition_v1$filters  %>% dplyr::filter(id == "date_range_filter")) > 0
+                          }
+                        } else {
+                          if (self$get_dashboard_version() == "v2") {
+                            ret_val <- ifelse(is.null(self$dashboard_filters_v2[["value"]][["query"]]), FALSE, TRUE)
+                          }
+                        }
 
-                        return(any(self$dashboard_definition_v1$filters$showFilter == TRUE))
+                        return(ret_val)
 
                       },
 
@@ -121,7 +133,11 @@ Data <- R6::R6Class("Data",
                       },
 
                       get_dashboard_combined_mappings = function() {
-                        return(self$get_dashboard_definition()$config$frameworks_mapping)
+                        if (self$get_dashboard_version() == "v1") {
+                          return(self$get_dashboard_definition()$config$frameworks_mapping)
+                        } else {
+                          return(self$get_dashboard_definition()$settings$idMap)
+                        }
                       }
 
 
@@ -135,7 +151,7 @@ Data <- R6::R6Class("Data",
                         # if dashboard_id or framework_id then must have token.
                         # we don't worry about testing if token when csvfile or dataframe passed - just not used.
                         end_point <- "openapi"
-                        token <- "eyJhbGciOiJFUzUxMiIsInR5cCI6IkpXVCIsImtpZCI6IjIzYjM4ZjE4OGMzY2IzOWYwOGZkOTdmZTdiNmJlZDAzYjRmNGM5M2MifQ.eyJhdWQiOiJodHRwczovL3BsYXRmb3JtLnNlbnNlbWFrZXItc3VpdGUuY29tIiwiZXhwIjoxNzAyNDU2OTQ4LCJpYXQiOjE3MDI0NTMzNDgsImlzcyI6Imh0dHBzOi8vYXBpLnNpbmd1bGFyaXR5LmljYXRhbHlzdC5jb20vdjEvaXNzdWVyLzg5NjlhM2I4LWU5YmEtNGQ2ZC1iNjA4LTc0YzVjOTI5NmUxNCIsInN1YiI6IjI1YTAzM2NlYWFkOWU4NzA0MTFkNDdkOGNlOTU3ZWI2ZGE2NTc0MWM2Y2YwMzkyNzcwYmYzMGRjM2FiODRkZDciLCJub25jZSI6MC41OTg3Mzg2MTA5NTMyMDY5LCJzY29wZSI6ImF1dGggcHJvZmlsZSIsImNsaWVudF9pZCI6Ijg5NjlhM2I4LWU5YmEtNGQ2ZC1iNjA4LTc0YzVjOTI5NmUxNCIsImdyYW50X3R5cGUiOiJhdXRob3JpemF0aW9uX2NvZGUiLCJyZWRpcmVjdF91cmkiOiJodHRwczovL3BsYXRmb3JtLnNlbnNlbWFrZXItc3VpdGUuY29tL2NhcHR1cmVzL2IxYWQ3NmNhLWQ2MGEtNGM5ZC05YjYzLWRlM2Q3ODkzNzg0Yi9kYXNoYm9hcmQvZWJhNGI0ZjQtZTI1OC00ZDUzLThmODMtYjhmYTYwYjU3ZDEyIiwicmVmcmVzaF90b2tlbiI6ImZlNjQ5YzAwLThlZjYtNDdmOS04YTg5LWEzNTcxYjE4ZTY1NiJ9.AUudUBPxffxhNDr0C0s3A6USih-VZUGz96S9E2KU30_aG3OSUv8Wqmi-bMwBhIRLf4AcXWwgF9neVYdosMiN03p8ADjhO9JtJUZPKFuTXqY1k47bK2Prl3uMlWuvTwk_9-EVIkFu3Ckl_2KOw44O6PXGvmwgAULMoe-NLGXh_Mw3kyKl"
+                        token <- "eyJhbGciOiJFUzUxMiIsInR5cCI6IkpXVCIsImtpZCI6IjIzYjM4ZjE4OGMzY2IzOWYwOGZkOTdmZTdiNmJlZDAzYjRmNGM5M2MifQ.eyJhdWQiOiJodHRwczovL3BsYXRmb3JtLnNlbnNlbWFrZXItc3VpdGUuY29tIiwiZXhwIjoxNzAyNTQzODYwLCJpYXQiOjE3MDI1NDAyNjAsImlzcyI6Imh0dHBzOi8vYXBpLnNpbmd1bGFyaXR5LmljYXRhbHlzdC5jb20vdjEvaXNzdWVyLzg5NjlhM2I4LWU5YmEtNGQ2ZC1iNjA4LTc0YzVjOTI5NmUxNCIsInN1YiI6IjI1YTAzM2NlYWFkOWU4NzA0MTFkNDdkOGNlOTU3ZWI2ZGE2NTc0MWM2Y2YwMzkyNzcwYmYzMGRjM2FiODRkZDciLCJub25jZSI6MC4zMzI4OTAwMjY0MTk0NjUzLCJzY29wZSI6ImF1dGggcHJvZmlsZSIsImNsaWVudF9pZCI6Ijg5NjlhM2I4LWU5YmEtNGQ2ZC1iNjA4LTc0YzVjOTI5NmUxNCIsImdyYW50X3R5cGUiOiJhdXRob3JpemF0aW9uX2NvZGUiLCJyZWRpcmVjdF91cmkiOiJodHRwczovL3BsYXRmb3JtLnNlbnNlbWFrZXItc3VpdGUuY29tL3BsYXRmb3JtL3Rvb2xzL2NhcHR1cmVzL3YyLzdiOWM1NDM0LWNhZTMtNGQzYy04MGVkLWIwYjI4M2JlZTI4NS9kYXNoYm9hcmQvOTMzYjU1NTItM2M2My00MmJkLTkxYTMtNDk4YjBmY2EzYWMxIiwicmVmcmVzaF90b2tlbiI6IjJiYWE3ZDA5LTRjMDctNGE3Zi05M2M5LTBhM2Y3ZmUzNjkyZiJ9.Af6mNMg4xuTaIMsgyfUPuQ-f06MSVgfs98S8_Xy7dkxG5hByVEMYg20dyHdKepP68WAyB60GuObg6YwiTogf9DR2AVHHWIRsX79DWMgaInq0NXuMpWHxANyhX79lx0v9Xxqv88-rOj7OLdyrayL0zRo8WQt_wk8E0jOmGNablAjFNvvE"
                         assertive::assert_any_are_not_na(c(csvfilename, csvfiledf, framework_id, dashboard_id, token), severity = "stop")
                         assertive::assert_any_are_na(c(csvfilename, csvfiledf), severity = "stop")
                         assertive::assert_any_are_na(c(framework_id, dashboard_id), severity = "stop")
@@ -222,6 +238,9 @@ Data <- R6::R6Class("Data",
                         is_demonstrator <- private$get_is_demonstrator(token)
                         self$is_demonstrator <- is_demonstrator
                         df <- private$get_API_framework_data(end_point, self$framework_id, token, is_demonstrator)
+                        # apply dates as we wll need them for filtering
+                        df <- private$apply_dates(df)
+
 
                         # Now we have df as the data frame required for processing - but does the dataframe match the definition
                         # get the framework_id if not present
@@ -248,8 +267,10 @@ Data <- R6::R6Class("Data",
                           df <- do.call(paste0("process_dashboard_definition_", self$dashboard_version), args = list(df, framework_id, end_point, dashboard_id, token, is_demonstrator, sensemakerframeworkrobject), envir = private)
                         }
 
+
                         # assign the sensemaker framework
                         self$sm_framework <- sensemakerframeworkrobject
+                        # we are only doing this here for now - will move to after the process data bit
                         self$df1 <- df
 
 
@@ -265,6 +286,15 @@ Data <- R6::R6Class("Data",
 
                         # add the date fields
 
+                      },
+
+                      apply_dates = function(df) {
+
+                        df[["started"]] <- as.character(lubridate::as_datetime(df[["server_upload_time"]]/1000, tz = "GMT"))
+                        df[["ServerEntryDate"]] <-  lubridate::as_date(df[["started"]] )
+                        df[["EntryYrMth"]] <- as.integer(strftime(df[["ServerEntryDate"]], format = "%Y%m"))
+                        df[["EntryYrMthDay"]] <- as.integer(strftime(df[["ServerEntryDate"]], format = "%Y%m%d"))
+                        return(df)
                       },
 
                       get_API_framework_data = function(end_point, framework_id, token, isDemonstratorAccount = FALSE) {
@@ -313,14 +343,14 @@ Data <- R6::R6Class("Data",
                         }
 
                         if(self$get_has_filters()) {
-                          df <- private$filter_data(df, framework_id, end_point, dashboard_id, token, is_demonstrator, sensemakerframeworkrobject)
+                          df <- private$filter_data_v1(df, framework_id, end_point, dashboard_id, token, is_demonstrator, sensemakerframeworkrobject)
                         }
 
                         return(df)
 
                       },
 
-                      filter_data = function(df, framework_id, end_point, dashboard_id, token, is_demonstrator, sensemakerframeworkrobject) {
+                      filter_data_v1 = function(df, framework_id, end_point, dashboard_id, token, is_demonstrator, sensemakerframeworkrobject) {
 
                         # Get the framework signifier ids that are set to show filters TRUE
                         # signifier_ids <- unlist(unname(purrr::keep(unlist(unname(purrr::imap(self$dashboard_definition_v1$filters$attribute_id, ~ private$get_show_filters(.x, .y, self$dashboard_definition_v1$filters)))), ~ {!is.na(.x)})))
@@ -328,60 +358,65 @@ Data <- R6::R6Class("Data",
                         # Filter out those that have showFilter
                         filter_defs <- self$dashboard_definition_v1$filters %>% dplyr::filter(showFilter == TRUE)
                         query_string <- NULL
-                        for (sig_id_idx in seq_along(filter_defs[, "attribute_id"]) ) {
-                          attribute_id <- filter_defs[sig_id_idx, "attribute_id"]
-                          if (sensemakerframeworkrobject$get_signifier_type(attribute_id) == "list") {
-                            qry <- paste0(paste0("`", attribute_id, "`"), " == ", paste0("\"", filter_defs[sig_id_idx, "value"][[1]][["id"]], "\""))
-                            query_string <-  ifelse(is.null(query_string), qry, paste(query_string, " & ", qry, collapse = ""))
-                          }
 
-                          if (sensemakerframeworkrobject$get_signifier_type(attribute_id) == "triad") {
-                           # qry <- paste0(attribute_id, " == ", filter_defs[sig_id_idx, "value"][[1]][["id"]])
-                            maxX <- filter_defs[sig_id_idx, "value"][[1]][["maxX"]]
-                            maxY <- filter_defs[sig_id_idx, "value"][[1]][["maxY"]]
-                            minX <- filter_defs[sig_id_idx, "value"][[1]][["minX"]]
-                            minY <- filter_defs[sig_id_idx, "value"][[1]][["minY"]]
-                            qry <- paste0(paste0("`", sensemakerframeworkrobject$get_triad_column_name(attribute_id, "X", original = TRUE), "`"), " >= ",  minX, " & ",
-                                                paste0("`", sensemakerframeworkrobject$get_triad_column_name(attribute_id, "Y", original = TRUE), "`"), " >= ", minY, " & ",
-                                                paste0("`", sensemakerframeworkrobject$get_triad_column_name(attribute_id, "X", original = TRUE), "`"), " <= ", maxX, " & ",
-                                                paste0("`", sensemakerframeworkrobject$get_triad_column_name(attribute_id, "Y", original = TRUE), "`"), " <= ", maxY)
-                            query_string <-  ifelse(is.null(query_string), qry, paste(query_string, " & ", qry, collapse = ""))
-                          }
-
-                          if (sensemakerframeworkrobject$get_signifier_type(attribute_id) == "dyad") {
-                            maxX <- filter_defs[sig_id_idx, "value"][[1]][["maxX"]]
-                            minX <- filter_defs[sig_id_idx, "value"][[1]][["minX"]]
-                            qry <- paste0(paste0("`", sensemakerframeworkrobject$get_dyad_column_name(attribute_id, "X", original = TRUE), "`"), " >= ",  minX, " & ",
-                                          paste0("`", sensemakerframeworkrobject$get_dyad_column_name(attribute_id, "X", original = TRUE), "`"), " <= ",  maxX)
-                            query_string <-  ifelse(is.null(query_string), qry, paste(query_string, " & ", qry, collapse = ""))
-                          }
-
-                          if (sensemakerframeworkrobject$get_signifier_type(attribute_id) == "stones") {
-                            maxX <- filter_defs[sig_id_idx, "value"][[1]][["maxX"]]
-                            maxY <- filter_defs[sig_id_idx, "value"][[1]][["maxY"]]
-                            minX <- filter_defs[sig_id_idx, "value"][[1]][["minX"]]
-                            minY <- filter_defs[sig_id_idx, "value"][[1]][["minY"]]
-                            qry <- NULL
-                            for (stone_item_id in sensemakerframeworkrobject$get_stones_items_ids(attribute_id)) {
-                              col_ids <- sensemakerframeworkrobject$get_stones_stone_compositional_column_names(attribute_id, stone_item_id, original = TRUE)
-                              qry_entry <- paste0( "`", col_ids[[1]], "`", " >= ", minX, " & ", "`",  col_ids[[1]], "`", " <= ", maxX, " & ",
-                                                 "`", col_ids[[2]], "`", " >= ", minY, " & ", "`",  col_ids[[2]], "`", " <= ", maxY, ")")
-                              qry <- ifelse(is.null(qry), paste0("((", qry_entry), paste0("(", qry, " | ", qry_entry))
+                        if (nrow(filter_defs) > 0) {
+                          for (sig_id_idx in seq_along(filter_defs[, "attribute_id"]) ) {
+                            attribute_id <- filter_defs[sig_id_idx, "attribute_id"]
+                            if (sensemakerframeworkrobject$get_signifier_type(attribute_id) == "list") {
+                              qry <- paste0(paste0("`", attribute_id, "`"), " == ", paste0("\"", filter_defs[sig_id_idx, "value"][[1]][["id"]], "\""))
+                              query_string <-  ifelse(is.null(query_string), qry, paste(query_string, " & ", qry, collapse = ""))
                             }
-                            qry <- paste0(qry, ")")
-                            query_string <-  ifelse(is.null(query_string), qry, paste(query_string," & ", qry, collapse = ""))
+
+                            if (sensemakerframeworkrobject$get_signifier_type(attribute_id) == "triad") {
+                              # qry <- paste0(attribute_id, " == ", filter_defs[sig_id_idx, "value"][[1]][["id"]])
+                              maxX <- filter_defs[sig_id_idx, "value"][[1]][["maxX"]]
+                              maxY <- filter_defs[sig_id_idx, "value"][[1]][["maxY"]]
+                              minX <- filter_defs[sig_id_idx, "value"][[1]][["minX"]]
+                              minY <- filter_defs[sig_id_idx, "value"][[1]][["minY"]]
+                              qry <- paste0(paste0("`", sensemakerframeworkrobject$get_triad_column_name(attribute_id, "X", original = TRUE), "`"), " >= ",  minX, " & ",
+                                            paste0("`", sensemakerframeworkrobject$get_triad_column_name(attribute_id, "Y", original = TRUE), "`"), " >= ", minY, " & ",
+                                            paste0("`", sensemakerframeworkrobject$get_triad_column_name(attribute_id, "X", original = TRUE), "`"), " <= ", maxX, " & ",
+                                            paste0("`", sensemakerframeworkrobject$get_triad_column_name(attribute_id, "Y", original = TRUE), "`"), " <= ", maxY)
+                              query_string <-  ifelse(is.null(query_string), qry, paste(query_string, " & ", qry, collapse = ""))
+                            }
+
+                            if (sensemakerframeworkrobject$get_signifier_type(attribute_id) == "dyad") {
+                              maxX <- filter_defs[sig_id_idx, "value"][[1]][["maxX"]]
+                              minX <- filter_defs[sig_id_idx, "value"][[1]][["minX"]]
+                              qry <- paste0(paste0("`", sensemakerframeworkrobject$get_dyad_column_name(attribute_id, "X", original = TRUE), "`"), " >= ",  minX, " & ",
+                                            paste0("`", sensemakerframeworkrobject$get_dyad_column_name(attribute_id, "X", original = TRUE), "`"), " <= ",  maxX)
+                              query_string <-  ifelse(is.null(query_string), qry, paste(query_string, " & ", qry, collapse = ""))
+                            }
+
+                            if (sensemakerframeworkrobject$get_signifier_type(attribute_id) == "stones") {
+                              maxX <- filter_defs[sig_id_idx, "value"][[1]][["maxX"]]
+                              maxY <- filter_defs[sig_id_idx, "value"][[1]][["maxY"]]
+                              minX <- filter_defs[sig_id_idx, "value"][[1]][["minX"]]
+                              minY <- filter_defs[sig_id_idx, "value"][[1]][["minY"]]
+                              qry <- NULL
+                              for (stone_item_id in sensemakerframeworkrobject$get_stones_items_ids(attribute_id)) {
+                                col_ids <- sensemakerframeworkrobject$get_stones_stone_compositional_column_names(attribute_id, stone_item_id, original = TRUE)
+                                qry_entry <- paste0( "`", col_ids[[1]], "`", " >= ", minX, " & ", "`",  col_ids[[1]], "`", " <= ", maxX, " & ",
+                                                     "`", col_ids[[2]], "`", " >= ", minY, " & ", "`",  col_ids[[2]], "`", " <= ", maxY, ")")
+                                qry <- ifelse(is.null(qry), paste0("((", qry_entry), paste0(qry, " | ", "(", qry_entry))
+                              }
+                              qry <- paste0(qry, ")")
+                              query_string <-  ifelse(is.null(query_string), qry, paste(query_string," & ", qry, collapse = ""))
+                            }
                           }
                         }
 
-                        # do the filtering
-                        df <- df %>% dplyr::filter(eval(parse(text = query_string)))
-                        return(df)
-
-                      },
-
-                      # return TRUE if the filter definition show filters value is TRUE otherwise FALSE (note - not currently used - maybe make public)
-                      get_show_filters = function(x, y, z) {
-                        return(ifelse(z[y, "showFilter"], z[y, "attribute_id"], NA))
+                        # now do the date if exists
+                        filter_defs <- self$dashboard_definition_v1$filters %>% dplyr::filter(id == "date_range_filter")
+                        if (nrow(filter_defs) > 0) {
+                          from_dte <- lubridate::as_date(filter_defs[["value"]][[1]][[1]])
+                          to_dte <- lubridate::as_date(filter_defs[["value"]][[1]][[2]])
+                          qry <- paste0("ServerEntryDate >= ", "\"",  from_dte, "\"",  " & ServerEntryDate <= ", "\"", to_dte, "\"")
+                          query_string <- ifelse(is.null(query_string), qry, paste0(query_string, " & ", qry))
+                        }
+                        if (is.null(query_string)) {return(df)}
+                        df_ret <- df %>% dplyr::filter(eval(parse(text = query_string)))
+                        return(df_ret)
                       },
 
                       combine_data = function(df, framework_id, end_point, dashboard_id, token, is_demonstrator, sensemakerframeworkrobject) {
@@ -424,8 +459,6 @@ Data <- R6::R6Class("Data",
                               }
                             }
                           }
-
-
                           mcq_item_list <- vector("list", length = length(unique(mcq_data[["start_sig_id"]]))  )
                           names(mcq_item_list) <- unique(mcq_data[["start_sig_id"]])
                           mcq_start_list <- unique(mcq_data[["start_sig_id"]]) #names(mcq_item_list)
@@ -433,46 +466,109 @@ Data <- R6::R6Class("Data",
                           mcq_list <- data.frame(start = mcq_start_list, end = mcq_end_list)
 
                           for (k in seq_along(mcq_list[["end"]])) {
-
                             entries <- mcq_data %>% dplyr::filter(end_sig_id == mcq_list[k, "end"])
-
-
-
                             sig_id  <- entries[1, "end_sig_id"]
-
                             sig_col <- fw_data[[sig_id]]
-
-
-
                             for (data_idx in seq_along(sig_col)) {
-
-
                               sig_col[[data_idx]] <- entries %>% dplyr::filter(start_item_id == sig_col[[data_idx]]) %>% dplyr::select(end_item_id)
-
-
                             }
-
                             fw_data[[sig_id]] <- as.character(sig_col)
-
-
-
-
-
                           }
-
                           df <- dplyr::bind_rows(df, fw_data)
-
                         }
-
                         return(df)
-
                       },
 
 
-                      process_dashboard_definition_v2 = function(df, framework_id, end_point, dashboard_id, token, is_demonstrator) {
+                      process_dashboard_definition_v2 = function(df, framework_id, end_point, dashboard_id, token, is_demonstrator, sensemakerframeworkrobject) {
+                        dashboard_definition <- self$dashboard_layout_v2
 
+                        # Set include FALSE for any signifier not defined to the dashboard.
+                        framework_signifier_ids <- sensemakerframeworkrobject$get_all_signifier_ids(keep_only_include = TRUE)
+                        dashboard_signifiers <- dashboard_definition$signifierID[which(!is.na(dashboard_definition$signifierID) & dashboard_definition$signifierID != "00000000-0000-0000-0000-000000000000")]
+                        framework_signifiers_missing <- framework_signifier_ids[which(!(framework_signifier_ids %in% dashboard_signifiers))]
+                        purrr::walk(framework_signifiers_missing, ~ {sensemakerframeworkrobject$change_signifier_include(.x, value = FALSE)}, sensemakerframeworkrobject)
 
-                        print("processing v2 of the dashboard")
+                        # if this is a combined dashboard, then get each mapping framework and process
+                        if (self$get_is_combined()) {
+                          df <- private$combine_data(df, framework_id, end_point, dashboard_id, token, is_demonstrator, sensemakerframeworkrobject)
+                        }
+
+                        # If filters are defined, filter the data
+                        if (self$get_has_filters()) {
+                          df <-  private$filter_data_v2(df, framework_id, end_point, dashboard_id, token, is_demonstrator, sensemakerframeworkrobject)
+                        }
+
+                        return(df)
+                      },
+
+                      filter_data_v2 = function(df, framework_id, end_point, dashboard_id, token, is_demonstrator, sensemakerframeworkrobject) {
+                        # Merely to help readability and help with coding.
+                        filter_definitions <- self$dashboard_filters_v2
+                        query_string <- NULL
+                        for (i in seq_along(filter_definitions[["id"]])) {
+                          # we are working with a real filter - this is in the JSON where there are other things going on in the filter JSON
+                          if (!is.null(filter_definitions[i,]$value$query$bool$must[[1]])) {
+
+                            if (filter_definitions[i,][["title"]] == "Timeline") {
+                              gte <- filter_definitions[i, ]$value$query$bool$must[[1]][["range"]][["server_upload_time"]][["gte"]]
+                              lte <- filter_definitions[i, ]$value$query$bool$must[[1]][["range"]][["server_upload_time"]][["lte"]]
+                              qry <- paste0("server_upload_time >= ", gte, " & server_upload_time <= ", lte)
+                              query_string <- ifelse(is.null(query_string), qry, paste0(" & ", qry))
+
+                            } else {
+                              attribute_id <- filter_definitions[i, ][["signifierID"]]
+                              sig_type <- sensemakerframeworkrobject$get_signifier_type(attribute_id)
+                              if (sig_type == "triad") {
+                                x_gte <- filter_definitions[i, ][["value"]][["query"]][["bool"]][["must"]][[1]][["range"]][[1]]$gte[[1]]
+                                x_lte <- filter_definitions[i, ][["value"]][["query"]][["bool"]][["must"]][[1]][["range"]][[1]]$lte[[1]]
+                                y_gte <- filter_definitions[i, ][["value"]][["query"]][["bool"]][["must"]][[1]][["range"]][[2]]$gte[[2]]
+                                y_lte <- filter_definitions[i, ][["value"]][["query"]][["bool"]][["must"]][[1]][["range"]][[2]]$lte[[2]]
+                                qry <- paste0(paste0("`", sensemakerframeworkrobject$get_triad_column_name(attribute_id, "X", original = TRUE), "`"), " >= ",  x_gte, " & ",
+                                              paste0("`", sensemakerframeworkrobject$get_triad_column_name(attribute_id, "Y", original = TRUE), "`"), " >= ", y_gte, " & ",
+                                              paste0("`", sensemakerframeworkrobject$get_triad_column_name(attribute_id, "X", original = TRUE), "`"), " <= ", x_lte, " & ",
+                                              paste0("`", sensemakerframeworkrobject$get_triad_column_name(attribute_id, "Y", original = TRUE), "`"), " <= ", y_lte)
+                                query_string <-  ifelse(is.null(query_string), qry, paste(query_string, " & ", qry, collapse = ""))
+                              }
+
+                              if (sig_type == "dyad") {
+                                x_gte <- filter_definitions[i, ][["value"]][["query"]][["bool"]][["must"]][[1]][["range"]][[1]]$gte[[1]]
+                                x_lte <- filter_definitions[i, ][["value"]][["query"]][["bool"]][["must"]][[1]][["range"]][[1]]$lte[[1]]
+                                qry <- paste0(paste0("`", sensemakerframeworkrobject$get_triad_column_name(attribute_id, "X", original = TRUE), "`"), " >= ",  x_gte, " & ",
+                                              paste0("`", sensemakerframeworkrobject$get_triad_column_name(attribute_id, "X", original = TRUE), "`"), " <= ", x_lte)
+                                query_string <-  ifelse(is.null(query_string), qry, paste(query_string, " & ", qry, collapse = ""))
+                              }
+
+                              if (sig_type == "list") {
+                                term <- filter_definitions[i,]$value$query$bool$must[[1]][["term"]][[1]]
+                                qry <- paste0("`", attribute_id, "`",  " == ", "\"", term, "\"")
+                                query_string <- ifelse(is.null(query_string), qry, paste(query_string, " & ", qry, collapse = ""))
+                              }
+
+                              if (sig_type == "stones") {
+                                stones_stones <- filter_definitions[i, ]$value$query$bool$must[[1]]$bool$should[[1]]$bool$must
+                                x_gte <- filter_definitions[i, ]$value$query$bool$must[[1]]$bool$should[[1]]$bool$must[[1]]$range[[1]]$gte[[1]]
+                                x_lte <- filter_definitions[i, ]$value$query$bool$must[[1]]$bool$should[[1]]$bool$must[[1]]$range[[1]]$lte[[1]]
+                                y_gte <- filter_definitions[i, ]$value$query$bool$must[[1]]$bool$should[[1]]$bool$must[[1]]$range[[2]]$gte[[2]]
+                                y_lte <- filter_definitions[i, ]$value$query$bool$must[[1]]$bool$should[[1]]$bool$must[[1]]$range[[2]]$lte[[2]]
+                                qry <- NULL
+                                for (stone_idx in 1:length(stones_stones)) {
+
+                                  stones_stones_id <- stringr::str_split_i(string = colnames(filter_definitions[i, ]$value$query$bool$must[[1]]$bool$should[[1]]$bool$must[[stone_idx]]$range)[[1]], pattern = ".xVal", i = 1)
+                                  col_ids <- sensemakerframeworkrobject$get_stones_stone_compositional_column_names(attribute_id, stones_stones_id, original = TRUE)
+                                  qry_entry <- paste0( "`", col_ids[[1]], "`", " >= ", x_gte, " & ", "`",  col_ids[[1]], "`", " <= ", x_lte, " & ",                                                       "`", col_ids[[2]], "`", " >= ", y_gte, " & ", "`",  col_ids[[2]], "`", " <= ", y_lte, ")")
+                                  qry <- ifelse(is.null(qry), paste0("((", qry_entry), paste0(qry, " | ", "(", qry_entry))
+                                }
+                                qry <- paste0(qry, ")")
+                                query_string <-  ifelse(is.null(query_string), qry, paste(query_string," & ", qry, collapse = ""))
+                              }
+                            }
+                          }
+                        }
+
+                        if(is.null(query_string)) {return(df)}
+                        ret_df <- df %>% dplyr::filter(eval(parse(text = query_string)))
+                        return(ret_df)
 
 
 
