@@ -151,7 +151,7 @@ Data <- R6::R6Class("Data",
                         # if dashboard_id or framework_id then must have token.
                         # we don't worry about testing if token when csvfile or dataframe passed - just not used.
                         end_point <- "openapi"
-                        token <- "eyJhbGciOiJFUzUxMiIsInR5cCI6IkpXVCIsImtpZCI6IjIzYjM4ZjE4OGMzY2IzOWYwOGZkOTdmZTdiNmJlZDAzYjRmNGM5M2MifQ.eyJhdWQiOiJodHRwczovL3BsYXRmb3JtLnNlbnNlbWFrZXItc3VpdGUuY29tIiwiZXhwIjoxNzAyNTQzODYwLCJpYXQiOjE3MDI1NDAyNjAsImlzcyI6Imh0dHBzOi8vYXBpLnNpbmd1bGFyaXR5LmljYXRhbHlzdC5jb20vdjEvaXNzdWVyLzg5NjlhM2I4LWU5YmEtNGQ2ZC1iNjA4LTc0YzVjOTI5NmUxNCIsInN1YiI6IjI1YTAzM2NlYWFkOWU4NzA0MTFkNDdkOGNlOTU3ZWI2ZGE2NTc0MWM2Y2YwMzkyNzcwYmYzMGRjM2FiODRkZDciLCJub25jZSI6MC4zMzI4OTAwMjY0MTk0NjUzLCJzY29wZSI6ImF1dGggcHJvZmlsZSIsImNsaWVudF9pZCI6Ijg5NjlhM2I4LWU5YmEtNGQ2ZC1iNjA4LTc0YzVjOTI5NmUxNCIsImdyYW50X3R5cGUiOiJhdXRob3JpemF0aW9uX2NvZGUiLCJyZWRpcmVjdF91cmkiOiJodHRwczovL3BsYXRmb3JtLnNlbnNlbWFrZXItc3VpdGUuY29tL3BsYXRmb3JtL3Rvb2xzL2NhcHR1cmVzL3YyLzdiOWM1NDM0LWNhZTMtNGQzYy04MGVkLWIwYjI4M2JlZTI4NS9kYXNoYm9hcmQvOTMzYjU1NTItM2M2My00MmJkLTkxYTMtNDk4YjBmY2EzYWMxIiwicmVmcmVzaF90b2tlbiI6IjJiYWE3ZDA5LTRjMDctNGE3Zi05M2M5LTBhM2Y3ZmUzNjkyZiJ9.Af6mNMg4xuTaIMsgyfUPuQ-f06MSVgfs98S8_Xy7dkxG5hByVEMYg20dyHdKepP68WAyB60GuObg6YwiTogf9DR2AVHHWIRsX79DWMgaInq0NXuMpWHxANyhX79lx0v9Xxqv88-rOj7OLdyrayL0zRo8WQt_wk8E0jOmGNablAjFNvvE"
+                        token <- "eyJhbGciOiJFUzUxMiIsInR5cCI6IkpXVCIsImtpZCI6IjIzYjM4ZjE4OGMzY2IzOWYwOGZkOTdmZTdiNmJlZDAzYjRmNGM5M2MifQ.eyJhdWQiOiJodHRwczovL3BsYXRmb3JtLnNlbnNlbWFrZXItc3VpdGUuY29tIiwiZXhwIjoxNzAyNjMyMTI3LCJpYXQiOjE3MDI2Mjg1MjcsImlzcyI6Imh0dHBzOi8vYXBpLnNpbmd1bGFyaXR5LmljYXRhbHlzdC5jb20vdjEvaXNzdWVyLzg5NjlhM2I4LWU5YmEtNGQ2ZC1iNjA4LTc0YzVjOTI5NmUxNCIsInN1YiI6IjI1YTAzM2NlYWFkOWU4NzA0MTFkNDdkOGNlOTU3ZWI2ZGE2NTc0MWM2Y2YwMzkyNzcwYmYzMGRjM2FiODRkZDciLCJub25jZSI6MC43MTcxMjQ4Nzc4NTcxMzc0LCJzY29wZSI6ImF1dGggcHJvZmlsZSIsImNsaWVudF9pZCI6Ijg5NjlhM2I4LWU5YmEtNGQ2ZC1iNjA4LTc0YzVjOTI5NmUxNCIsImdyYW50X3R5cGUiOiJhdXRob3JpemF0aW9uX2NvZGUiLCJyZWRpcmVjdF91cmkiOiJodHRwczovL3BsYXRmb3JtLnNlbnNlbWFrZXItc3VpdGUuY29tL3BsYXRmb3JtL3Rvb2xzL2ZyYW1ld29ya3MvYjFhZDc2Y2EtZDYwYS00YzlkLTliNjMtZGUzZDc4OTM3ODRiIiwicmVmcmVzaF90b2tlbiI6IjdjZDVlN2VlLThmMDktNDQ1Yy1iNzg5LWRhNzJkYjhiYjNmYyJ9.ACI3MvgYlNu1kHd9xPcIuZm09UhS9RbFsdynNhTt5RlDczr4OUJoVKMwHW80OrxYaL4upZrSnMqqTA41abR8Z9UnAbRdeq1IfB2GDpbWLyVJYgmFNSaNyzxEGNoA02Qga0RJ2MHwbCDs6aDvlQc3xbCqDsqJmmhmIOngpK8j96yfrEXD"
                         assertive::assert_any_are_not_na(c(csvfilename, csvfiledf, framework_id, dashboard_id, token), severity = "stop")
                         assertive::assert_any_are_na(c(csvfilename, csvfiledf), severity = "stop")
                         assertive::assert_any_are_na(c(framework_id, dashboard_id), severity = "stop")
@@ -270,22 +270,83 @@ Data <- R6::R6Class("Data",
 
                         # assign the sensemaker framework
                         self$sm_framework <- sensemakerframeworkrobject
-                        # we are only doing this here for now - will move to after the process data bit
-                        self$df1 <- df
-
-
 
                         # start processing data
-                        private$process_data(df, sensemakerframeworkrobject)
-
+                        df <- private$process_data(df, sensemakerframeworkrobject)
+                        self$df1 <- df
 
                       },
 
                       process_data = function(df, sensemakerframeworkrobject) {
 
+                        if ("meta_platform_verion" %in% colnames(df)) {
+                          df[["meta_platform_verion"]] <- as.character( df[["meta_platform_verion"]])
+                        }
 
-                        # add the date fields
 
+                        # process dyads
+                        # Add the new percentage X columns for the dyads, keeping the decemal columns in place - side effects on df
+                        if(sensemakerframeworkrobject$get_dyad_count() > 0) {
+                          purrr::walk(sensemakerframeworkrobject$get_dyad_ids(), ~ {df[[sensemakerframeworkrobject$get_dyad_aspercent_x_column_name(.x)]] <<- df[[sensemakerframeworkrobject$get_dyad_column_name(.x, column = "X", original = TRUE)]] * 100}, df)
+                          # rename the dyad x column names - heaps of legacy code - side effect on df column names
+                          purrr::walk(sensemakerframeworkrobject$get_dyad_ids(), ~ {names(df)[which(names(df) == sensemakerframeworkrobject$get_dyad_column_name(.x, column = "X", original = TRUE))] <<- sensemakerframeworkrobject$get_dyad_column_name(.x, column = "X", original = FALSE)}, df)
+                        }
+
+
+                        # process triads
+                        if(sensemakerframeworkrobject$get_triad_count() > 0) {
+                          # the triad Y column has to be multiplied by 0.8660254 as this is in reality not a percentage - side effects on df
+                          purrr::walk(sensemakerframeworkrobject$get_triad_ids(), ~
+                                        {df[[sensemakerframeworkrobject$get_triad_column_name(id = .x, column = "Y", original = TRUE)]] <<-
+                                          df[[sensemakerframeworkrobject$get_triad_column_name(id = .x, column = "Y", original = TRUE)]] * 0.8660254}, df)
+                          # turn triad anchor columns into %ages (multiply by 100) - side effects on df
+                          purrr::walk(sensemakerframeworkrobject$get_triad_ids(), ~
+                                        {purrr::walk(sensemakerframeworkrobject$get_triad_anchor_column_names(.x, delist = TRUE, exclude_na = TRUE),
+                                                     ~ {df[[.x]] <<- df[[.x]] * 100}, df)}, df)
+                          # Adjust and triad anchor data <= 0 - make slightly positive (important for compositional stats) - side effects on df
+                          purrr::walk(sensemakerframeworkrobject$get_triad_ids(), ~
+                                        {purrr::walk(sensemakerframeworkrobject$get_triad_anchor_column_names(.x, delist = TRUE, exclude_na = TRUE),
+                                                     ~ {ifelse(df[[.x]] <= 0, 0.00001 , df[[.x]])}, df)}, df)
+                          # rename the triad x and y columns names - heaps of legacy code - side effect on df column names
+                          purrr::walk(sensemakerframeworkrobject$get_triad_ids(), ~
+                                        {names(df)[which(names(df) == sensemakerframeworkrobject$get_triad_column_name(.x, column = "X", original = TRUE))] <<-
+                                          sensemakerframeworkrobject$get_triad_column_name(.x, column = "X", original = FALSE);
+                                        names(df)[which(names(df) == sensemakerframeworkrobject$get_triad_column_name(.x, column = "Y", original = TRUE))] <<-
+                                          sensemakerframeworkrobject$get_triad_column_name(.x, column = "Y", original = FALSE)}, df)
+                        }
+
+                        # Process stones
+                        if(sensemakerframeworkrobject$get_stones_count() > 0) {
+                          # rename the stone column names - heaps of legacy code - side effect on df column names
+                          purrr::walk(sensemakerframeworkrobject$get_stones_ids(), ~
+                                        {purrr::walk2(sensemakerframeworkrobject$get_stones_compositional_column_names(id = .x, original = TRUE),
+                                                      sensemakerframeworkrobject$get_stones_compositional_column_names(id = .x, original = FALSE),
+                                                      ~ {names(df)[which(names(df) %in% .x)] <<- .y}, df)}, df)
+
+                        }
+
+                        # Processing lists
+                        # holding of list levels until we have added all the other
+                        # Add new columns and list definitions for each multi-select MCQ column to have "selected" or "not selected" - side effects on df
+                        purrr::walk(sensemakerframeworkrobject$get_multiselect_list_ids(), ~
+                                      { purrr::walk(sensemakerframeworkrobject$get_list_column_names(.x), ~
+                                                      {df[[paste0(.x, "_selected")]] <<- private$process_col(.x, df)}, df)}, df)
+                        # add these new columns to the framework definitions - side effect on the sensemakerframeworkrobject object
+
+                        # add the NarrID column (used for filter indexing) and set the "id" column to "FragmentID" (reads better in the code)
+                        df[["NarrID"]] <- 1:nrow(df)
+                        names(df)[[which(names(df) == "id")]] <- "FragmentID"
+                        sensemakerframeworkrobject$change_signifier_title(id = "e533b24f-1ac4-4506-8b10-0b1169cc7282", value = "fuck off if this works - wow")
+
+                        return(df)
+
+
+                      },
+
+                      # set up the selected and not selected columns for a multi-select column
+                      process_col = function(x, df) {
+                        col_vals <- df[[x]]
+                        return(unlist(unname(purrr::map(col_vals, ~ {ifelse(is.na(.x), "Not Selected", "Selected")}))))
                       },
 
                       apply_dates = function(df) {
@@ -498,7 +559,6 @@ Data <- R6::R6Class("Data",
                         if (self$get_has_filters()) {
                           df <-  private$filter_data_v2(df, framework_id, end_point, dashboard_id, token, is_demonstrator, sensemakerframeworkrobject)
                         }
-
                         return(df)
                       },
 
