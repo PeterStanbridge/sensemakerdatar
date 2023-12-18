@@ -139,11 +139,17 @@ Data <- R6::R6Class("Data",
                           return(self$get_dashboard_definition()$settings$idMap)
                         }
                       }
-
-
                     ),
 
                     private = list(
+                     omit_meta_cols = c("meta_platform", "meta_completed", "meta_started",
+                        "meta_application", "meta_platform_verion",  "meta_platform_version", "meta_selectedLanguage", "meta_fbclid", "meta_started_format",
+                        "meta_completed_format", "meta_selected_language", "meta_started_location_speed", "meta_started_location_latitude",
+                        "meta_started_location_longitude", "meta_started_location_accuracy", "meta_started_location_heading",
+                        "meta_started_location_altitude", "meta_completed_location_speed", "meta_completed_location_heading",
+                        "meta_completed_location_accuracy", "meta_completed_location_altitude", "meta_completed_location_latitude",
+                        "meta_completed_location_longitude", "meta_collection_time_Mins", "meta_completed_location_altitudeAccuracy",
+                        "meta_started_location_altitudeAccuracy"),
                       # function handling the initialisation - get the data, process the data and load appropriate fields
                       get_data = function(csvfilename = NA, csvfiledf = NA, framework_id = NA, dashboard_id = NA, token = NA, sensemakerframeworkrobject = NA) {
                         # checking that the parameters are correct.
@@ -151,7 +157,7 @@ Data <- R6::R6Class("Data",
                         # if dashboard_id or framework_id then must have token.
                         # we don't worry about testing if token when csvfile or dataframe passed - just not used.
                         end_point <- "openapi"
-                        token <- "eyJhbGciOiJFUzUxMiIsInR5cCI6IkpXVCIsImtpZCI6IjIzYjM4ZjE4OGMzY2IzOWYwOGZkOTdmZTdiNmJlZDAzYjRmNGM5M2MifQ.eyJhdWQiOiJodHRwczovL3BsYXRmb3JtLnNlbnNlbWFrZXItc3VpdGUuY29tIiwiZXhwIjoxNzAyNjMyMTI3LCJpYXQiOjE3MDI2Mjg1MjcsImlzcyI6Imh0dHBzOi8vYXBpLnNpbmd1bGFyaXR5LmljYXRhbHlzdC5jb20vdjEvaXNzdWVyLzg5NjlhM2I4LWU5YmEtNGQ2ZC1iNjA4LTc0YzVjOTI5NmUxNCIsInN1YiI6IjI1YTAzM2NlYWFkOWU4NzA0MTFkNDdkOGNlOTU3ZWI2ZGE2NTc0MWM2Y2YwMzkyNzcwYmYzMGRjM2FiODRkZDciLCJub25jZSI6MC43MTcxMjQ4Nzc4NTcxMzc0LCJzY29wZSI6ImF1dGggcHJvZmlsZSIsImNsaWVudF9pZCI6Ijg5NjlhM2I4LWU5YmEtNGQ2ZC1iNjA4LTc0YzVjOTI5NmUxNCIsImdyYW50X3R5cGUiOiJhdXRob3JpemF0aW9uX2NvZGUiLCJyZWRpcmVjdF91cmkiOiJodHRwczovL3BsYXRmb3JtLnNlbnNlbWFrZXItc3VpdGUuY29tL3BsYXRmb3JtL3Rvb2xzL2ZyYW1ld29ya3MvYjFhZDc2Y2EtZDYwYS00YzlkLTliNjMtZGUzZDc4OTM3ODRiIiwicmVmcmVzaF90b2tlbiI6IjdjZDVlN2VlLThmMDktNDQ1Yy1iNzg5LWRhNzJkYjhiYjNmYyJ9.ACI3MvgYlNu1kHd9xPcIuZm09UhS9RbFsdynNhTt5RlDczr4OUJoVKMwHW80OrxYaL4upZrSnMqqTA41abR8Z9UnAbRdeq1IfB2GDpbWLyVJYgmFNSaNyzxEGNoA02Qga0RJ2MHwbCDs6aDvlQc3xbCqDsqJmmhmIOngpK8j96yfrEXD"
+                        token <- "eyJhbGciOiJFUzUxMiIsInR5cCI6IkpXVCIsImtpZCI6IjIzYjM4ZjE4OGMzY2IzOWYwOGZkOTdmZTdiNmJlZDAzYjRmNGM5M2MifQ.eyJhdWQiOiJodHRwczovL3BsYXRmb3JtLnNlbnNlbWFrZXItc3VpdGUuY29tIiwiZXhwIjoxNzAyODk3MTM0LCJpYXQiOjE3MDI4OTM1MzQsImlzcyI6Imh0dHBzOi8vYXBpLnNpbmd1bGFyaXR5LmljYXRhbHlzdC5jb20vdjEvaXNzdWVyLzg5NjlhM2I4LWU5YmEtNGQ2ZC1iNjA4LTc0YzVjOTI5NmUxNCIsInN1YiI6IjI1YTAzM2NlYWFkOWU4NzA0MTFkNDdkOGNlOTU3ZWI2ZGE2NTc0MWM2Y2YwMzkyNzcwYmYzMGRjM2FiODRkZDciLCJub25jZSI6MC40MDY2MDM3ODM3OTk3NTM1LCJzY29wZSI6ImF1dGggcHJvZmlsZSIsImNsaWVudF9pZCI6Ijg5NjlhM2I4LWU5YmEtNGQ2ZC1iNjA4LTc0YzVjOTI5NmUxNCIsImdyYW50X3R5cGUiOiJhdXRob3JpemF0aW9uX2NvZGUiLCJyZWRpcmVjdF91cmkiOiJodHRwczovL3BsYXRmb3JtLnNlbnNlbWFrZXItc3VpdGUuY29tL3BsYXRmb3JtL3Rvb2xzL2ZyYW1ld29ya3MvNWViZWQwYTctNWRlYy00Mjk3LWE1OTUtZDdmMzA5NjljODRiIiwicmVmcmVzaF90b2tlbiI6IjZiMjEzMDQzLWIxOTQtNDQzZC05Y2MzLWRlZGI5OWE3ZDViYSJ9.ASRHA4naRq-6IVDw_kS0ygX59tesNnngzzGxZFkRcIG9P007WYz23mKBslUlDEmFmqO70kz6uRuuNHMWr0yr_p05ACjqR75J8u076YTpGWPDR2YqoLkFr-3mEXUspVpknOtci64pXshpCsaGWcehrhTIWErmnkYQI1A83ZrRBlNZoGgA"
                         assertive::assert_any_are_not_na(c(csvfilename, csvfiledf, framework_id, dashboard_id, token), severity = "stop")
                         assertive::assert_any_are_na(c(csvfilename, csvfiledf), severity = "stop")
                         assertive::assert_any_are_na(c(framework_id, dashboard_id), severity = "stop")
@@ -215,6 +221,7 @@ Data <- R6::R6Class("Data",
                           # get the dashboard definition.
                           # try version one of the dashboard
                           dashboard_definition <- private$get_v1_DashboardDefinition(end_point, dashboard_id, token)
+                          jsonlite::write_json(dashboard_definition, path = "zpb4l_dashboard_definition.json")
                           if (!is.null(dashboard_definition$framework_id)) {
                             self$dashboard_definition_v1 <- dashboard_definition
                             self$framework_id <- dashboard_definition$framework_id
@@ -238,9 +245,6 @@ Data <- R6::R6Class("Data",
                         is_demonstrator <- private$get_is_demonstrator(token)
                         self$is_demonstrator <- is_demonstrator
                         df <- private$get_API_framework_data(end_point, self$framework_id, token, is_demonstrator)
-                        # apply dates as we wll need them for filtering
-                        df <- private$apply_dates(df)
-
 
                         # Now we have df as the data frame required for processing - but does the dataframe match the definition
                         # get the framework_id if not present
@@ -258,6 +262,9 @@ Data <- R6::R6Class("Data",
                           print(paste("the framework_id", framework_id, "passed or obtained from the data, not the same as", sensemakerframeworkrobject$get_parent_framework_id(), "in the sensemakerframeworkr package object"))
                           stop()
                         }
+
+                        # apply dates as we wll need them for filtering
+                        df <- private$apply_dates(df)
 
                         self$framework_definition <- sensemakerframeworkrobject$framework_json
 
@@ -332,15 +339,60 @@ Data <- R6::R6Class("Data",
                                       { purrr::walk(sensemakerframeworkrobject$get_list_column_names(.x), ~
                                                       {df[[paste0(.x, "_selected")]] <<- private$process_col(.x, df)}, df)}, df)
                         # add these new columns to the framework definitions - side effect on the sensemakerframeworkrobject object
+                        # NOTE In setting the "include" to false for these lists, we are compromising on the old WB way of dealing with
+                        # multi-select attributes, which is here set at the proper place as the signifier class.
+                        list_items <- data.frame(id = c("selected", "notselected"), title = c("selected", "not selected"), tooltip = c("selected", "not selected"), visible = c(TRUE, TRUE), other_signifier_id = c("", ""))
+                        purrr::walk(sensemakerframeworkrobject$get_multiselect_list_ids(), ~
+                                      {purrr::walk2(sensemakerframeworkrobject$get_list_items_ids(.x), .x, ~
+                                                      {ttitle <- paste0(sensemakerframeworkrobject$get_signifier_title(.y), "_",
+                                                                        sensemakerframeworkrobject$get_list_item_title(.y, .x));
+                                                      sensemakerframeworkrobject$add_list(title = ttitle, tooltip = ttitle, allow_na = FALSE,
+                                                                                          fragment = FALSE, required = FALSE, sticky = FALSE,
+                                                                                          items = list_items,  max_responses = 1, min_responses = 1,
+                                                                                          other_item_id = NULL, other_signifier_id = NULL, sig_class = "multi_select_item",
+                                                                                          theader = NULL, id = paste0(ttitle, "_selected"));
+                                                      sensemakerframeworkrobject$change_signifier_include(id = paste0(ttitle, "_selected"), value = FALSE)})},
+                                    list_items)
+
+                        # add the date and columns as filters to framework definition - side effects on the sensemakerframeworkrobject object
+                       date_cols <- c("EntryYr", "EntryYrMth", "EntryYrMthDay")
+                       purrr::walk(date_cols, ~ {data_vals <- sort(unique(df[[.x]])); list_items <- data.frame(id = data_vals, title = data_vals,
+                                                tooltip = data_vals, visible = rep_len(TRUE, length.out = length(data_vals)),
+                                                other_signifier_id = rep_len("", length(data_vals)));
+                       sensemakerframeworkrobject$add_list(title = .x, tooltip = .x, allow_na = FALSE,
+                                                           fragment = FALSE, required = FALSE, sticky = FALSE,
+                                                           items = list_items,  max_responses = 1, min_responses = 1,
+                                                           other_item_id = NULL, other_signifier_id = NULL, sig_class = "date",
+                                                           theader = NULL, id = .x)}, df)
+
+                        # add the meta columns - those that have more than 1 unique option, but not more than 30. (and we omit crazy duplicates that can come in with numeric values with decimals)
+                       metaColNamesX <- purrr::keep(colnames(df)[grepl("meta", colnames(df))][!(colnames(df)[grepl("meta", colnames(df))] %in%
+                                                                                                       private$omit_meta_cols)],
+                                                         ~ {dplyr::between(length(sort(unique(df[!is.na(df[[.x]]), .x]))),  2, 30) & all(duplicated(sort(unique(df[!is.na(df[[.x]]), .x]))) == FALSE)}, df)
+
+                       # Add to the sensemaker frameworkr object - side effects on the sensemakerframeworkrobject object
+                       purrr::walk(metaColNamesX, ~ {data_vals <- sort(unique(df[!is.na(df[[.x]]), .x])); list_items <- data.frame(id = data_vals, title = data_vals,
+                                                     tooltip = data_vals, visible = rep_len(TRUE, length.out = length(data_vals)),
+                                                      other_signifier_id = rep_len("", length(data_vals)));
+                       sensemakerframeworkrobject$add_list(title = .x, tooltip = .x, allow_na = FALSE,
+                                                           fragment = FALSE, required = FALSE, sticky = FALSE,
+                                                           items = list_items,  max_responses = 1, min_responses = 1,
+                                                           other_item_id = NULL, other_signifier_id = NULL, sig_class = "meta",
+                                                           theader = NULL, id = .x)}, df)
+
+
+
+
+
+
+
+
+
 
                         # add the NarrID column (used for filter indexing) and set the "id" column to "FragmentID" (reads better in the code)
                         df[["NarrID"]] <- 1:nrow(df)
                         names(df)[[which(names(df) == "id")]] <- "FragmentID"
-                        sensemakerframeworkrobject$change_signifier_title(id = "e533b24f-1ac4-4506-8b10-0b1169cc7282", value = "fuck off if this works - wow")
-
                         return(df)
-
-
                       },
 
                       # set up the selected and not selected columns for a multi-select column
@@ -353,6 +405,7 @@ Data <- R6::R6Class("Data",
 
                         df[["started"]] <- as.character(lubridate::as_datetime(df[["server_upload_time"]]/1000, tz = "GMT"))
                         df[["ServerEntryDate"]] <-  lubridate::as_date(df[["started"]] )
+                        df[["EntryYr"]] <- as.integer(strftime(df[["ServerEntryDate"]], format = "%Y"))
                         df[["EntryYrMth"]] <- as.integer(strftime(df[["ServerEntryDate"]], format = "%Y%m"))
                         df[["EntryYrMthDay"]] <- as.integer(strftime(df[["ServerEntryDate"]], format = "%Y%m%d"))
                         return(df)
@@ -467,14 +520,16 @@ Data <- R6::R6Class("Data",
                           }
                         }
 
+
                         # now do the date if exists
                         filter_defs <- self$dashboard_definition_v1$filters %>% dplyr::filter(id == "date_range_filter")
                         if (nrow(filter_defs) > 0) {
                           from_dte <- lubridate::as_date(filter_defs[["value"]][[1]][[1]])
                           to_dte <- lubridate::as_date(filter_defs[["value"]][[1]][[2]])
                           qry <- paste0("ServerEntryDate >= ", "\"",  from_dte, "\"",  " & ServerEntryDate <= ", "\"", to_dte, "\"")
-                          query_string <- ifelse(is.null(query_string), qry, paste0(query_string, " & ", qry))
+                           query_string <- ifelse(is.null(query_string), qry, paste0(query_string, " & ", qry))
                         }
+
                         if (is.null(query_string)) {return(df)}
                         df_ret <- df %>% dplyr::filter(eval(parse(text = query_string)))
                         return(df_ret)
@@ -484,8 +539,9 @@ Data <- R6::R6Class("Data",
                         fw_mappings <- self$get_dashboard_combined_mappings()
                         for (fw_id in names(fw_mappings)) {
                           mcq_data <- NULL
-                          # get combined framework data and load definition (maybe not)
+                          # get combined framework data and load definition (maybe not) and do the date application (needed for filtering so done now)
                           fw_data <- private$get_API_framework_data(end_point, fw_id, token, self$is_demonstrator)
+                          fw_data <- private$apply_dates(fw_data)
 
                           # fw_json <- private$get_framework_definition(end_point, fw_id, token)
 
@@ -629,10 +685,6 @@ Data <- R6::R6Class("Data",
                         if(is.null(query_string)) {return(df)}
                         ret_df <- df %>% dplyr::filter(eval(parse(text = query_string)))
                         return(ret_df)
-
-
-
-
                       },
 
                       get_framework_definition = function(end_point, framework_id, token) {
@@ -701,8 +753,6 @@ Data <- R6::R6Class("Data",
 
                         return(ret_list)
                       },
-
-
 
                       get_is_demonstrator = function(trToken) {
 
