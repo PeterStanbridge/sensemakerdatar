@@ -203,14 +203,14 @@ Data <- R6::R6Class("Data",
                     ),
 
                     private = list(
-                     omit_meta_cols = c("meta_platform", "meta_completed", "meta_started",
-                        "meta_application", "meta_platform_verion",  "meta_platform_version", "meta_selectedLanguage", "meta_fbclid", "meta_started_format",
-                        "meta_completed_format", "meta_selected_language", "meta_started_location_speed", "meta_started_location_latitude",
-                        "meta_started_location_longitude", "meta_started_location_accuracy", "meta_started_location_heading",
-                        "meta_started_location_altitude", "meta_completed_location_speed", "meta_completed_location_heading",
-                        "meta_completed_location_accuracy", "meta_completed_location_altitude", "meta_completed_location_latitude",
-                        "meta_completed_location_longitude", "meta_collection_time_Mins", "meta_completed_location_altitudeAccuracy",
-                        "meta_started_location_altitudeAccuracy"),
+                      omit_meta_cols = c("meta_platform", "meta_completed", "meta_started",
+                                         "meta_application", "meta_platform_verion",  "meta_platform_version", "meta_selectedLanguage", "meta_fbclid", "meta_started_format",
+                                         "meta_completed_format", "meta_selected_language", "meta_started_location_speed", "meta_started_location_latitude",
+                                         "meta_started_location_longitude", "meta_started_location_accuracy", "meta_started_location_heading",
+                                         "meta_started_location_altitude", "meta_completed_location_speed", "meta_completed_location_heading",
+                                         "meta_completed_location_accuracy", "meta_completed_location_altitude", "meta_completed_location_latitude",
+                                         "meta_completed_location_longitude", "meta_collection_time_Mins", "meta_completed_location_altitudeAccuracy",
+                                         "meta_started_location_altitudeAccuracy"),
                       # function handling the initialisation - get the data, process the data and load appropriate fields
                       get_data = function(csvfilename = NA, csvfiledf = NA, framework_id = NA, dashboard_id = NA, token = NA, sensemakerframeworkrobject = NA) {
                         # checking that the parameters are correct.
@@ -218,7 +218,7 @@ Data <- R6::R6Class("Data",
                         # if dashboard_id or framework_id then must have token.
                         # we don't worry about testing if token when csvfile or dataframe passed - just not used.
                         end_point <- "openapi"
-                        token <- "eyJhbGciOiJFUzUxMiIsInR5cCI6IkpXVCIsImtpZCI6IjIzYjM4ZjE4OGMzY2IzOWYwOGZkOTdmZTdiNmJlZDAzYjRmNGM5M2MifQ.eyJhdWQiOiJodHRwczovL3BsYXRmb3JtLnNlbnNlbWFrZXItc3VpdGUuY29tIiwiZXhwIjoxNzAzNzU2OTEzLCJpYXQiOjE3MDM3NTMzMTMsImlzcyI6Imh0dHBzOi8vYXBpLnNpbmd1bGFyaXR5LmljYXRhbHlzdC5jb20vdjEvaXNzdWVyLzg5NjlhM2I4LWU5YmEtNGQ2ZC1iNjA4LTc0YzVjOTI5NmUxNCIsInN1YiI6IjI1YTAzM2NlYWFkOWU4NzA0MTFkNDdkOGNlOTU3ZWI2ZGE2NTc0MWM2Y2YwMzkyNzcwYmYzMGRjM2FiODRkZDciLCJub25jZSI6MC4yNzg5NzgyMTY3NjMxNDQ4LCJzY29wZSI6ImF1dGggcHJvZmlsZSIsImNsaWVudF9pZCI6Ijg5NjlhM2I4LWU5YmEtNGQ2ZC1iNjA4LTc0YzVjOTI5NmUxNCIsImdyYW50X3R5cGUiOiJhdXRob3JpemF0aW9uX2NvZGUiLCJyZWRpcmVjdF91cmkiOiJodHRwczovL3BsYXRmb3JtLnNlbnNlbWFrZXItc3VpdGUuY29tL3BsYXRmb3JtL3Rvb2xzL2ZyYW1ld29ya3MvYjFhZDc2Y2EtZDYwYS00YzlkLTliNjMtZGUzZDc4OTM3ODRiIiwicmVmcmVzaF90b2tlbiI6ImE3OWQ4OGE1LTJhYTMtNGViNC1hZWE5LWM3NzM1ZWE4YjlhMSJ9.AXyB5NaQnmPofiEtLPWYFGZHTKwFz2mNgzH4pJSh-rsUfJewMn8L_hY-FSdUA0x-qG0Py67vw9NJKmMf7t0HGopHALr5VwLLdrZMgI3iSoLPvd4WuJrTNW8KvRKSkTDxzayGSvRNWHwmlFj2U9HPlvhp1pt_LaLy1gPqZ_0eoTVpL6XG"
+                        token <- "eyJhbGciOiJFUzUxMiIsInR5cCI6IkpXVCIsImtpZCI6IjIzYjM4ZjE4OGMzY2IzOWYwOGZkOTdmZTdiNmJlZDAzYjRmNGM5M2MifQ.eyJhdWQiOiJodHRwczovL3BsYXRmb3JtLnNlbnNlbWFrZXItc3VpdGUuY29tIiwiZXhwIjoxNzAzODI1MDEwLCJpYXQiOjE3MDM4MjE0MTAsImlzcyI6Imh0dHBzOi8vYXBpLnNpbmd1bGFyaXR5LmljYXRhbHlzdC5jb20vdjEvaXNzdWVyLzg5NjlhM2I4LWU5YmEtNGQ2ZC1iNjA4LTc0YzVjOTI5NmUxNCIsInN1YiI6IjI1YTAzM2NlYWFkOWU4NzA0MTFkNDdkOGNlOTU3ZWI2ZGE2NTc0MWM2Y2YwMzkyNzcwYmYzMGRjM2FiODRkZDciLCJub25jZSI6MC44MDMwMjc3NDM0ODU4NDI5LCJzY29wZSI6ImF1dGggcHJvZmlsZSIsImNsaWVudF9pZCI6Ijg5NjlhM2I4LWU5YmEtNGQ2ZC1iNjA4LTc0YzVjOTI5NmUxNCIsImdyYW50X3R5cGUiOiJhdXRob3JpemF0aW9uX2NvZGUiLCJyZWRpcmVjdF91cmkiOiJodHRwczovL3BsYXRmb3JtLnNlbnNlbWFrZXItc3VpdGUuY29tLyIsInJlZnJlc2hfdG9rZW4iOiJjOWVlMTk3OC1jZGMzLTQ1YzgtYTk5Zi01M2I3M2FkN2YyMWUifQ.AVpJXUf2A826bMmvBh3wWmKYDtYioAZFpHysbUbmX2XqSc3IVFb2_vvBrG4WwPmyX7S9bspZ_umKQB8Dv_E3-7muALr627pPeve4LdVBCA-LXxSlwgSI9u7dso_q-qnTqro996nh2BWgWaqx89f6w2C3UpFSxf8TOvF2XHi9XhR0Tndx"
                         assertive::assert_any_are_not_na(c(csvfilename, csvfiledf, framework_id, dashboard_id, token), severity = "stop")
                         assertive::assert_any_are_na(c(csvfilename, csvfiledf), severity = "stop")
                         assertive::assert_any_are_na(c(framework_id, dashboard_id), severity = "stop")
@@ -423,54 +423,54 @@ Data <- R6::R6Class("Data",
                                     list_items)
 
                         # add the date and columns as filters to framework definition - side effects on the sensemakerframeworkrobject object
-                       date_cols <- c("EntryYr", "EntryYrMth", "EntryYrMthDay")
-                       purrr::walk(date_cols, ~ {data_vals <- sort(unique(df[[.x]])); list_items <- data.frame(id = data_vals, title = data_vals,
-                                                tooltip = data_vals, visible = rep_len(TRUE, length.out = length(data_vals)),
-                                                other_signifier_id = rep_len("", length(data_vals)));
-                       sensemakerframeworkrobject$add_list(title = .x, tooltip = .x, allow_na = FALSE,
-                                                           fragment = FALSE, required = FALSE, sticky = FALSE,
-                                                           items = list_items,  max_responses = 1, min_responses = 1,
-                                                           other_item_id = NULL, other_signifier_id = NULL, sig_class = "date",
-                                                           theader = NULL, id = .x)}, df)
+                        date_cols <- c("EntryYr", "EntryYrMth", "EntryYrMthDay")
+                        purrr::walk(date_cols, ~ {data_vals <- sort(unique(df[[.x]])); list_items <- data.frame(id = data_vals, title = data_vals,
+                                                                                                                tooltip = data_vals, visible = rep_len(TRUE, length.out = length(data_vals)),
+                                                                                                                other_signifier_id = rep_len("", length(data_vals)));
+                        sensemakerframeworkrobject$add_list(title = .x, tooltip = .x, allow_na = FALSE,
+                                                            fragment = FALSE, required = FALSE, sticky = FALSE,
+                                                            items = list_items,  max_responses = 1, min_responses = 1,
+                                                            other_item_id = NULL, other_signifier_id = NULL, sig_class = "date",
+                                                            theader = NULL, id = .x)}, df)
 
                         # add the meta columns - those that have more than 1 unique option, but not more than 30. (and we omit crazy duplicates that can come in with numeric values with decimals)
-                       metaColNamesX <- purrr::keep(colnames(df)[grepl("meta", colnames(df))][!(colnames(df)[grepl("meta", colnames(df))] %in%
-                                                                                                       private$omit_meta_cols)],
-                                                         ~ {dplyr::between(length(sort(unique(df[!is.na(df[[.x]]), .x]))),  2, 30) & all(duplicated(sort(unique(df[!is.na(df[[.x]]), .x]))) == FALSE)}, df)
+                        metaColNamesX <- purrr::keep(colnames(df)[grepl("meta", colnames(df))][!(colnames(df)[grepl("meta", colnames(df))] %in%
+                                                                                                   private$omit_meta_cols)],
+                                                     ~ {dplyr::between(length(sort(unique(df[!is.na(df[[.x]]), .x]))),  2, 30) & all(duplicated(sort(unique(df[!is.na(df[[.x]]), .x]))) == FALSE)}, df)
 
-                       # Add to the sensemaker frameworkr object - side effects on the sensemakerframeworkrobject object
-                       purrr::walk(metaColNamesX, ~ {data_vals <- sort(unique(df[!is.na(df[[.x]]), .x])); list_items <- data.frame(id = data_vals, title = data_vals,
-                                                     tooltip = data_vals, visible = rep_len(TRUE, length.out = length(data_vals)),
-                                                      other_signifier_id = rep_len("", length(data_vals)));
-                       sensemakerframeworkrobject$add_list(title = .x, tooltip = .x, allow_na = FALSE,
-                                                           fragment = FALSE, required = FALSE, sticky = FALSE,
-                                                           items = list_items,  max_responses = 1, min_responses = 1,
-                                                           other_item_id = NULL, other_signifier_id = NULL, sig_class = "meta",
-                                                           theader = NULL, id = .x)}, df)
+                        # Add to the sensemaker frameworkr object - side effects on the sensemakerframeworkrobject object
+                        purrr::walk(metaColNamesX, ~ {data_vals <- sort(unique(df[!is.na(df[[.x]]), .x])); list_items <- data.frame(id = data_vals, title = data_vals,
+                                                                                                                                    tooltip = data_vals, visible = rep_len(TRUE, length.out = length(data_vals)),
+                                                                                                                                    other_signifier_id = rep_len("", length(data_vals)));
+                        sensemakerframeworkrobject$add_list(title = .x, tooltip = .x, allow_na = FALSE,
+                                                            fragment = FALSE, required = FALSE, sticky = FALSE,
+                                                            items = list_items,  max_responses = 1, min_responses = 1,
+                                                            other_item_id = NULL, other_signifier_id = NULL, sig_class = "meta",
+                                                            theader = NULL, id = .x)}, df)
 
 
-                       # adding the project ids into the mcq list if this is a combined one and more than one frameworkid in the data
-                       # is combined will only be true if it is a dashboard and a combined one
-                       if (self$is_combined()) {
-                         combined_list <- self$get_combined_dashboard_frameworks_for_dropdown(include_id = TRUE, only_id = FALSE, include_parent = TRUE)
+                        # adding the project ids into the mcq list if this is a combined one and more than one frameworkid in the data
+                        # is combined will only be true if it is a dashboard and a combined one
+                        if (self$is_combined()) {
+                          combined_list <- self$get_combined_dashboard_frameworks_for_dropdown(include_id = TRUE, only_id = FALSE, include_parent = TRUE)
                           if (length(combined_list) > 1 & length(sort(unique(df[["project_id"]]))) > 1) {
-                           list_items <- data.frame(id = unlist(unname(combined_list)), title = names(combined_list),
-                                                    tooltip = names(combined_list), visible = rep_len(TRUE, length.out = length(combined_list)),
-                                                    other_signifier_id = rep_len("", length.out = length(combined_list)))
-                           sensemakerframeworkrobject$add_list(title = "project_id", tooltip = "project_id", allow_na = FALSE,
-                                                               fragment = FALSE, required = FALSE, sticky = FALSE,
-                                                               items = list_items,  max_responses = 1, min_responses = 1,
-                                                               other_item_id = NULL, other_signifier_id = NULL, sig_class = "project_id",
-                                                               theader = NULL, id = "project_id")
-                         }
-                       }
+                            list_items <- data.frame(id = unlist(unname(combined_list)), title = names(combined_list),
+                                                     tooltip = names(combined_list), visible = rep_len(TRUE, length.out = length(combined_list)),
+                                                     other_signifier_id = rep_len("", length.out = length(combined_list)))
+                            sensemakerframeworkrobject$add_list(title = "project_id", tooltip = "project_id", allow_na = FALSE,
+                                                                fragment = FALSE, required = FALSE, sticky = FALSE,
+                                                                items = list_items,  max_responses = 1, min_responses = 1,
+                                                                other_item_id = NULL, other_signifier_id = NULL, sig_class = "project_id",
+                                                                theader = NULL, id = "project_id")
+                          }
+                        }
 
-                       # add the zones - triad, dyad and stones
-                       df <- private$add_triad_zones(df, sensemakerframeworkrobject)
+                        # add the zones - triad, dyad and stones
+                        df <- private$add_triad_zones(df, sensemakerframeworkrobject)
 
-                       df <- private$add_dyad_zones(df, sensemakerframeworkrobject)
+                        df <- private$add_dyad_zones(df, sensemakerframeworkrobject)
 
-                       df <- private$add_stones_zones(df, sensemakerframeworkrobject)
+                        df <- private$add_stones_zones(df, sensemakerframeworkrobject)
 
 
                         # add the NarrID column (used for filter indexing) and set the "id" column to "FragmentID" (reads better in the code)
@@ -479,77 +479,137 @@ Data <- R6::R6Class("Data",
                         return(df)
                       },
 
-                    add_triad_zones = function(df, sensemakerframeworkrobject) {
+                      add_triad_zones = function(df, sensemakerframeworkrobject) {
 
-                      for (triad_id in sensemakerframeworkrobject$get_triad_ids()) {
-                        df[[paste0(triad_id, "_Zone")]] <- private$get_triad_zone(triad_id, df, sensemakerframeworkrobject)
-                      }
-                      return(df)
-                    },
+                        for (triad_id in sensemakerframeworkrobject$get_triad_ids()) {
+                          df[[paste0(triad_id, "_Zone")]] <- private$get_triad_zone(triad_id, df, sensemakerframeworkrobject)
+                        }
+                        return(df)
+                      },
 
-                    get_triad_zone = function(id, df, sensemakerframeworkrobject) {
+                      get_triad_zone = function(id, df, sensemakerframeworkrobject) {
 
-                      leftLabel <- sensemakerframeworkrobject$get_triad_left_column_name(id)
-                      topLabel <- sensemakerframeworkrobject$get_triad_top_column_name(id)
-                      rightLabel <- sensemakerframeworkrobject$get_triad_right_column_name(id)
+                        leftLabel <- sensemakerframeworkrobject$get_triad_left_column_name(id)
+                        topLabel <- sensemakerframeworkrobject$get_triad_top_column_name(id)
+                        rightLabel <- sensemakerframeworkrobject$get_triad_right_column_name(id)
 
-                      triadZone <- vector("list", length = nrow(df))
-                      for (i in 1:nrow(df)) {
-                        if (is.na(df[i,leftLabel])) {
-                          triadZone[[i]] <- NA
-                          next
+                        triadZone <- vector("list", length = nrow(df))
+                        for (i in 1:nrow(df)) {
+                          if (is.na(df[i,leftLabel])) {
+                            triadZone[[i]] <- NA
+                            next
+                          }
+
+                          if (df[i,leftLabel] >= 60) {triadZone[[i]] <- "L"}
+                          if (df[i,topLabel] >= 60) {triadZone[[i]] <- "T"}
+                          if (df[i,rightLabel] > 60) {triadZone[[i]] <- "R"}
+                          if (df[i,leftLabel] < 60 & df[i,leftLabel] >= 20 & df[i,topLabel] < 60 & df[i,topLabel] >= 20 & df[i,rightLabel] < 20) {triadZone[[i]] <- "LT"}
+                          if (df[i,leftLabel] <= 20 & df[i,topLabel] < 60 & df[i,topLabel] >= 20 & df[i,rightLabel] <= 60 & df[i,rightLabel] >= 20) {triadZone[[i]] <- "TR"}
+                          if (df[i,leftLabel] < 60 & df[i,leftLabel] >= 20 & df[i,topLabel] < 20 & df[i,rightLabel] <= 60 & df[i,rightLabel] >= 20) {triadZone[[i]] <- "LR"}
+                          if (df[i,leftLabel] < 60 & df[i,leftLabel] >= 20 & df[i,topLabel] >= 20 & df[i,topLabel] < 60 & df[i,rightLabel] < 60 & df[i,rightLabel] >= 20) {triadZone[[i]] <- "Centre"}
+                        }
+                        return(unlist(triadZone))
+                      },
+
+                      add_dyad_zones = function(df, sensemakerframeworkrobject) {
+
+                        for (dyad_id in sensemakerframeworkrobject$get_dyad_ids()) {
+                          df[[paste0(dyad_id, "_Zone")]] <- private$get_dyad_zone(dyad_id, df, sensemakerframeworkrobject)
+                        }
+                        return(df)
+                      },
+
+                      get_dyad_zone = function(id, df, sensemakerframeworkrobject) {
+                        leftLabel <- sensemakerframeworkrobject$get_dyad_aspercent_x_column_name(id)
+                        dyadZone <- vector("list", length = nrow(df))
+                        for (i in 1:nrow(df)) {
+                          if (is.na(df[i, leftLabel])) {
+                            dyadZone[[i]] <- NA
+                            next
+                          }
+                          if (df[i,leftLabel] > 80) {dyadZone[[i]] <- "Right"}
+                          if (df[i,leftLabel] > 60 & df[i,leftLabel] <= 80) {dyadZone[[i]] <- "Centre-Right"}
+                          if (df[i,leftLabel] > 40 & df[i,leftLabel] <= 60) {dyadZone[[i]] <- "Centre"}
+                          if (df[i,leftLabel] > 20 & df[i,leftLabel] <= 40) {dyadZone[[i]] <- "Centre-Left"}
+                          if (df[i,leftLabel] <= 20) {dyadZone[[i]] <- "Left"}
+                        }
+                        return(unlist(dyadZone))
+                      },
+
+                      add_stones_zones = function(df, sensemakerframeworkrobject) {
+                        for (stones_id in sensemakerframeworkrobject$get_stones_ids()) {
+                          for (stone_id in sensemakerframeworkrobject$get_stones_items_ids(stones_id)) {
+                            #  x axis zones
+                            df[[paste0(stones_id, "_", stone_id, "_x_Zone")]] <- private$get_stone_zone(stones_id, stone_id, df, sensemakerframeworkrobject, "x")
+                            df[[paste0(stones_id, "_", stone_id, "_y_Zone")]] <- private$get_stone_zone(stones_id, stone_id, df, sensemakerframeworkrobject, "y")
+                            df[[paste0(stones_id, "_", stone_id, "_4_Zone")]] <-  private$get_stone_4_zone(stones_id, stone_id, df, sensemakerframeworkrobject)
+                            df[[paste0(stones_id, "_", stone_id, "_9_Zone")]] <-  private$get_stone_9_zone(stones_id, stone_id, df, sensemakerframeworkrobject)
+                          }
                         }
 
-                        if (df[i,leftLabel] >= 60) {triadZone[[i]] <- "L"}
-                        if (df[i,topLabel] >= 60) {triadZone[[i]] <- "T"}
-                        if (df[i,rightLabel] > 60) {triadZone[[i]] <- "R"}
-                        if (df[i,leftLabel] < 60 & df[i,leftLabel] >= 20 & df[i,topLabel] < 60 & df[i,topLabel] >= 20 & df[i,rightLabel] < 20) {triadZone[[i]] <- "LT"}
-                        if (df[i,leftLabel] <= 20 & df[i,topLabel] < 60 & df[i,topLabel] >= 20 & df[i,rightLabel] <= 60 & df[i,rightLabel] >= 20) {triadZone[[i]] <- "TR"}
-                        if (df[i,leftLabel] < 60 & df[i,leftLabel] >= 20 & df[i,topLabel] < 20 & df[i,rightLabel] <= 60 & df[i,rightLabel] >= 20) {triadZone[[i]] <- "LR"}
-                        if (df[i,leftLabel] < 60 & df[i,leftLabel] >= 20 & df[i,topLabel] >= 20 & df[i,topLabel] < 60 & df[i,rightLabel] < 60 & df[i,rightLabel] >= 20) {triadZone[[i]] <- "Centre"}
-                      }
-                      return(unlist(triadZone))
-                    },
+                        return(df)
 
-                    add_dyad_zones = function(df, sensemakerframeworkrobject) {
+                      },
 
-                      for (dyad_id in sensemakerframeworkrobject$get_dyad_ids()) {
-                        df[[paste0(dyad_id, "_Zone")]] <- private$get_dyad_zone(dyad_id, df, sensemakerframeworkrobject)
-                      }
-                      return(df)
-                    },
+                      get_stone_zone = function(stones_id, stone_id, df, sensemakerframeworkrobject, axis) {
 
-                    get_dyad_zone = function(id, df, sensemakerframeworkrobject) {
-                      leftLabel <- sensemakerframeworkrobject$get_dyad_aspercent_x_column_name(id)
-                      dyadZone <- vector("list", length = nrow(df))
-                      for (i in 1:nrow(df)) {
-                        if (is.na(df[i, leftLabel])) {
-                          dyadZone[[i]] <- NA
-                          next
+                        label <- sensemakerframeworkrobject$get_stones_stone_compositional_column_names(stones_id, stone_id, axis = axis)
+                        stone_zone <- vector("list", length = nrow(df))
+
+                        for (i in 1:nrow(df)) {
+                          if (is.na(df[i, label])) {
+                            stone_zone[[i]] <- NA
+                            next
+                          }
+                          if (df[i,label] > 0.8) {stone_zone[[i]] <- "Right"}
+                          if (df[i,label] > 0.6 & df[i,label] <= 0.8) {stone_zone[[i]] <- "Centre-Right"}
+                          if (df[i,label] > 0.4 & df[i,label] <= 0.8) {stone_zone[[i]] <- "Centre"}
+                          if (df[i,label] > 0.2 & df[i,label] <= 0.4) {stone_zone[[i]] <- "Centre-Left"}
+                          if (df[i,label] <= 0.2) {stone_zone[[i]] <- "Left"}
                         }
-                        if (df[i,leftLabel] > 80) {dyadZone[[i]] <- "Right"}
-                        if (df[i,leftLabel] > 60 & df[i,leftLabel] <= 80) {dyadZone[[i]] <- "Centre-Right"}
-                        if (df[i,leftLabel] > 40 & df[i,leftLabel] <= 60) {dyadZone[[i]] <- "Centre"}
-                        if (df[i,leftLabel] > 20 & df[i,leftLabel] <= 40) {dyadZone[[i]] <- "Centre-Left"}
-                        if (df[i,leftLabel] <= 20) {dyadZone[[i]] <- "Left"}
-                      }
-                      return(unlist(dyadZone))
-                    },
-
-                    add_stones_zones = function(df, sensemakerframeworkrobject) {
-
-                      # 1 x axis zones
-                      # 2 y axis zones
-                      # 3, 4 grid zones
-                      # 4, 9 grid zones
+                        return(unlist(stone_zone))
+                      },
 
 
+                      get_stone_4_zone = function(stones_id, stone_id, df, sensemakerframeworkrobject, axis) {
+                        x_label <- sensemakerframeworkrobject$get_stones_stone_compositional_column_names(stones_id, stone_id, axis = "x")
+                        y_label <- sensemakerframeworkrobject$get_stones_stone_compositional_column_names(stones_id, stone_id, axis = "y")
+                        stone_zone <- vector("list", length = nrow(df))
+                        for (i in 1:nrow(df)) {
+                          if (is.na(df[i, x_label])) {
+                            stone_zone[[i]] <- NA
+                            next
+                          }
+                          if (df[i, x_label] >= 0.5 & df[i, y_label] >= 0.5) {stone_zone[[i]] <- "Top_Right"}
+                          if (df[i, x_label] >= 0.5 & df[i, y_label] < 0.5) {stone_zone[[i]] <- "Bottom_Right"}
+                          if (df[i, x_label] < 0.5 & df[i, y_label] < 0.5) {stone_zone[[i]] <- "Bottom_Left"}
+                          if (df[i, x_label] < 0.5 & df[i, y_label] >= 0.5) {stone_zone[[i]] <- "Top_Left"}
+                        }
+                        return(unlist(stone_zone))
+                      },
 
 
-                      return(df)
-
-                    },
-
+                      get_stone_9_zone = function(stones_id, stone_id, df, sensemakerframeworkrobject, axis) {
+                        x_label <- sensemakerframeworkrobject$get_stones_stone_compositional_column_names(stones_id, stone_id, axis = "x")
+                        y_label <- sensemakerframeworkrobject$get_stones_stone_compositional_column_names(stones_id, stone_id, axis = "y")
+                        stone_zone <- vector("list", length = nrow(df))
+                        for (i in 1:nrow(df)) {
+                          if (is.na(df[i, x_label])) {
+                            stone_zone[[i]] <- NA
+                            next
+                          }
+                          if (df[i, x_label] >= 0.66666666 & df[i, y_label] >= 0.66666666) {stone_zone[[i]] <- "Top_Right"}
+                          if (df[i, x_label] >= 0.66666666 & df[i, y_label] >= 0.33333333 & df[i, y_label] < 0.66666666) {stone_zone[[i]] <- "Centre_Right"}
+                          if (df[i, x_label] >= 0.66666666 & df[i, y_label] < 0.33333333) {stone_zone[[i]] <- "Bottom_Right"}
+                          if (df[i, x_label] >= 0.33333333 & df[i, x_label] < 0.66666666 & df[i, y_label] >= 0.66666666) {stone_zone[[i]] <- "Top_Centre"}
+                          if (df[i, x_label] >= 0.33333333 & df[i, x_label] < 0.66666666 & df[i, y_label] >= 0.33333333 & df[i, y_label] < 0.66666666) {stone_zone[[i]] <- "Centre"}
+                          if (df[i, x_label] >= 0.33333333 & df[i, x_label] < 0.66666666 &  df[i, y_label] < 0.33333333) {stone_zone[[i]] <- "Bottom_Centre"}
+                          if (df[i, x_label] < 0.33333333 & df[i, y_label] >= 0.66666666) {stone_zone[[i]] <- "Top_Left"}
+                          if (df[i, x_label] < 0.33333333 & df[i, y_label] >= 0.33333333 & df[i, y_label] < 0.66666666) {stone_zone[[i]] <- "Centre_Left"}
+                          if (df[i, x_label] < 0.33333333 & df[i, y_label] < 0.33333333) {stone_zone[[i]] <- "Bottom_Left"}
+                        }
+                        return(unlist(stone_zone))
+                      },
 
 
                       # set up the selected and not selected columns for a multi-select column
@@ -559,7 +619,6 @@ Data <- R6::R6Class("Data",
                       },
 
                       apply_dates = function(df) {
-
                         df[["started"]] <- as.character(lubridate::as_datetime(df[["server_upload_time"]]/1000, tz = "GMT"))
                         df[["ServerEntryDate"]] <-  lubridate::as_date(df[["started"]] )
                         df[["EntryYr"]] <- as.integer(strftime(df[["ServerEntryDate"]], format = "%Y"))
@@ -683,7 +742,7 @@ Data <- R6::R6Class("Data",
                           from_dte <- lubridate::as_date(filter_defs[["value"]][[1]][[1]])
                           to_dte <- lubridate::as_date(filter_defs[["value"]][[1]][[2]])
                           qry <- paste0("ServerEntryDate >= ", "\"",  from_dte, "\"",  " & ServerEntryDate <= ", "\"", to_dte, "\"")
-                           query_string <- ifelse(is.null(query_string), qry, paste0(query_string, " & ", qry))
+                          query_string <- ifelse(is.null(query_string), qry, paste0(query_string, " & ", qry))
                         }
 
                         if (is.null(query_string)) {return(df)}
@@ -704,7 +763,7 @@ Data <- R6::R6Class("Data",
                           fw_data <- private$apply_dates(fw_data)
 
                           # Don't need this now since we get this from the sensemakerframeworkr object.
-                           #fw_json <- private$get_framework_definition(end_point, fw_id, token)
+                          #fw_json <- private$get_framework_definition(end_point, fw_id, token)
 
                           if (nrow(fw_data) == 0) {next}
                           # map the fields - "end" is primary and "start" is the combined. "_" means a list item
