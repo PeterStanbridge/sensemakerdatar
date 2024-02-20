@@ -41,15 +41,23 @@ Data <- R6::R6Class("Data",
                       #' @field is_demonstrator Boolean - TRUE if the token is a demonstrator account.
                       is_demonstrator = NULL,
                       # this will be a list of lists containing the data.
-                      #' @field data The full list of data
+                      #' @field data The full list of data objects keyed by the name of the field. NOTE - this will be user (coder) extendible
                       data = list(NULL),
                       # Common lists used from within the data list- all initially set to full dataset
-                      #' @field df1 The full dataset for any given fw or linked fw data
+                      #' @field df1 The full dataset for any given framework, thus if linked framework selected, will have only the linked framework data, not the full set
                       df1 = NULL,
-                      #' @field dat  Filtered data so always the data being displayed based on a filter
+                      #' @field dat  Filtered data so always the data being displayed based on a filter on the main df1 dataframe
                       dat = NULL,
-                      #' @field df_keep Always the full dataset even through linked fw selections
+                      #' @field df_keep Always the full dataset even through linked fw selections- enables restore of full dataset when deselecting linked frameworks
                       df_keep = NULL,
+                      #' @field df_multi_select The transformed multi-select MCQ data
+                      df_multi_select = NULL,
+                      #' @field df_multi_select_full The transformed multi-select MCQ data - always full set
+                      df_multi_select_full = NULL,
+                      #' @field stone_ratios Stone ratios of each of the stone canvases
+                      stone_ratios = NULL,
+                      #' @field stone_data Stone transformed data into long from from column form
+                      stone_data = NULL,
                       #' @field title_data data containing titles, not ids
                       title_data = NULL,
                       #' @field title_use Filtered data containing titles not ids, used for display on a filter
@@ -80,6 +88,12 @@ Data <- R6::R6Class("Data",
                       dashboard_combined_frameworks_rev = NULL,
                       #' @field dashboard_version The dashboard version - whether 1 or 2
                       dashboard_version = NULL,
+                      #' @field polymorphic_definition_json The jsonlite package parsed json for polymorphic definitions if they exist
+                      polymorphic_definition_json = NULL,
+                      #' @field polymorphic_sigs The parsed jsonlite package parsed json for polymorphic definitions if they exist
+                      polymorphic_sigs = NULL,
+                      #' @field has_poly_sigs The parsed framework has polymorphic signifieres
+                      has_poly_sigs = NULL,
                       #' @description
                       #' Create a new `data` object.
                       #' @details
@@ -90,10 +104,11 @@ Data <- R6::R6Class("Data",
                       #' @param dashboard_id The id of the dashboard to load (if framework or dashboard id passed, only one not the other must be non NULL).
                       #' @param token if using the platform security, the token to gain access to the data. Used only when framework_id or dashboard_id passed.
                       #' @param sensemakerframeworkrobject - optional sensemakerframeworkr R6 class object which would be added to based on data loaded (e.g. meta columns)
+                      #' @param polymorphic_definition_json - jsonlite parsed json file of the polymorphic definition - default blank
                       #' @return A new `signifier` R6 class object and fields type by signifier id, signifier ids by type, and
                       initialize = function(csvfilename = NA, csvfiledf = NA, framework_id = NA, dashboard_id = NA,
-                                            token = NA, sensemakerframeworkrobject = NA) {
-                        sensemakerdata <- private$get_data(csvfilename, csvfiledf, framework_id, dashboard_id, token, sensemakerframeworkrobject)
+                                            token = NA, sensemakerframeworkrobject = NA, polymorphic_definition_json = "") {
+                        sensemakerdata <- private$get_data(csvfilename, csvfiledf, framework_id, dashboard_id, token, sensemakerframeworkrobject, polymorphic_definition_json)
 
                       },
                       is_dashboard = function() {
@@ -192,17 +207,12 @@ Data <- R6::R6Class("Data",
                         } else {
                           return(names(self$dashboard_combined_frameworks))
                         }
-
-
                         return(ret_val)
-
-
                       }
-
-
                     ),
 
                     private = list(
+                      # columns to omit from list creation for meta-filtering
                       omit_meta_cols = c("meta_platform", "meta_completed", "meta_started",
                                          "meta_application", "meta_platform_verion",  "meta_platform_version", "meta_selectedLanguage", "meta_fbclid", "meta_started_format",
                                          "meta_completed_format", "meta_selected_language", "meta_started_location_speed", "meta_started_location_latitude",
@@ -212,13 +222,12 @@ Data <- R6::R6Class("Data",
                                          "meta_completed_location_longitude", "meta_collection_time_Mins", "meta_completed_location_altitudeAccuracy",
                                          "meta_started_location_altitudeAccuracy"),
                       # function handling the initialisation - get the data, process the data and load appropriate fields
-                      get_data = function(csvfilename = NA, csvfiledf = NA, framework_id = NA, dashboard_id = NA, token = NA, sensemakerframeworkrobject = NA) {
+                      get_data = function(csvfilename = NA, csvfiledf = NA, framework_id = NA, dashboard_id = NA, token = NA, sensemakerframeworkrobject = NA, polymorphic_definition_json = "") {
                         # checking that the parameters are correct.
                         # either one of filename/csvfiledf OR framework_id/dashboard_id
                         # if dashboard_id or framework_id then must have token.
                         # we don't worry about testing if token when csvfile or dataframe passed - just not used.
                         end_point <- "openapi"
-                        token <- "eyJhbGciOiJFUzUxMiIsInR5cCI6IkpXVCIsImtpZCI6IjIzYjM4ZjE4OGMzY2IzOWYwOGZkOTdmZTdiNmJlZDAzYjRmNGM5M2MifQ.eyJhdWQiOiJodHRwczovL3BsYXRmb3JtLnNlbnNlbWFrZXItc3VpdGUuY29tIiwiZXhwIjoxNzAzODI1MDEwLCJpYXQiOjE3MDM4MjE0MTAsImlzcyI6Imh0dHBzOi8vYXBpLnNpbmd1bGFyaXR5LmljYXRhbHlzdC5jb20vdjEvaXNzdWVyLzg5NjlhM2I4LWU5YmEtNGQ2ZC1iNjA4LTc0YzVjOTI5NmUxNCIsInN1YiI6IjI1YTAzM2NlYWFkOWU4NzA0MTFkNDdkOGNlOTU3ZWI2ZGE2NTc0MWM2Y2YwMzkyNzcwYmYzMGRjM2FiODRkZDciLCJub25jZSI6MC44MDMwMjc3NDM0ODU4NDI5LCJzY29wZSI6ImF1dGggcHJvZmlsZSIsImNsaWVudF9pZCI6Ijg5NjlhM2I4LWU5YmEtNGQ2ZC1iNjA4LTc0YzVjOTI5NmUxNCIsImdyYW50X3R5cGUiOiJhdXRob3JpemF0aW9uX2NvZGUiLCJyZWRpcmVjdF91cmkiOiJodHRwczovL3BsYXRmb3JtLnNlbnNlbWFrZXItc3VpdGUuY29tLyIsInJlZnJlc2hfdG9rZW4iOiJjOWVlMTk3OC1jZGMzLTQ1YzgtYTk5Zi01M2I3M2FkN2YyMWUifQ.AVpJXUf2A826bMmvBh3wWmKYDtYioAZFpHysbUbmX2XqSc3IVFb2_vvBrG4WwPmyX7S9bspZ_umKQB8Dv_E3-7muALr627pPeve4LdVBCA-LXxSlwgSI9u7dso_q-qnTqro996nh2BWgWaqx89f6w2C3UpFSxf8TOvF2XHi9XhR0Tndx"
                         assertive::assert_any_are_not_na(c(csvfilename, csvfiledf, framework_id, dashboard_id, token), severity = "stop")
                         assertive::assert_any_are_na(c(csvfilename, csvfiledf), severity = "stop")
                         assertive::assert_any_are_na(c(framework_id, dashboard_id), severity = "stop")
@@ -270,12 +279,18 @@ Data <- R6::R6Class("Data",
                           df <- csvfiledf
                         }
 
+                        # polymorphic parsed json passed in
+                        if (polymorphic_definition_json != "") {
+                          self$polymorphic_definition_json <- polymorphic_definition_json
+                        }
+
                         # framework id is passed (so at some stage will have to use the API to get the data. )
                         if (!is.na(framework_id)) {
                           self$framework_id <- framework_id
                         }
                         # preliminary process of the dashboard - get the framework id and the frqmework data.
                         if (!is.na(dashboard_id)) {
+
                           # get the dashboard definition.
                           # try version one of the dashboard
 
@@ -329,10 +344,8 @@ Data <- R6::R6Class("Data",
                         # apply dates as we wll need them for filtering
                         df <- private$apply_dates(df)
 
+                        # assign the framework json definition to field
                         self$framework_definition <- sensemakerframeworkrobject$framework_json
-
-
-
 
                         # now process the dashboard completely - this function has side effects on the dashboard definition,
                         # data and framework definition
@@ -340,24 +353,57 @@ Data <- R6::R6Class("Data",
                           df <- do.call(paste0("process_dashboard_definition_", self$dashboard_version), args = list(df, framework_id, end_point, dashboard_id, token, is_demonstrator, sensemakerframeworkrobject), envir = private)
                         }
 
-
                         # assign the sensemaker framework
                         self$sm_framework <- sensemakerframeworkrobject
-                        # now apply the other main framework stuff to self
+                        # Main framework title
                         self$framework_title <- self$sm_framework$get_parent_framework_name()
 
                         # start processing data
-                        df <- private$process_data(df, sensemakerframeworkrobject)
-                        self$df1 <- df
+                        self$df1 <- private$process_data(df, sensemakerframeworkrobject)
 
+
+                        # populate the data class fields including the generic array "data" which can be extended by application developers
+                        self$data <- vector("list", length = 6)
+                        names(self$data) <- c("df1", "dat", "df_keep", "df_multi_select", "df_multi_select_full", "stone_data")
+
+                        if (!is.null(self$df1)) {
+                          self$data[["df1"]] <- self$df1
+                          self$dat <- self$df1
+                          self$data[["dat"]] <- self$df1
+                          self$df_keep <- self$df1
+                          self$data[["df_keep"]] <- self$df1
+                        }
+
+                        if (!is.null(self$data[["df_multi_select"]])) {
+                          self$data[["df_multi_select"]] <- self$df_multi_select
+                        }
+                        if (!is.null(self$df_multi_select_full)) {
+                          self$data[["df_multi_select_full"]] <- self$df_multi_select_full
+                          self$df_multi_select <- self$df_multi_select_full
+                          self$data[["df_multi_select"]] <- self$df_multi_select_full
+                        }
+
+                        if (!is.null(self$stone_data)) {
+                          self$data[["stone_data"]] <- self$stone_data
+                        }
                       },
 
+
+                      # Do all the things needed to be done to the main data data frame including creating new transformed data frames for multi-select MCQs and stones
                       process_data = function(df, sensemakerframeworkrobject) {
 
+                        # we need the framework id for some of the calls
+                        framework_id <- sensemakerframeworkrobject$get_parent_framework_id()
+
+                        # a funny thing we have to do so stuff doesn't fall over - turn into character datatype
                         if ("meta_platform_verion" %in% colnames(df)) {
                           df[["meta_platform_verion"]] <- as.character( df[["meta_platform_verion"]])
                         }
 
+
+                        # add the NarrID column (used for filter indexing) and set the "id" column to "FragmentID" (reads better in the code)
+                        df[["NarrID"]] <- 1:nrow(df)
+                        names(df)[[which(names(df) == "id")]] <- "FragmentID"
 
                         # process dyads
                         # Add the new percentage X columns for the dyads, keeping the decemal columns in place - side effects on df
@@ -378,7 +424,7 @@ Data <- R6::R6Class("Data",
                           purrr::walk(sensemakerframeworkrobject$get_triad_ids(), ~
                                         {purrr::walk(sensemakerframeworkrobject$get_triad_anchor_column_names(.x, delist = TRUE, exclude_na = TRUE),
                                                      ~ {df[[.x]] <<- df[[.x]] * 100}, df)}, df)
-                          # Adjust and triad anchor data <= 0 - make slightly positive (important for compositional stats) - side effects on df
+                          # Adjust  triad anchor data that equals 0 to make them slightly positive (important for compositional stats) - side effects on df
                           purrr::walk(sensemakerframeworkrobject$get_triad_ids(), ~
                                         {purrr::walk(sensemakerframeworkrobject$get_triad_anchor_column_names(.x, delist = TRUE, exclude_na = TRUE),
                                                      ~ {ifelse(df[[.x]] <= 0, 0.00001 , df[[.x]])}, df)}, df)
@@ -442,7 +488,7 @@ Data <- R6::R6Class("Data",
                         purrr::walk(metaColNamesX, ~ {data_vals <- sort(unique(df[!is.na(df[[.x]]), .x])); list_items <- data.frame(id = data_vals, title = data_vals,
                                                                                                                                     tooltip = data_vals, visible = rep_len(TRUE, length.out = length(data_vals)),
                                                                                                                                     other_signifier_id = rep_len("", length(data_vals)));
-                        sensemakerframeworkrobject$add_list(title = .x, tooltip = .x, allow_na = FALSE,
+                                             sensemakerframeworkrobject$add_list(title = .x, tooltip = .x, allow_na = FALSE,
                                                             fragment = FALSE, required = FALSE, sticky = FALSE,
                                                             items = list_items,  max_responses = 1, min_responses = 1,
                                                             other_item_id = NULL, other_signifier_id = NULL, sig_class = "meta",
@@ -465,6 +511,91 @@ Data <- R6::R6Class("Data",
                           }
                         }
 
+
+                        # Process multi-select MCQs
+                        for (list_id in sensemakerframeworkrobject$get_multiselect_list_ids()) {
+                          for (col_name in sensemakerframeworkrobject$get_list_column_names(list_id)) {
+                            df[[paste0(col_name, "_selected")]] <- unlist(unname(purrr::map(df[[col_name]], ~ {ifelse(is.na(.x), "notselected", "selected")})))
+                            # now create a list item in the new sensemakerframeworkr
+                            list_items <- data.frame(id = c("selected", "notselected"), title = c("selected", "not selected"), tooltip = c("selected", "not selected"), visible = c(TRUE, TRUE), other_signifier_id = c("", ""))
+                            temp_list_item_id <- unlist(stringi::stri_split(col_name, regex = "_"))[[2]]
+                            temp_title <- paste(sensemakerframeworkrobject$get_signifier_title(list_id), "-", sensemakerframeworkrobject$get_list_item_title(list_id, temp_list_item_id))
+                            sensemakerframeworkrobject$add_list(title = temp_title, tooltip = temp_title, allow_na = FALSE, fragment = FALSE, required = FALSE, sticky = FALSE, items = list_items,  max_responses = 1, min_responses = 1, other_item_id = NULL, other_signifier_id = NULL, theader = NULL, id = paste0(col_name, "_selected"))
+                            sensemakerframeworkrobject$change_signifier_include(id = paste0(col_name, "_selected"), value = FALSE)
+                          }
+                        }
+
+                        # now do the same for single select MCQs that only have one item - they don't work on stats requiring 2 or more items
+                        single_item_mcqs <- unlist(unname(purrr::keep(sensemakerframeworkrobject$get_single_select_list_ids(), ~ {sensemakerframeworkrobject$get_list_num_items(.x) == 1})))
+                        for (list_id in single_item_mcqs) {
+                          for (col_name in sensemakerframeworkrobject$get_list_column_names(list_id)) {
+                            df[[paste0(col_name, "_selected")]] <- unlist(unname(purrr::map(df[[col_name]], ~ {ifelse(is.na(.x), "notselected", "selected")})))
+                            # now create a list item in the new sensemakerframeworkr
+                            list_items <- data.frame(id = c("selected", "notselected"), title = c("selected", "not selected"), tooltip = c("selected", "not selected"), visible = c(TRUE, TRUE), other_signifier_id = c("", ""))
+                            temp_list_item_id <- col_name
+                            temp_title <- paste(sensemakerframeworkrobject$get_signifier_title(list_id), "-", sensemakerframeworkrobject$get_list_item_title(list_id, temp_list_item_id))
+                            sensemakerframeworkrobject$add_list(title = temp_title, tooltip = temp_title, allow_na = FALSE, fragment = FALSE, required = FALSE, sticky = FALSE, items = list_items,  max_responses = 1, min_responses = 1, other_item_id = NULL, other_signifier_id = NULL, theader = NULL, id = paste0(col_name, "_selected"))
+                            sensemakerframeworkrobject$change_signifier_include(id = paste0(col_name, "_selected"), value = FALSE)
+                          }
+                        }
+
+                        # multi-select MCQ data structure
+                        self$df_multi_select_full <- private$transform_multi_select(df, sensemakerframeworkrobject)
+
+                        # ------------- Process stones ---------------
+                        # Calculate stone ratios
+                        self$stone_ratios <- private$getStoneRatios(df, sensemakerframeworkrobject)
+                        # stone transform - column to row for each stone in the framework definition.
+                        stones <- sensemakerframeworkrobject$get_stones_ids()
+                        if (length(stones) > 0) {
+                          stone_data <- vector("list", length = length(stones))
+                          names(stone_data) <- stones
+                          for (stones_id in stones) {
+                            # data file columns for stone
+                            cols <- sensemakerframeworkrobject$get_stones_compositional_column_names(stones_id)
+                            # rest of columns for the transform
+                            exl <-colnames(df)[-which(colnames(df) %in% cols)]
+                            # gather the cols - i.e. turn the x value columns then the y value columns in cols to a single column named "cols" and place the stone value
+                            #  for each in "x_value" and "y_value" accordingly
+                            df_row_x <- df %>% tidyr::gather(cols, "x_value", -exl) %>% dplyr::filter(grepl("XRight", cols)) %>% dplyr::select("FragmentID", "cols", "x_value")
+                            df_row_y <- df %>% tidyr::gather(cols, "y_value", -exl) %>% dplyr::filter(grepl("YTop", cols)) %>% dplyr::select("FragmentID", "cols", "y_value")
+                            # Now pull out the stones id from the stone id and get the stone and stones label to add for the x-value
+                            df_row_x_stone <- df_row_x %>% dplyr::mutate(stones_label = rep_len(sensemakerframeworkrobject$get_signifier_title(stones_id), nrow(df_row_x)), stone_id = stringr::str_remove(unlist(unname(purrr::map(df_row_x[["cols"]], ~ {stringr::str_split(.x, "_")[[1]][2]} ))), "XRight"),
+                                                                         stone_label = unlist(unname(purrr::map(stringr::str_remove(unlist(unname(purrr::map(df_row_x[["cols"]], ~ {stringr::str_split(.x, "_")[[1]][2]} ))), "XRight"), ~ {sensemakerframeworkrobject$get_stones_stone_title_by_id(stones_id, .x)})))) %>%
+                              dplyr::select(-"cols")
+
+                            # y-value same as above but we don't need the repleats of all the label and id columns - just the keys and value for the coming join
+                            df_row_y_stone <- df_row_y %>% dplyr::mutate(stone_id = stringr::str_remove(unlist(unname(purrr::map(df_row_y[["cols"]], ~ {stringr::str_split(.x, "_")[[1]][2]} ))), "YTop")) %>%
+                              dplyr::select("FragmentID", "stone_id", "y_value")
+
+                            # Join into a single dataframe then add to the out list
+                            stonedf1 <- dplyr::left_join(df_row_x_stone, df_row_y_stone, by = c("FragmentID", "stone_id"))
+                            stone_data[[stones_id]] <- stonedf1
+                          }
+                          # set the field
+                          self$stone_data <- stone_data
+                        }
+
+
+                        # add polymorphic signifiers extra column data
+                        # if the existing directory has a polymorphic definition file in it, or passed in as parameter than add to the framework definition
+
+                        if (!is.null(self$polymorphic_definition_json)) {
+                          self$polymorphic_sigs <- jsonlite::fromJSON(txt = self$polymorphic_definition_json, simplifyVector = TRUE, simplifyDataFrame = TRUE, flatten = FALSE)
+                          sensemakerframeworkrobject$add_polymorphic_signifiers(tpoly_data = self$polymorphic_sigs, NULL)
+                          self$has_poly_sigs <- TRUE
+                        } else {
+                          if (file.exists(paste0("PolymorphismDefinition_", framework_id, ".json"))) {
+                            self$polymorphic_sigs <- jsonlite::fromJSON(paste0("PolymorphismDefinition_", framework_id, ".json"), simplifyVector = TRUE, simplifyDataFrame = TRUE, flatten = FALSE)
+                            sensemakerframeworkrobject$add_polymorphic_signifiers(tpoly_data = NULL, tpoly_data_file = paste0("PolymorphismDefinition_", framework_id, ".json"))
+                            self$has_poly_sigs <- TRUE
+                          }
+                        }
+
+                        if(sensemakerframeworkrobject$is_polymorphic()) {
+                          df <- private$apply_polymorphic_definition(df, sensemakerframeworkrobject)
+                        }
+
                         # add the zones - triad, dyad and stones
                         df <- private$add_triad_zones(df, sensemakerframeworkrobject)
 
@@ -473,10 +604,120 @@ Data <- R6::R6Class("Data",
                         df <- private$add_stones_zones(df, sensemakerframeworkrobject)
 
 
-                        # add the NarrID column (used for filter indexing) and set the "id" column to "FragmentID" (reads better in the code)
-                        df[["NarrID"]] <- 1:nrow(df)
-                        names(df)[[which(names(df) == "id")]] <- "FragmentID"
+                        # add any fragmentID level extra column data
+                        #currentposition
+
+
+                        # add any foreign key level extra column data
+
+
+                        # add any new fragments data
+
+
+
                         return(df)
+                      },
+
+                      apply_polymorphic_definition = function(df, sensemakerframeworkrobject) {
+
+                        modified_ids <- names(sensemakerframeworkrobject$get_poly_anchor_modification_ids_with_type())
+
+                        for (i in seq_along(modified_ids)) {
+                          id <- modified_ids[[i]]
+                          type <- sensemakerframeworkrobject$get_poly_anchor_modification_ids_with_type()[id]
+                          new_id <- sensemakerframeworkrobject$get_poly_modification_sig_id(id)
+                          if (type == "triad") {
+                            new_anchor_ids <- sensemakerframeworkrobject$get_triad_anchor_ids(new_id)
+                            top_list <- vector(mode = "list", length = nrow(df))
+                            left_list <- vector(mode = "list", length = nrow(df))
+                            right_list <- vector(mode = "list", length = nrow(df))
+                            top_list <- df[[paste0(id, "_", new_anchor_ids[["top"]])]]
+                            left_list <- df[[paste0(id, "_", new_anchor_ids[["left"]])]]
+                            right_list <- df[[paste0(id, "_", new_anchor_ids[["right"]])]]
+                            new_df <- data.frame(x = left_list, y = top_list, z = right_list)
+                            new_xy <- ggtern::tlr2xy(new_df, ggtern::coord_tern())
+                            new_cols_df <- NULL
+                            if (!sensemakerframeworkrobject$get_signifier_allow_na(id)) {
+                              new_cols_df <- data.frame(x = new_xy[["x"]], y = new_xy[["y"]], t <- top_list, l = left_list, r = right_list)
+                            } else {
+                              new_cols_df <- data.frame(x = new_xy[["x"]], y = new_xy[["y"]], t <- top_list, l = left_list, r = right_list, na = df[[sensemakerframeworkrobject$get_triad_all_column_names(id)[["na"]]]])
+                            }
+                            colnames(new_cols_df) <- sensemakerframeworkrobject$get_triad_all_column_names(new_id, delist = TRUE)
+                            df <- dplyr::bind_cols(df, new_cols_df)
+
+                          } else {
+
+                            # need to test this part - not tested for dyads
+                            new_anchor_ids <- sensemakerframeworkrobject$get_dyad_anchor_ids(new_id)
+                            new_col_ids <- sensemakerframeworkrobject$get_dyad_all_column_names(new_id, delist = TRUE)
+                            new_col_ids_L <- sensemakerframeworkrobject$get_dyad_all_column_names(new_id, delist = FALSE)
+                            left_list <- vector(mode = "list", length = nrow(df))
+                            right_list <- vector(mode = "list", length = nrow(df))
+                            left_list <- df[[paste0(id, "_", new_anchor_ids[["left"]])]]
+                            right_list <- df[[paste0(id, "_", new_anchor_ids[["right"]])]]
+
+                            x_list <- (1 - df[[paste0(id, "X")]])
+                            x_listR <- x_list * 100
+                            new_cols_df <- NULL
+                            if (!sensemakerframeworkrobject$get_signifier_allow_na(id)) {
+                              new_cols_df <- data.frame(x = x_list, l = left_list, r = right_list, xR = x_listR)
+                            } else {
+                              new_cols_df <- data.frame(x = x_list, l = left_list, r = right_list, na = df[[paste0(id, "_NA")]],  xR = x_listR)
+                              # new_cols_df <- data.frame(x = new_df[["x"]], l = new_df[["l"]], r <- new_df[["r"]], na = df[[new_col_ids[["na"]]]])
+                            }
+                            colnames(new_cols_df) <- c(sensemakerframeworkrobject$get_dyad_all_column_names(new_id, delist = TRUE), paste0(new_col_ids_L[["x"]], "R"))
+                            df <- dplyr::bind_cols(df, new_cols_df)
+                          }
+                        }
+
+                        # Now add in the polymorphic triads for overlay display
+                        poly_triad_ids <- sensemakerframeworkrobject$get_poly_sig_ids_for_type("triad")
+
+                        for (i in seq_along(poly_triad_ids)) {
+
+                          poly_triad_id <- poly_triad_ids[[i]]
+                          to_triad_ids <- sensemakerframeworkrobject$get_poly_sig_to_ids(poly_triad_id[[i]])
+
+                          top_col <- as.numeric((df %>% tidyr::unite("top_col", all_of(unlist(purrr::map(to_triad_ids, ~ {sensemakerframeworkrobject$get_triad_top_column_name(.x)}))), remove = FALSE, na.rm = TRUE))[, "top_col"])
+                          left_col <- as.numeric((df %>% tidyr::unite("left_col", all_of(unlist(purrr::map(to_triad_ids, ~ {sensemakerframeworkrobject$get_triad_left_column_name(.x)}))), remove = FALSE, na.rm = TRUE))[, "left_col"])
+                          right_col <- as.numeric((df %>% tidyr::unite("right_col", all_of(unlist(purrr::map(to_triad_ids, ~ {sensemakerframeworkrobject$get_triad_right_column_name(.x)}))), remove = FALSE, na.rm = TRUE))[, "right_col"])
+                          x_col <- as.numeric((df %>% tidyr::unite("x_col", all_of(unlist(purrr::map(to_triad_ids, ~ {sensemakerframeworkrobject$get_triad_x_column_name(.x)}))), remove = FALSE, na.rm = TRUE))[, "x_col"])
+                          y_col <- as.numeric((df %>% tidyr::unite("y_col", all_of(unlist(purrr::map(to_triad_ids, ~ {sensemakerframeworkrobject$get_triad_y_column_name(.x)}))), remove = FALSE, na.rm = TRUE))[, "y_col"])
+                          temp_dataframe <- data.frame(top_col, left_col, right_col, x_col, y_col)
+                          colnames(temp_dataframe) <- c(sensemakerframeworkrobject$get_triad_top_column_name(poly_triad_id), sensemakerframeworkrobject$get_triad_left_column_name(poly_triad_id), sensemakerframeworkrobject$get_triad_right_column_name(poly_triad_id),
+                                                        sensemakerframeworkrobject$get_triad_x_column_name(poly_triad_id), sensemakerframeworkrobject$get_triad_y_column_name(poly_triad_id))
+                          df <- dplyr::bind_cols(df, temp_dataframe)
+                          # add in the colour by column
+                          left_col_names <- unlist(purrr::map(to_triad_ids, ~ {sensemakerframeworkrobject$get_triad_left_column_name(.x)}))
+                          poly_source <- rep_len(NA, length.out = nrow(df))
+                          for (i in 1:nrow(df)) {
+                            if (length(which(!is.na(df[i, left_col_names])) != 0)) {
+                              poly_source[[i]] <- sensemakerframeworkrobject$get_signifier_title(stringr::str_split_1(left_col_names[[which(!is.na(df[i, left_col_names]))]], "_")[[1]])
+                            }
+                          }
+                          poly_source <- stringr::str_remove_all(string = poly_source, pattern = ":")
+
+                          poly_source <- stringr::str_remove_all(string = poly_source, pattern = "\\...")
+                          poly_id <- stringr::str_remove_all(string = poly_source, pattern = " ")
+
+                          temp_id <- sensemakerframeworkrobject$get_poly_overlay_id(poly_triad_id)
+                          df[[temp_id]] <- poly_id
+                          meta_id <- sort(unique(poly_id))  # sort(unique(df[[sensemakerframeworkrobject$get_poly_overlay_id(poly_triad_id)]]))
+                          meta_title <- sort(unique(poly_source))
+
+                          temp_items <- data.frame(id = meta_id, title = meta_title, tooltip = meta_title, visible = rep_len("TRUE", length(meta_title)), other_signifier_id = rep_len("", length(meta_title)))
+                          temp_title <- sensemakerframeworkrobject$get_signifier_title(poly_triad_id)
+
+                          # temp_id <- sensemakerframeworkrobject$get_poly_overlay_id(poly_triad_id)
+                          # do we need to add this to the lists in the new_json and old for the purposes of filtering and colouring
+                          # temp_items <- data.frame(id = meta_values, title = meta_values, tooltip = meta_values, visible = rep_len("TRUE", length(meta_values)), other_signifier_id = rep_len("", length(meta_values)))
+
+                          sensemakerframeworkrobject$add_list(title = temp_title, tooltip = temp_title, allow_na = FALSE, fragment = FALSE, required = FALSE, sticky = FALSE, items = temp_items,  max_responses = 1, min_responses = 1, other_item_id = NULL, other_signifier_id = NULL, theader = NULL, id = temp_id)
+
+                        }
+
+                        return(df)
+
                       },
 
                       add_triad_zones = function(df, sensemakerframeworkrobject) {
@@ -1012,6 +1253,97 @@ Data <- R6::R6Class("Data",
                           return(NULL)
                         }
                         return(out)
+                      },
+
+                      # put the multi-seect mcqs into data structure
+                      transform_multi_select = function(df, sensemakerframeworkrobject) {
+
+                        # No data at all so just return with the emmty tdf1
+                        if (nrow(df) == 0) {
+                          return(df)
+                        }
+                        multi_IDs <- sensemakerframeworkrobject$get_multiselect_list_ids()
+                        # No multi-select MCQs in project so return just the df
+                        if (is.null(multi_IDs)) {
+                          return(df)
+                        }
+
+                        multi_MCQs <- vector("list", length(multi_IDs))
+                        names(multi_MCQs) <- multi_IDs
+                        for (i in seq_along(multi_IDs)) {
+                          mcqItems <- sensemakerframeworkrobject$get_list_items_mcq_list(multi_IDs[[i]])
+                          #mcqColumns <- paste0(multi_IDs[[i]], "_", unlist(mcqItems))
+                          mcqColumns <- sensemakerframeworkrobject$get_list_column_mcq_names(multi_IDs[[i]], delist = TRUE)
+                          multi_MCQs[[i]] <- df %>% tidyr::gather(FileattributeKey, Occurs, mcqColumns) %>% dplyr::select(FragmentID, FileattributeKey, Occurs) %>% dplyr::filter(!is.na(Occurs))
+                          MCQItemNames <- data.frame(attributeKey =   rep(multi_IDs[[i]], length(mcqColumns)),  MCQItemID = mcqColumns, DisplayValue = names(unlist(mcqItems)))
+                          multi_MCQs[[i]] <- dplyr::left_join(multi_MCQs[[i]], MCQItemNames, by = c("FileattributeKey" = "MCQItemID"))
+                          multi_MCQs[[i]][["FileattributeKey"]] <- factor(multi_MCQs[[i]][["FileattributeKey"]], levels = mcqColumns)
+                          multi_MCQs[[i]][["DisplayValue"]] <- factor(multi_MCQs[[i]][["DisplayValue"]], levels = names(unlist(mcqItems)))
+                          multi_MCQs[[i]][["attributeKey"]] <- factor(multi_MCQs[[i]][["attributeKey"]], levels = multi_IDs[[i]])
+                        }
+                        return(multi_MCQs)
+                      },
+                      # get the stone ratios of each of the stone canvases
+                      getStoneRatios = function(data, sensemakerframeworkrobject) {
+
+                        if (sensemakerframeworkrobject$get_stones_count() == 0) {return(NULL)}
+
+                        stoneIDs <- sensemakerframeworkrobject$get_stones_ids()
+
+                        stoneRatios <- vector('list', length = length(stoneIDs))
+
+                        for (i in seq_along(stoneIDs)) {
+
+                          imagePath <- sensemakerframeworkrobject$get_stones_background_image(stoneIDs[[i]])
+
+                          imageSplit <- stringr::str_split(imagePath, "\\.")
+                          if (!(grepl("https", imageSplit[[1]][[1]], fixed = TRUE))) {
+                            stoneRatios[[i]] <- 1.5
+                            next
+                          }
+
+                          if (tools::file_ext(imagePath) == "svg") {
+                            img <- svgtools::read_svg(file = imagePath)
+                            imgXML <- XML::xmlParse(img)
+                            rootnode <- XML::xmlRoot(imgXML)
+                            rn1 <- XML::xmlToList(rootnode[[1]][1][1][["clipPath"]][1][["rect"]])
+                            width <- as.numeric(rn1[["width"]])
+                            height <- as.numeric(rn1[["height"]])
+                            stoneRatios[[i]] <- width / height
+                            next
+                          }
+
+
+                          #   imageType <- imageSplit[[1]][[length(imageSplit[[1]])]]
+                          z <- tempfile()
+                          download.file(imagePath, paste0(z, ".jpeg"), mode="wb")
+                          img <- imager::load.image(file = paste0(z, ".jpeg"))
+                          calRatio <- imager::width(img) / imager::height(img)
+                          #    if (imageType %in% c("jpg", "jpeg")) {
+                          # pic <- readJPEG(paste0(z, ".jpeg"))
+                          #    } else {
+                          #      if (imageType %in% c("png")) {
+                          #        pic <- readPNG(z)
+                          #      }
+                          #    }
+                          # file.remove(z)
+
+                          # calRatio <- dim(pic[[2]]) / dim(pic[[1]])
+
+                          if (length(calRatio) == 0) {
+                            calRatio <- 1.5
+                          }
+                          stoneRatios[[i]] <- calRatio
+
+
+                        }
+
+
+                        names(stoneRatios) <- stoneIDs
+                        return(stoneRatios)
+
+
+                        #  }
                       }
 
 
