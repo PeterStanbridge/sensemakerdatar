@@ -14,4 +14,6 @@ Imports:
     assertr,
     lubridate,
     purrr,
-    sensemakerframeworkr
+    sensemakerframeworkr,
+    stringr,
+    XML

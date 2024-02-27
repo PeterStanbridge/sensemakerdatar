@@ -38,8 +38,8 @@
 #' triad_01_image <- pt$get_triad_background_image(fw_triads[[1]])
 Data <- R6::R6Class("Data",
                     public = list(
-                      #' @field is_demonstrator Boolean - TRUE if the token is a demonstrator account.
-                      is_demonstrator = NULL,
+                      #' @field demonstrator Boolean - TRUE if the token is a demonstrator account.
+                      demonstrator = NULL,
                       # this will be a list of lists containing the data.
                       #' @field data The full list of data objects keyed by the name of the field. NOTE - this will be user (coder) extendible
                       data = list(NULL),
@@ -50,6 +50,8 @@ Data <- R6::R6Class("Data",
                       dat = NULL,
                       #' @field df_keep Always the full dataset even through linked fw selections- enables restore of full dataset when deselecting linked frameworks
                       df_keep = NULL,
+                      #' @field df_titles Dataframe of the data containing titles and not ids
+                      df_titles = NULL,
                       #' @field df_multi_select The transformed multi-select MCQ data
                       df_multi_select = NULL,
                       #' @field df_multi_select_full The transformed multi-select MCQ data - always full set
@@ -64,8 +66,8 @@ Data <- R6::R6Class("Data",
                       title_use = NULL,
                       #' @field sm_framework the framework definition
                       sm_framework = NULL,
-                      #' @field framework_definition The framework json for non-dashboard or dashbpard parent
-                      framework_definition = NULL,
+                      #' @field framework_definition_json The framework json for non-dashboard or dashbpard parent
+                      framework_definition_json = NULL,
                       #' @field dashboard_definition_v1 The dashboard json for version 1 because we need to do work with it after declaring it
                       dashboard_definition_v1 = NULL,
                       #' @field dashboard_definition_v2 The dashboard json for version 2 because we need to do work with it after declaring it
@@ -82,18 +84,22 @@ Data <- R6::R6Class("Data",
                       dashboard_id = NULL,
                       #' @field dashboard_title The title of the dashboard
                       dashboard_title = NULL,
-                      #' @field dashboard_combined_frameworks Named vector of the combined dashboard frameworks. Names with ids as list title
-                      dashboard_combined_frameworks = NULL,
+                      #' @field dashboard_combined_frameworks_names Named vector of the combined dashboard frameworks. Names with ids as list title
+                      dashboard_combined_frameworks_names = NULL,
                       #' @field dashboard_combined_frameworks_rev reverse of above. ids as content, titles as names
-                      dashboard_combined_frameworks_rev = NULL,
+                      dashboard_combined_frameworks_ids = NULL,
                       #' @field dashboard_version The dashboard version - whether 1 or 2
                       dashboard_version = NULL,
                       #' @field polymorphic_definition_json The jsonlite package parsed json for polymorphic definitions if they exist
                       polymorphic_definition_json = NULL,
-                      #' @field polymorphic_sigs The parsed jsonlite package parsed json for polymorphic definitions if they exist
-                      polymorphic_sigs = NULL,
-                      #' @field has_poly_sigs The parsed framework has polymorphic signifieres
-                      has_poly_sigs = NULL,
+                      #' @field polymorphic_signifiers The parsed jsonlite package parsed json for polymorphic definitions if they exist
+                      polymorphic_signifiers = NULL,
+                      #' @field has_polymorphic_signifiers The parsed framework has polymorphic signifieres
+                      has_polymorphic_signifiers = FALSE,
+                      #' @field fragment_level_upload dataframe of fragment level list updates to data
+                      fragment_level_upload = NULL,
+                      #' @field FK_level_upload dataframe of fragment level list updates to data
+                      FK_level_upload = NULL,
                       #' @description
                       #' Create a new `data` object.
                       #' @details
@@ -105,26 +111,46 @@ Data <- R6::R6Class("Data",
                       #' @param token if using the platform security, the token to gain access to the data. Used only when framework_id or dashboard_id passed.
                       #' @param sensemakerframeworkrobject - optional sensemakerframeworkr R6 class object which would be added to based on data loaded (e.g. meta columns)
                       #' @param polymorphic_definition_json - jsonlite parsed json file of the polymorphic definition - default blank
+                      #' @param fragment_level_csv - a csv file containing fragment level additional data columns to add to the dataset and define as list items for analysis
+                      #' @param fragment_level_parsed - an already parsed (read) csv as fragment level additional data columns
+                      #' @param FK_level_csv - a csv file containing additional data columns linked by a FK - i.e. the id values of a signifier other than the fragmentID - e.g. county linked to city id
+                      #' @param FK_level_parsed - an already parsed (read) csv as additional data columns linked by FK
+                      #' @param upload_na_identifier - The identifier in the csv files for NA values - this should be consistent through all files. Typically "" or "NA"
                       #' @return A new `signifier` R6 class object and fields type by signifier id, signifier ids by type, and
-                      initialize = function(csvfilename = NA, csvfiledf = NA, framework_id = NA, dashboard_id = NA,
-                                            token = NA, sensemakerframeworkrobject = NA, polymorphic_definition_json = "") {
-                        sensemakerdata <- private$get_data(csvfilename, csvfiledf, framework_id, dashboard_id, token, sensemakerframeworkrobject, polymorphic_definition_json)
+                      initialize = function(csvfilename = "", csvfiledf = "", framework_id = "", dashboard_id = "",
+                                            token = "", sensemakerframeworkrobject = "", polymorphic_definition_json = "", fragment_level_csv = "",
+                                            fragment_level_parsed = "", FK_level_csv = "", FK_level_parsed = "", upload_na_identifier = "") {
+                        sensemakerdata <- private$get_data(csvfilename, csvfiledf, framework_id, dashboard_id, token, sensemakerframeworkrobject,
+                                                           polymorphic_definition_json, fragment_level_csv, fragment_level_parsed,
+                                                           FK_level_csv, FK_level_parsed, upload_na_identifier)
 
                       },
+                      #' @description
+                      #' is the account accessing this framework a demonstrator account, TRUE or FALSE.
+                      #' @return TRUE or FALSE
+                      is_demonstrator = function() {
+                        return(self$demonstrator)
+                      },
+                      #' @description
+                      #' is the definition being accessed a dashboard, TRUE or FALSE.
+                      #' @return TRUE or FALSE
                       is_dashboard = function() {
                         if (!is.null(self$dashboard_id)) {return(TRUE)}
                         return(FALSE)
                       },
-
+                      #' @description
+                      #' get the dashboard parsed json definition.
+                      #' @return The parsed dashboard definition
                       get_dashboard_definition = function() {
                         if (self$get_dashboard_version() == "v1") {
                           return(self$dashboard_definition_v1) } else {
                             return(self$dashboard_definition_v2)
                           }
-
                       },
-
-                      is_combined = function() {
+                      #' @description
+                      #' get wheter the dashboard is a combined dashboard or not, TRUE or FALSE.
+                      #' @return TRUE or FALSE
+                      is_combined_dashboard = function() {
                         if (!self$is_dashboard()) {return(FALSE)}
                         if (self$get_dashboard_version() == "v1") {v_length = length(self$get_dashboard_definition()$config$frameworks_mapping)}
                         if (self$get_dashboard_version() == "v2") {v_length = length(self$get_dashboard_definition()$settings$idMap)}
@@ -134,7 +160,11 @@ Data <- R6::R6Class("Data",
                           return(FALSE)
                         }
                       },
-                      has_filters = function() {
+                      #' @description
+                      #' get whether the dashboard is a combined dashboard or not, TRUE or FALSE.
+                      #' @return TRUE or FALSE
+                      dashboard_has_filters = function() {
+                        if (!self$is_dashboard()) {return(NULL)}
                         if (self$get_dashboard_version() == "v1") {
                           ret_val <- any(self$dashboard_definition_v1$filters$showFilter == TRUE)
                           if (!ret_val) {
@@ -145,70 +175,254 @@ Data <- R6::R6Class("Data",
                             ret_val <- ifelse(is.null(self$dashboard_filters_v2[["value"]][["query"]]), FALSE, TRUE)
                           }
                         }
-
                         return(ret_val)
-
                       },
-
+                      #' @description
+                      #' Get the dashboard version.
+                      #' @return v1 or v2
                       get_dashboard_version = function() {
                         if (!self$is_dashboard()) {return(NULL)}
                         return(self$dashboard_version)
                       },
-
+                      #' @description
+                      #' Get the dashboard combined signifier mappings if it is a combined dashboard
+                      #' @return Parsed json of the signifier mapping specifications
                       get_dashboard_combined_mappings = function() {
+                        if (!self$is_dashboard()) {return(NULL)}
+                        if (!self$is_combined_dashboard()) {return(NULL)}
                         if (self$get_dashboard_version() == "v1") {
                           return(self$get_dashboard_definition()$config$frameworks_mapping)
                         } else {
                           return(self$get_dashboard_definition()$settings$idMap)
                         }
                       },
-
+                      #' @description
+                      #' Get the framework_id (if a dashboard, the framework id will be different to the dashboard id passed in)
+                      #' @return The framework id
                       get_framework_id = function() {
                         return(self$framework_id)
                       },
-
+                      #' @description
+                      #' Get the framework title (if a dashboard, the framework title will be different to the dashboard title)
+                      #' @return The framework id
                       get_framework_title = function() {
                         return(self$framework_title)
                       },
-
+                      #' @description
+                      #' Get the dashboard id
+                      #' @return The dashboard id
                       get_dashboard_id = function() {
+                        if (!self$is_dashboard()) {return(NULL)}
                         return(self$dashboard_id)
                       },
-
+                      #' @description
+                      #' Get the dashboard title
+                      #' @return The dashboard title
                       get_dashboard_title = function() {
+                        if (!self$is_dashboard()) {return(NULL)}
                         return(self$dashboard_title)
                       },
-
+                      #' @description
+                      #' Get the names and ids for the frameworks making up the combined dashboard
+                      #' @param include_id - if TRUE, return the ids as the list elements (Default TRUE)
+                      #' @param only_id - if TRUE, return the ids and not the names (as list names)
+                      #' @param include_parent - if TRUE, incudes the parent framework along with the combined ones .
+                      #' @return List of framework ids with title as names (or vector of ids if only_id TRUE)
                       get_combined_dashboard_frameworks_for_dropdown = function(include_id = TRUE, only_id = FALSE, include_parent = FALSE) {
+                        if (!self$is_dashboard()) {return(NULL)}
+                        if (!self$is_combined_dashboard()) {return(NULL)}
                         parent_fw <- vector("list", length = 1)
                         parent_fw[[1]] <- self$get_framework_id()
                         names(parent_fw) <-  self$get_framework_title()
-
                         if (only_id) {
                           if (include_parent) {
-                            return(unlist(unname((append(parent_fw, self$dashboard_combined_frameworks_rev)))))
+                            return(unlist(unname((append(parent_fw, self$dashboard_combined_frameworks_ids)))))
                           } else {
-                            return(unlist(unname((self$dashboard_combined_frameworks_rev))))
+                            return(unlist(unname((self$dashboard_combined_frameworks_ids))))
                           }
                         }
-
                         if (include_id) {
-
                           if (include_parent) {
-                            return(append(parent_fw, self$dashboard_combined_frameworks_rev))
+                            return(append(parent_fw, self$dashboard_combined_frameworks_ids))
                           } else {
-                            return(self$dashboard_combined_frameworks_rev)
+                            return(self$dashboard_combined_frameworks_ids)
                           }
-
                         }
-
                         if (include_parent) {
-                          return(names(append(parent_fw, self$dashboard_combined_frameworks)))
+                          return(names(append(parent_fw, self$dashboard_combined_frameworks_names)))
                         } else {
-                          return(names(self$dashboard_combined_frameworks))
+                          return(names(self$dashboard_combined_frameworks_names))
                         }
                         return(ret_val)
+                      },
+                      #' @description
+                      #' Get the data entry names (names in the data field)
+                      #' @param return_type "system" returns on the systemm ones, "user" only the user defined, "both" both
+                      #' @return The names in the data data.frame
+                      get_framework_data_names = function(return_type = "system") {
+                        if (!(return_type %in% c("user", "system", "both"))) {return(NULL)}
+                        system <- c("df1", "dat", "df_keep", "df_multi_select", "df_multi_select_full", "stone_data", "title_data", "title_use")
+                        if (return_type == "system") {return(system)}
+                        if (return_type == "both") {return(names(self$data))}
+                        if (return_type == "user") {return(names(self$data[-pmatch(system, names(self$data))]))}
+                      },
+                      #' @description
+                      #' add a dataframe to the data field
+                      #' @param data_frame the data.frame to add
+                      #' @param data_frame_name the name of the dataframe to add (will access it by get_framework_data(<data_frame_name>))
+                      #' @return will return the data frame or NULL if it isn't a dataframe or the name is invalid or blank
+                      add_framework_data_frame = function(data_frame, data_frame_name) {
+                        if (is.null(data_frame_name)) {return(NULL)}
+                        if (data_frame_name == "") {return(NULL)}
+                        if (make.names(data_frame_name) != data_frame_name) {return(NULL)}
+                        if (is.null(data_frame)) {return(NULL)}
+                        if (all(data_frame == "")) {return(NULL)}
+                        if (!is.data.frame(data_frame)) {return(NULL)}
+                        self$data[[data_frame_name]] <- data_frame
+                        return(data_frame)
+                      },
+                      #' @description
+                      #' Get the data
+                      #' @param data_name - the name of the data to be returned. System values are "df1", "dat", "df_keep", "df_multi_select", "df_multi_select_full" and "stone_data", "title_data", "title_use". User defined names are allowed
+                      #' @return The data data.frame
+                      get_framework_data = function(data_name) {
+                        if (!(data_name %in% names(self$data))) {return(NULL)}
+                        return(self$data[[data_name]])
+                      },
+                      #' @description
+                      #' Get the df1 data
+                      #' @return The df1 data data.frame
+                      get_df1_data = function() {
+                        return(self$data[["df1"]])
+                      },
+                      #' @description
+                      #' Get the dat data
+                      #' @return The dat data data.frame
+                      get_dat_data = function() {
+                        return(self$data[["dat"]])
+                      },
+                      #' @description
+                      #' Get the df_keep data
+                      #' @return The df_keep data data.frame
+                      get_df_keep_data = function() {
+                        return(self$data[["df_keep"]])
+                      },
+                      #' @description
+                      #' Get the df_multi_select data
+                      #' @return The df_multi_select data data.frame
+                      get_df_multi_select_data = function() {
+                        return(self$data[["df_multi_select"]])
+                      },
+                      #' @description
+                      #' Get the df_multi_select_full data
+                      #' @return The df_multi_select_full data data.frame
+                      get_df_multi_select_full_data = function() {
+                        return(self$data[["df_multi_select_full"]])
+                      },
+                      #' @description
+                      #' Get the stone_data data
+                      #' @return The stone_data data data.frame
+                      get_stone_data_data = function() {
+                        return(self$data[["stone_data"]])
+                      },
+                      #' @description
+                      #' Get the stone_data data
+                      #' @return The stone_data data data.frame
+                      get_stones_ratio = function(stones_id = "", include_ids = FALSE) {
+                        if (stones_id != "") {
+                          if (!(stones_id %in% names(self$stone_ratios))) {return(NULL)}
+                        }
+                        if (stones_id == "") {
+                          if (include_ids) {return(self$stone_ratios)}
+                          if (!include_ids) {return(unlist(unname(self$stone_ratios)))}
+                        } else {
+                          if (include_ids) {return(self$stone_ratios[stones_id])}
+                          if (!include_ids) {return(unlist(unname(self$stone_ratios[[stones_id]])))}
+                        }
+                      },
+
+                      #' @description
+                      #' Get the title_data data
+                      #' @return The title_data data data.frame
+                      get_title_data_data = function() {
+                        return(self$data[["title_data"]])
+                      },
+                      #' @description
+                      #' Get the title_use data
+                      #' @return The title_use data data.frame
+                      get_title_use_data = function() {
+                        return(self$data[["title_use"]])
+                      },
+                      #' @description
+                      #' Get the title_use data
+                      #' @return The title_use data data.frame
+                      get_sm_framework = function() {
+                        return(self$sm_framework)
+                      },
+                      #' @description
+                      #' Get the framework definition parsed json
+                      #' @return The framework definition parsed json
+                      get_framework_definition_json = function() {
+                        return(self$framework_definition_json)
+                      },
+                      #' @description
+                      #' Get the dashboard definition parsed json
+                      #' @return The dashboard definition parsed json
+                      get_dashboard_definition_json = function() {
+                        if (!(self$is_dashboard())) {return(NULL)}
+                        return(eval(parse(text = paste0("self$dashboard_definition_", self$get_dashboard_version()))))
+                      },
+                      #' @description
+                      #' Get the dashboard layout parsed json
+                      #' @return The dashboard layout parsed json
+                      get_dashboard_layout_json = function() {
+                        if (!(self$is_dashboard())) {return(NULL)}
+                        if (!(self$get_dashboard_version() == "v2")) {return(NULL)}
+                        return(self$dashboard_layout_v2)
+                      },
+                      #' @description
+                      #' Get the dashboard layout parsed json
+                      #' @return The dashboard layout parsed json
+                      get_dashboard_filters_json = function() {
+                        if (!(self$is_dashboard())) {return(NULL)}
+                        if (!(self$get_dashboard_version() == "v2")) {return(NULL)}
+                        return(self$dashboard_filters_v2)
+                      },
+                      #' @description
+                      #' Get the dashboard combined frameworks names
+                      #' @param include_ids if TRUE return the framework ids as the list names, defaults to FALSE
+                      #' @return The dashboard combined framework names
+                      get_dashboard_combined_frameworks_names = function(include_ids = FALSE) {
+                        if (!(self$is_dashboard())) {return(NULL)}
+                        if (include_ids) {
+                          return(self$dashboard_combined_frameworks_names)
+                        }
+                        if (!include_ids) {return(unlist(unname(self$dashboard_combined_frameworks_names)))}
+                      },
+                      #' @description
+                      #' Get the dashboard combined frameworks ids
+                      #' @param include_names if TRUE return the framework names as the list names, defaults to FALSE
+                      #' @return The dashboard combined framework ids
+                      get_dashboard_combined_frameworks_ids = function(include_names = FALSE) {
+                        if (!(self$is_dashboard())) {return(NULL)}
+                        if (include_names) {
+                          return(self$dashboard_combined_frameworks_ids)
+                        }
+                        if (!include_names) {return(unlist(unname(self$dashboard_combined_frameworks_ids)))}
+                      },
+                      #' @description
+                      #' Get whether the framework has polymorphic signifiers
+                      #' @return TRUE if framework has polymorphic signifiers otherwise FALSE
+                      get_has_polymorphic_signifiers = function() {
+                        return(self$has_polymorphic_signifiers)
+                      },
+                      #' @description
+                      #' Get the polymorphic signifiers
+                      #' @return Parsed JSON file of the polymorphic signifier definitions
+                      get_polymorphic_signifiers = function() {
+                        return(self$polymorphic_signifiers)
                       }
+
                     ),
 
                     private = list(
@@ -222,52 +436,167 @@ Data <- R6::R6Class("Data",
                                          "meta_completed_location_longitude", "meta_collection_time_Mins", "meta_completed_location_altitudeAccuracy",
                                          "meta_started_location_altitudeAccuracy"),
                       # function handling the initialisation - get the data, process the data and load appropriate fields
-                      get_data = function(csvfilename = NA, csvfiledf = NA, framework_id = NA, dashboard_id = NA, token = NA, sensemakerframeworkrobject = NA, polymorphic_definition_json = "") {
+                      get_data = function(csvfilename, csvfiledf, framework_id, dashboard_id, token, sensemakerframeworkrobject, polymorphic_definition_json,
+                                          fragment_level_csv, fragment_level_parsed, FK_level_csv, FK_level_parsed, upload_na_identifier) {
+
                         # checking that the parameters are correct.
                         # either one of filename/csvfiledf OR framework_id/dashboard_id
                         # if dashboard_id or framework_id then must have token.
                         # we don't worry about testing if token when csvfile or dataframe passed - just not used.
                         end_point <- "openapi"
-                        assertive::assert_any_are_not_na(c(csvfilename, csvfiledf, framework_id, dashboard_id, token), severity = "stop")
-                        assertive::assert_any_are_na(c(csvfilename, csvfiledf), severity = "stop")
-                        assertive::assert_any_are_na(c(framework_id, dashboard_id), severity = "stop")
-                        if  (length(which(!is.na(c(csvfilename, csvfiledf)) == TRUE)) == 1 & length(which(!is.na(c(framework_id, dashboard_id)) == TRUE)) >= 1) {
+                        #    assertive::assert_any_are_not_na(c(csvfilename, csvfiledf, framework_id, dashboard_id, token), severity = "stop")
+                        if (all(c(csvfilename, csvfiledf, framework_id, dashboard_id, token) == "")) {
+                          print("at least one parameter needs to be provided")
+                          stop()
+                        }
+
+                        #   assertive::assert_any_are_na(c(framework_id, dashboard_id), severity = "stop")
+                        if  (all(c(csvfilename, csvfiledf) != "")) {
+                          print("you cannot provide a file name and a data frame together")
+                          stop()
+                        }
+
+                        if  (all(c(framework_id, dashboard_id) != "")) {
+                          print("you cannot provide a framework_id and a dashboard_id together")
+                          stop()
+                        }
+
+                        if  (any(c(csvfilename, csvfiledf) != "")  & any(c(framework_id, dashboard_id) != "")) {
                           print("you cannot have file name or file while also passing framework id or dashboard id")
                           stop()
                         }
 
-                        if (any(c(csvfilename, csvfiledf, framework_id, dashboard_id) == "", na.rm = TRUE)) {
-                          print("no parameter should be a blank string")
-                          stop()
-                        }
 
-                        if (length(which(!is.na(c(framework_id, dashboard_id)))) == 1 & is.na(token)) {
+                        if (any(c(framework_id, dashboard_id) == "") &  token == "") {
                           print("if providing a framework id or dashboard id you must provide a token")
                           stop()
                         }
 
-                        if (!is.data.frame(csvfiledf)) {
-                          if ((any(!is.na(csvfiledf)))) {
+                        if (csvfiledf != "") {
+                          if (!is.data.frame(csvfiledf)) {
                             print("csvfiledf should be a dataframe")
                             stop()
+                          } else {
+                            if (!('project_id' %in% colnames(csvfiledf))) {
+                              print("data frame 'csvfiledf' must have a column 'project_id' with the framework id present")
+                              stop()
+                            }
                           }
-                        } else {
-                          if (!('project_id' %in% colnames(csvfiledf))) {
-                            print("data frame 'csvfiledf' must have a column 'project_id' with the framework id present")
+                        }
+
+                        if (csvfilename != "") {
+                          assertive::assert_all_are_existing_files(x = csvfilename, severity = "stop")
+                        }
+
+                        # =========== fragment level level update files or parsed data =================
+
+                        # validate fragment level csv stuff if passed in
+                        if (any(fragment_level_csv != "") & any(fragment_level_parsed != "")) {
+                          print("only one of fragment level csv or fragment level parsed can be non blank")
+                          stop()
+                        }
+
+
+                        if (any(fragment_level_csv != "")) {
+                          if (any(!unlist(unname(purrr::map(fragment_level_csv, ~ {file.exists(.x)}))))) {
+                            print("at least one of the passed in fragment level csv files does not exist")
                             stop()
                           }
 
+
+                          if (any(unlist(unname(purrr::map(fragment_level_csv, ~ {!stringr::str_ends(fragment_level_csv, ".csv")}))))) {
+                            print("at least one of the passed in fragment level csv files does not have a .csv extension")
+                            stop()
+                          }
+
+
+                          # read the fragment level files
+                          fl_list <- NULL
+                          purrr::walk(fragment_level_csv, ~ {fl_list[[.x]] <<- read.csv(.x, na.strings = upload_na_identifier, check.names = FALSE,stringsAsFactors = FALSE)})
+                          # first columns in each must be "FragmentID" or "id"
+                          if (any(unlist(unname(purrr::map(names(fl_list), ~ {colnames(fl_list[[.x]])[[1]] == "FragmentID" | colnames(fl_list[[.x]])[[1]] == "id"}))) == FALSE)) {
+                            print("The first column in each file must be named 'Fragment_ID' or 'id'")
+                            stop()
+                          }
+                          self$fragment_level_upload <- fl_list
                         }
 
-                        if (!is.na(csvfilename)) {
-                          assertive::assert_all_are_existing_files(x = csvfilename, severity = "stop")
+                        if (any(fragment_level_parsed != "")) {
+                          if (any(!unlist(unname(purrr::map(fragment_level_parsed, ~ {is.data.frame(.x)}))))) {
+                            print("at least one of the passed in fragment level parsed is not a dataframe")
+                            stop()
+                          }
+
+                          if(any(unlist(unname(purrr::map(fragment_level_parsed, ~ {colnames(.x)[[1]] == "id" | colnames(.x)[[1]] == "FragmentID"}))) == FALSE)) {
+                            print("at least one of the passed in fragment level parsed does not have 'id' or 'FragmentID' as first column ")
+                            stop()
+                          }
+                          self$fragment_level_upload <- fragment_level_parsed
                         }
+
+                        # =========== FK level update files or parsed data =================
+
+                        if (any(FK_level_csv != "") & any(FK_level_parsed != "")) {
+                          print("only one of foreign key level csv or fragment level parsed can be non blank")
+                          stop()
+                        }
+
+
+                        if (any(FK_level_csv != "")) {
+                          if (any(!unlist(unname(purrr::map(FK_level_csv, ~ {file.exists(.x)}))))) {
+                            print("at least one of the passed in foreign key level csv files does not exist")
+                            stop()
+                          }
+                          if (any(unlist(unname(purrr::map(FK_level_csv, ~ {!stringr::str_ends(FK_level_csv, ".csv")}))))) {
+                            print("at least one of the passed in oreign key level csv files does not have a .csv extension")
+                            stop()
+                          }
+                          # read the fragment level files
+                          fl_list <- NULL
+                          purrr::walk(FK_level_csv, ~ {fl_list[[.x]] <<- read.csv(.x, na.strings = upload_na_identifier, check.names = FALSE,stringsAsFactors = FALSE)})
+                          # Must only have 2 columns
+                          if (any(unlist(unname(purrr::map(names(fl_list), ~ {length(colnames(fl_list[[.x]])) != 2}))))) {
+                            print("Each foreign key file must have only two columns. The FK column and the new values column")
+                            stop()
+                          }
+                          # first column must exist in the data csv
+                          if (any(unlist(unname(purrr::map(names(fl_list), ~ {colnames(fl_list[[.x]])[[1]] %in% colnames(df)}))))) {
+                            print("The first column name in each file must exist in the data file as a foreign key link")
+                            stop()
+                          }
+                          self$FK_level_upload <- fl_list
+                        }
+
+                        # now if FK parsed data passed in
+                        if (any(FK_level_parsed != "")) {
+                          # must be dataframes
+                          if (any(!unlist(unname(purrr::map(FK_level_parsed, ~ {is.data.frame(.x)}))))) {
+                            print("at least one of the passed in FK level parsed is not a dataframe")
+                            stop()
+                          }
+
+                          if(any(unlist(unname(purrr::map(names(FK_level_parsed), ~ {length(colnames(FK_level_parsed[[.x]])) != 2}))))) {
+                            print("Each foreign key file must have only two columns. The FK column and the new values column")
+                            stop()
+                          }
+
+                          # first column must exist in the data csv
+                          if (any(unlist(unname(purrr::map(names(FK_level_parsed), ~ {colnames(FK_level_parsed[[.x]])[[1]] %in% colnames(df)}))))) {
+                            print("The first column name in each foreign key file must exist in the data file as a foreign key link")
+                            stop()
+                          }
+
+                          self$FK_level_upload <- FK_level_parsed
+
+
+                        }
+
 
                         # end of parameter checking.
                         # "df" to store the data frame read or downloaded
                         df <- NULL
 
-                        if (!is.na(csvfilename)) {
+                        if (csvfilename != "") {
                           df <- read.csv(csvfilename, check.names = FALSE, stringsAsFactors = FALSE, as.is = TRUE, encoding = "UTF-8")
                           if (!("project_id" %in% colnames(df))) {
                             print("file 'csvfilename' must have a column 'project_id' with the framework id present")
@@ -285,17 +614,15 @@ Data <- R6::R6Class("Data",
                         }
 
                         # framework id is passed (so at some stage will have to use the API to get the data. )
-                        if (!is.na(framework_id)) {
+                        if (framework_id != "") {
                           self$framework_id <- framework_id
                         }
                         # preliminary process of the dashboard - get the framework id and the frqmework data.
-                        if (!is.na(dashboard_id)) {
+                        if (dashboard_id != "") {
 
                           # get the dashboard definition.
                           # try version one of the dashboard
-
                           dashboard_definition <- private$get_v1_DashboardDefinition(end_point, dashboard_id, token)
-
                           if (!is.null(dashboard_definition$framework_id)) {
                             self$dashboard_definition_v1 <- dashboard_definition
                             self$framework_id <- dashboard_definition$framework_id
@@ -319,12 +646,12 @@ Data <- R6::R6Class("Data",
                         # Get the data
                         if (is.null(df)) {
                           is_demonstrator <- private$get_is_demonstrator(token)
-                          self$is_demonstrator <- is_demonstrator
+                          self$demonstrator <- is_demonstrator
                           df <- private$get_API_framework_data(end_point, self$framework_id, token, is_demonstrator)
                         }
                         # Now we have df as the data frame required for processing - but does the dataframe match the definition
                         # get the framework_id if not present
-                        if (is.na(framework_id)) {
+                        if (framework_id == "") {
                           framework_id <- df[1, "project_id"]
                           self$framework_id <- framework_id
                         }
@@ -345,11 +672,11 @@ Data <- R6::R6Class("Data",
                         df <- private$apply_dates(df)
 
                         # assign the framework json definition to field
-                        self$framework_definition <- sensemakerframeworkrobject$framework_json
+                        self$framework_definition_json <- sensemakerframeworkrobject$framework_json
 
                         # now process the dashboard completely - this function has side effects on the dashboard definition,
                         # data and framework definition
-                        if (!is.na(dashboard_id)) {
+                        if (dashboard_id != "") {
                           df <- do.call(paste0("process_dashboard_definition_", self$dashboard_version), args = list(df, framework_id, end_point, dashboard_id, token, is_demonstrator, sensemakerframeworkrobject), envir = private)
                         }
 
@@ -358,13 +685,20 @@ Data <- R6::R6Class("Data",
                         # Main framework title
                         self$framework_title <- self$sm_framework$get_parent_framework_name()
 
+
+
+
                         # start processing data
                         self$df1 <- private$process_data(df, sensemakerframeworkrobject)
 
 
+
+
+
+
                         # populate the data class fields including the generic array "data" which can be extended by application developers
-                        self$data <- vector("list", length = 6)
-                        names(self$data) <- c("df1", "dat", "df_keep", "df_multi_select", "df_multi_select_full", "stone_data")
+                        self$data <- vector("list", length = 9)
+                        names(self$data) <- c("df1", "dat", "df_keep", "df_titles", "df_multi_select", "df_multi_select_full", "stone_data", "title_data", "title_use")
 
                         if (!is.null(self$df1)) {
                           self$data[["df1"]] <- self$df1
@@ -456,6 +790,17 @@ Data <- R6::R6Class("Data",
                         # NOTE In setting the "include" to false for these lists, we are compromising on the old WB way of dealing with
                         # multi-select attributes, which is here set at the proper place as the signifier class.
                         list_items <- data.frame(id = c("selected", "notselected"), title = c("selected", "not selected"), tooltip = c("selected", "not selected"), visible = c(TRUE, TRUE), other_signifier_id = c("", ""))
+                        #      purrr::walk(sensemakerframeworkrobject$get_multiselect_list_ids(), ~
+                        #                    {purrr::walk2(sensemakerframeworkrobject$get_list_items_ids(.x), .x, ~
+                        #                                   {ttitle <- paste0(sensemakerframeworkrobject$get_signifier_title(.y), "_",
+                        #                                                     sensemakerframeworkrobject$get_list_item_title(.y, .x));
+                        #                                   sensemakerframeworkrobject$add_list(title = ttitle, tooltip = ttitle, allow_na = FALSE,
+                        #                                                                      fragment = FALSE, required = FALSE, sticky = FALSE,
+                        #                                                                      items = list_items,  max_responses = 1, min_responses = 1,
+                        #                                                                      other_item_id = NULL, other_signifier_id = NULL, sig_class = "multi_select_item",
+                        #                                                                      theader = NULL, id = paste0(ttitle, "_selected"));
+                        #                                  sensemakerframeworkrobject$change_signifier_include(id = paste0(ttitle, "_selected"), value = FALSE)})},
+                        #               list_items)
                         purrr::walk(sensemakerframeworkrobject$get_multiselect_list_ids(), ~
                                       {purrr::walk2(sensemakerframeworkrobject$get_list_items_ids(.x), .x, ~
                                                       {ttitle <- paste0(sensemakerframeworkrobject$get_signifier_title(.y), "_",
@@ -464,8 +809,8 @@ Data <- R6::R6Class("Data",
                                                                                           fragment = FALSE, required = FALSE, sticky = FALSE,
                                                                                           items = list_items,  max_responses = 1, min_responses = 1,
                                                                                           other_item_id = NULL, other_signifier_id = NULL, sig_class = "multi_select_item",
-                                                                                          theader = NULL, id = paste0(ttitle, "_selected"));
-                                                      sensemakerframeworkrobject$change_signifier_include(id = paste0(ttitle, "_selected"), value = FALSE)})},
+                                                                                          theader = NULL, id = paste0(.y, "_", .x, "_selected"));
+                                                      sensemakerframeworkrobject$change_signifier_include(id = paste0(.y, "_", .x, "_selected"), value = FALSE)})},
                                     list_items)
 
                         # add the date and columns as filters to framework definition - side effects on the sensemakerframeworkrobject object
@@ -488,7 +833,7 @@ Data <- R6::R6Class("Data",
                         purrr::walk(metaColNamesX, ~ {data_vals <- sort(unique(df[!is.na(df[[.x]]), .x])); list_items <- data.frame(id = data_vals, title = data_vals,
                                                                                                                                     tooltip = data_vals, visible = rep_len(TRUE, length.out = length(data_vals)),
                                                                                                                                     other_signifier_id = rep_len("", length(data_vals)));
-                                             sensemakerframeworkrobject$add_list(title = .x, tooltip = .x, allow_na = FALSE,
+                        sensemakerframeworkrobject$add_list(title = .x, tooltip = .x, allow_na = FALSE,
                                                             fragment = FALSE, required = FALSE, sticky = FALSE,
                                                             items = list_items,  max_responses = 1, min_responses = 1,
                                                             other_item_id = NULL, other_signifier_id = NULL, sig_class = "meta",
@@ -497,7 +842,7 @@ Data <- R6::R6Class("Data",
 
                         # adding the project ids into the mcq list if this is a combined one and more than one frameworkid in the data
                         # is combined will only be true if it is a dashboard and a combined one
-                        if (self$is_combined()) {
+                        if (self$is_combined_dashboard()) {
                           combined_list <- self$get_combined_dashboard_frameworks_for_dropdown(include_id = TRUE, only_id = FALSE, include_parent = TRUE)
                           if (length(combined_list) > 1 & length(sort(unique(df[["project_id"]]))) > 1) {
                             list_items <- data.frame(id = unlist(unname(combined_list)), title = names(combined_list),
@@ -511,21 +856,7 @@ Data <- R6::R6Class("Data",
                           }
                         }
 
-
-                        # Process multi-select MCQs
-                        for (list_id in sensemakerframeworkrobject$get_multiselect_list_ids()) {
-                          for (col_name in sensemakerframeworkrobject$get_list_column_names(list_id)) {
-                            df[[paste0(col_name, "_selected")]] <- unlist(unname(purrr::map(df[[col_name]], ~ {ifelse(is.na(.x), "notselected", "selected")})))
-                            # now create a list item in the new sensemakerframeworkr
-                            list_items <- data.frame(id = c("selected", "notselected"), title = c("selected", "not selected"), tooltip = c("selected", "not selected"), visible = c(TRUE, TRUE), other_signifier_id = c("", ""))
-                            temp_list_item_id <- unlist(stringi::stri_split(col_name, regex = "_"))[[2]]
-                            temp_title <- paste(sensemakerframeworkrobject$get_signifier_title(list_id), "-", sensemakerframeworkrobject$get_list_item_title(list_id, temp_list_item_id))
-                            sensemakerframeworkrobject$add_list(title = temp_title, tooltip = temp_title, allow_na = FALSE, fragment = FALSE, required = FALSE, sticky = FALSE, items = list_items,  max_responses = 1, min_responses = 1, other_item_id = NULL, other_signifier_id = NULL, theader = NULL, id = paste0(col_name, "_selected"))
-                            sensemakerframeworkrobject$change_signifier_include(id = paste0(col_name, "_selected"), value = FALSE)
-                          }
-                        }
-
-                        # now do the same for single select MCQs that only have one item - they don't work on stats requiring 2 or more items
+                        # Add selected MCQ for any single select MCQ that has only one item. The single item one cannot be used in many stats operations
                         single_item_mcqs <- unlist(unname(purrr::keep(sensemakerframeworkrobject$get_single_select_list_ids(), ~ {sensemakerframeworkrobject$get_list_num_items(.x) == 1})))
                         for (list_id in single_item_mcqs) {
                           for (col_name in sensemakerframeworkrobject$get_list_column_names(list_id)) {
@@ -534,12 +865,11 @@ Data <- R6::R6Class("Data",
                             list_items <- data.frame(id = c("selected", "notselected"), title = c("selected", "not selected"), tooltip = c("selected", "not selected"), visible = c(TRUE, TRUE), other_signifier_id = c("", ""))
                             temp_list_item_id <- col_name
                             temp_title <- paste(sensemakerframeworkrobject$get_signifier_title(list_id), "-", sensemakerframeworkrobject$get_list_item_title(list_id, temp_list_item_id))
-                            sensemakerframeworkrobject$add_list(title = temp_title, tooltip = temp_title, allow_na = FALSE, fragment = FALSE, required = FALSE, sticky = FALSE, items = list_items,  max_responses = 1, min_responses = 1, other_item_id = NULL, other_signifier_id = NULL, theader = NULL, id = paste0(col_name, "_selected"))
-                            sensemakerframeworkrobject$change_signifier_include(id = paste0(col_name, "_selected"), value = FALSE)
+                            sensemakerframeworkrobject$add_list(title = temp_title, tooltip = temp_title, allow_na = FALSE, fragment = FALSE, required = FALSE, sticky = FALSE, items = list_items,  max_responses = 1, min_responses = 1, other_item_id = NULL, other_signifier_id = NULL, sig_class = "single_select_item",  theader = NULL, id = paste0(col_name, "_selected"))
                           }
                         }
 
-                        # multi-select MCQ data structure
+                        # multi-select MCQ data into new long form tables
                         self$df_multi_select_full <- private$transform_multi_select(df, sensemakerframeworkrobject)
 
                         # ------------- Process stones ---------------
@@ -581,17 +911,18 @@ Data <- R6::R6Class("Data",
                         # if the existing directory has a polymorphic definition file in it, or passed in as parameter than add to the framework definition
 
                         if (!is.null(self$polymorphic_definition_json)) {
-                          self$polymorphic_sigs <- jsonlite::fromJSON(txt = self$polymorphic_definition_json, simplifyVector = TRUE, simplifyDataFrame = TRUE, flatten = FALSE)
-                          sensemakerframeworkrobject$add_polymorphic_signifiers(tpoly_data = self$polymorphic_sigs, NULL)
-                          self$has_poly_sigs <- TRUE
+                          self$polymorphic_signifiers <- jsonlite::fromJSON(txt = self$polymorphic_definition_json, simplifyVector = TRUE, simplifyDataFrame = TRUE, flatten = FALSE)
+                          sensemakerframeworkrobject$add_polymorphic_signifiers(tpoly_data = self$polymorphic_sigifiers, NULL)
+                          self$has_polymorphic_signifiers <- TRUE
                         } else {
                           if (file.exists(paste0("PolymorphismDefinition_", framework_id, ".json"))) {
-                            self$polymorphic_sigs <- jsonlite::fromJSON(paste0("PolymorphismDefinition_", framework_id, ".json"), simplifyVector = TRUE, simplifyDataFrame = TRUE, flatten = FALSE)
+                            self$polymorphic_signifiers <- jsonlite::fromJSON(paste0("PolymorphismDefinition_", framework_id, ".json"), simplifyVector = TRUE, simplifyDataFrame = TRUE, flatten = FALSE)
                             sensemakerframeworkrobject$add_polymorphic_signifiers(tpoly_data = NULL, tpoly_data_file = paste0("PolymorphismDefinition_", framework_id, ".json"))
-                            self$has_poly_sigs <- TRUE
+                            self$has_polymorphic_signifiers <- TRUE
                           }
                         }
 
+                        # apply the polymorphic definition if it is polymorphic
                         if(sensemakerframeworkrobject$is_polymorphic()) {
                           df <- private$apply_polymorphic_definition(df, sensemakerframeworkrobject)
                         }
@@ -604,11 +935,23 @@ Data <- R6::R6Class("Data",
                         df <- private$add_stones_zones(df, sensemakerframeworkrobject)
 
 
+                        # create a title version of the data frame. ToDo this isn't finished because of query with Manami/Ramya
+                        self$df_titles <- private$convert_data_to_titles(df, sensemakerframeworkrobject)
+                        self$data[["df_titles"]] <- self$df_titles
+
                         # add any fragmentID level extra column data
-                        #currentposition
+                        if (!is.null(self$fragment_level_upload)) {
+                        df <- private$apply_fragment_level_updates(df, sensemakerframeworkrobject)
+                        }
+
+                        # add any FK level extra column data
+                        if (!is.null(self$FK_level_upload)) {
+                          df <- private$apply_FK_level_updates(df, sensemakerframeworkrobject)
+                        }
 
 
                         # add any foreign key level extra column data
+
 
 
                         # add any new fragments data
@@ -724,6 +1067,10 @@ Data <- R6::R6Class("Data",
 
                         for (triad_id in sensemakerframeworkrobject$get_triad_ids()) {
                           df[[paste0(triad_id, "_Zone")]] <- private$get_triad_zone(triad_id, df, sensemakerframeworkrobject)
+                          # add the zones as list item
+                          list_items <- data.frame(id = c("L", "R", "T", "Centre", "LR", "LT", "TR"), title = c("Left", "Right", "Top", "Centre", "Left Right", "Left Top", "Top Right"), tooltip = c("Left", "Right", "Top", "Centre", "Left Right", "Left Top", "Top Right"), visible = c(TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE), other_signifier_id = c("", "", "", "", "", "", ""))
+                          temp_title <- paste(sensemakerframeworkrobject$get_signifier_title(triad_id), "-", "_Zone")
+                          sensemakerframeworkrobject$add_list(title = temp_title, tooltip = temp_title, allow_na = FALSE, fragment = FALSE, required = FALSE, sticky = FALSE, items = list_items,  max_responses = 1, min_responses = 1, other_item_id = NULL, other_signifier_id = NULL,  sig_class = "zone", theader = NULL, id = paste0(triad_id, "_Zone"))
                         }
                         return(df)
                       },
@@ -756,6 +1103,10 @@ Data <- R6::R6Class("Data",
 
                         for (dyad_id in sensemakerframeworkrobject$get_dyad_ids()) {
                           df[[paste0(dyad_id, "_Zone")]] <- private$get_dyad_zone(dyad_id, df, sensemakerframeworkrobject)
+                          # add the zones as list item
+                          list_items <- data.frame(id = c("Left", "Centre-Left", "Centre", "Centre-Right", "Right"), title = c("Left", "Centre Left", "Centre", "Centre Right", "Right"), tooltip = c("Left", "Centre Left", "Centre", "Centre Right", "Right"), visible = c(TRUE, TRUE, TRUE, TRUE, TRUE), other_signifier_id = c("", "", "", "", ""))
+                          temp_title <- paste(sensemakerframeworkrobject$get_signifier_title(dyad_id), "-", "_Zone")
+                          sensemakerframeworkrobject$add_list(title = temp_title, tooltip = temp_title, allow_na = FALSE, fragment = FALSE, required = FALSE, sticky = FALSE, items = list_items,  max_responses = 1, min_responses = 1, other_item_id = NULL, other_signifier_id = NULL,  sig_class = "zone", theader = NULL, id = paste0(dyad_id, "_Zone"))
                         }
                         return(df)
                       },
@@ -785,8 +1136,31 @@ Data <- R6::R6Class("Data",
                             df[[paste0(stones_id, "_", stone_id, "_y_Zone")]] <- private$get_stone_zone(stones_id, stone_id, df, sensemakerframeworkrobject, "y")
                             df[[paste0(stones_id, "_", stone_id, "_4_Zone")]] <-  private$get_stone_4_zone(stones_id, stone_id, df, sensemakerframeworkrobject)
                             df[[paste0(stones_id, "_", stone_id, "_9_Zone")]] <-  private$get_stone_9_zone(stones_id, stone_id, df, sensemakerframeworkrobject)
+                            # add the zones as list item
+                            # 1. x zones
+                            list_items <- data.frame(id = c("Left", "Centre-Left", "Centre", "Centre-Right", "Right"), title = c("Left", "Centre Left", "Centre", "Centre Right", "Right"), tooltip = c("Left", "Centre Left", "Centre", "Centre Right", "Right"), visible = c(TRUE, TRUE, TRUE, TRUE, TRUE), other_signifier_id = c("", "", "", "", ""))
+                            temp_title <- paste(sensemakerframeworkrobject$get_signifier_title(stones_id), "_", sensemakerframeworkrobject$get_stones_stone_title_by_id(stones_id, stone_id),  "_", "x_Zone")
+                            sensemakerframeworkrobject$add_list(title = temp_title, tooltip = temp_title, allow_na = FALSE, fragment = FALSE, required = FALSE, sticky = FALSE, items = list_items,  max_responses = 1, min_responses = 1, other_item_id = NULL, other_signifier_id = NULL,  sig_class = "zone", theader = NULL, id = paste0(stones_id, "_", stone_id, "_x_Zone"))
+                            # 2. y zones
+                            list_items <- data.frame(id = c("Left", "Centre-Left", "Centre", "Centre-Right", "Right"), title = c("Left", "Centre Left", "Centre", "Centre Right", "Right"), tooltip = c("Left", "Centre Left", "Centre", "Centre Right", "Right"), visible = c(TRUE, TRUE, TRUE, TRUE, TRUE), other_signifier_id = c("", "", "", "", ""))
+                            temp_title <- paste(sensemakerframeworkrobject$get_signifier_title(stones_id), "_", sensemakerframeworkrobject$get_stones_stone_title_by_id(stones_id, stone_id),  "_", "y _Zone")
+                            sensemakerframeworkrobject$add_list(title = temp_title, tooltip = temp_title, allow_na = FALSE, fragment = FALSE, required = FALSE, sticky = FALSE, items = list_items,  max_responses = 1, min_responses = 1, other_item_id = NULL, other_signifier_id = NULL,  sig_class = "zone", theader = NULL, id = paste0(stones_id, "_", stone_id, "_y_Zone"))
+                            # 3. 4 zones
+                            list_items <- data.frame(id = c("Top_Left", "Top_Right", "Bottom_Left", "Bottom-Right"), title = c("Top Left", "Top Right", "Bottom Left", "Bottom Right"), tooltip = c("Top Left", "Top Right", "Bottom Left", "Bottom Right"), visible = c(TRUE, TRUE, TRUE, TRUE), other_signifier_id = c("", "", "", ""))
+                            temp_title <- paste(sensemakerframeworkrobject$get_signifier_title(stones_id), "_", sensemakerframeworkrobject$get_stones_stone_title_by_id(stones_id, stone_id),  "_", "4_Zone")
+                            sensemakerframeworkrobject$add_list(title = temp_title, tooltip = temp_title, allow_na = FALSE, fragment = FALSE, required = FALSE, sticky = FALSE, items = list_items,  max_responses = 1, min_responses = 1, other_item_id = NULL, other_signifier_id = NULL,  sig_class = "zone", theader = NULL, id = paste0(stones_id, "_", stone_id, "_4_Zone"))
+                            # 4. 9 zones
+                            list_items <- data.frame(id = c("Top_Left", "Top_Centre", "Top_Right",  "Centre_Left", "Centre", "Centre_Right", "Bottom_Left", "Bottom_Centre", "Bottom_Right"), title = c("Top Left", "Top Centre", "Top Right",  "Centre Left", "Centre", "Centre Right", "Bottom Left", "Bottom Centre", "Bottom Right"), tooltip = c("Top Left", "Top Centre", "Top Right",  "Centre Left", "Centre", "Centre Right", "Bottom Left", "Bottom Centre", "Bottom Right"), visible = c(TRUE, TRUE, TRUE, TRUE,TRUE, TRUE, TRUE, TRUE, TRUE), other_signifier_id = c("", "", "", "", "", "", "", "", ""))
+                            temp_title <- paste(sensemakerframeworkrobject$get_signifier_title(stones_id), "_", sensemakerframeworkrobject$get_stones_stone_title_by_id(stones_id, stone_id),  "_", "9_Zone")
+                            sensemakerframeworkrobject$add_list(title = temp_title, tooltip = temp_title, allow_na = FALSE, fragment = FALSE, required = FALSE, sticky = FALSE, items = list_items,  max_responses = 1, min_responses = 1, other_item_id = NULL, other_signifier_id = NULL,  sig_class = "zone", theader = NULL, id = paste0(stones_id, "_", stone_id, "_9_Zone"))
+
                           }
                         }
+
+                        # In the original workbench we now would add all the MCQ factors that would include the additional MCQs - BUT
+                        # because we always do our graphing and statistical output by title/labels and not IDs then the factoring levels has to be
+                        # calculated at the output point, not in the datar package.
+
 
                         return(df)
 
@@ -870,7 +1244,6 @@ Data <- R6::R6Class("Data",
 
                       get_API_framework_data = function(end_point, framework_id, token, isDemonstratorAccount = FALSE) {
 
-
                         # Get the data from the API saving to temp folder, read csv into dataframe, remove temp file and return dataframe
                         df1FileName <- tempfile(pattern = "", fileext = ".csv")
                         r1 <- httr::GET(paste0("http://", end_point, ".sensemaker-suite.com/apis/capture/", framework_id,"/?type=csv", sep=""),
@@ -889,6 +1262,7 @@ Data <- R6::R6Class("Data",
                             DF1I[[col]] <- as.character( DF1I[[col]])
                           }
                         }
+
                         return(DF1I)
                       },
 
@@ -908,11 +1282,11 @@ Data <- R6::R6Class("Data",
                         purrr::walk(framework_signifiers_missing, ~ {sensemakerframeworkrobject$change_signifier_include(.x, value = FALSE)}, sensemakerframeworkrobject)
 
                         # if this is a combined dashboard, then get each mapping framework and process
-                        if (self$is_combined()) {
+                        if (self$is_combined_dashboard()) {
                           df <- private$combine_data(df, framework_id, end_point, dashboard_id, token, is_demonstrator, sensemakerframeworkrobject)
                         }
 
-                        if(self$has_filters()) {
+                        if(self$dashboard_has_filters()) {
                           df <- private$filter_data_v1(df, framework_id, end_point, dashboard_id, token, is_demonstrator, sensemakerframeworkrobject)
                         }
 
@@ -1000,8 +1374,12 @@ Data <- R6::R6Class("Data",
                           combined_fw[[fw_id]] <- combined_fw_obj$get_parent_framework_name()
                           mcq_data <- NULL
                           # get combined framework data and load definition (maybe not) and do the date application (needed for filtering so done now)
-                          fw_data <- private$get_API_framework_data(end_point, fw_id, token, self$is_demonstrator)
+
+                          fw_data <- private$get_API_framework_data(end_point, fw_id, token, self$demonstrator)
+
+
                           fw_data <- private$apply_dates(fw_data)
+
 
                           # Don't need this now since we get this from the sensemakerframeworkr object.
                           #fw_json <- private$get_framework_definition(end_point, fw_id, token)
@@ -1054,10 +1432,11 @@ Data <- R6::R6Class("Data",
                           }
                           df <- dplyr::bind_rows(df, fw_data)
                         }
+
                         # for drop downs - e.g. in project list on the workbench, we will be using the rev version
                         combined_fw_rev <-setNames(names(combined_fw), combined_fw)
-                        self$dashboard_combined_frameworks <- combined_fw
-                        self$dashboard_combined_frameworks_rev <- combined_fw_rev
+                        self$dashboard_combined_frameworks_names <- combined_fw
+                        self$dashboard_combined_frameworks_ids <- combined_fw_rev
 
                         return(df)
                       },
@@ -1073,12 +1452,12 @@ Data <- R6::R6Class("Data",
                         purrr::walk(framework_signifiers_missing, ~ {sensemakerframeworkrobject$change_signifier_include(.x, value = FALSE)}, sensemakerframeworkrobject)
 
                         # if this is a combined dashboard, then get each mapping framework and process
-                        if (self$is_combined()) {
+                        if (self$is_combined_dashboard()) {
                           df <- private$combine_data(df, framework_id, end_point, dashboard_id, token, is_demonstrator, sensemakerframeworkrobject)
                         }
 
                         # If filters are defined, filter the data
-                        if (self$has_filters()) {
+                        if (self$dashboard_has_filters()) {
                           df <-  private$filter_data_v2(df, framework_id, end_point, dashboard_id, token, is_demonstrator, sensemakerframeworkrobject)
                         }
                         return(df)
@@ -1165,8 +1544,6 @@ Data <- R6::R6Class("Data",
                       },
                       get_v1_DashboardDefinition = function(end_point, dashboard_id, token) {
                         # we are in the get dashboard definition
-
-
                         out <- try( {
                           # get the json from the returned project definition
 
@@ -1221,6 +1598,7 @@ Data <- R6::R6Class("Data",
                         return(ret_list)
                       },
 
+                      # Demonstrator accounts only allowed a subset of the data.
                       get_is_demonstrator = function(trToken) {
 
                         out <- try({
@@ -1255,7 +1633,7 @@ Data <- R6::R6Class("Data",
                         return(out)
                       },
 
-                      # put the multi-seect mcqs into data structure
+                      # put the multi-seect mcq data into long form structure ready for graphing
                       transform_multi_select = function(df, sensemakerframeworkrobject) {
 
                         # No data at all so just return with the emmty tdf1
@@ -1283,7 +1661,9 @@ Data <- R6::R6Class("Data",
                         }
                         return(multi_MCQs)
                       },
-                      # get the stone ratios of each of the stone canvases
+
+                      # get the stone ratios of each of the stone canvases - note legacy commented out code still left here for now.
+                      # ToDo - remove commented code when safe
                       getStoneRatios = function(data, sensemakerframeworkrobject) {
 
                         if (sensemakerframeworkrobject$get_stones_count() == 0) {return(NULL)}
@@ -1334,17 +1714,145 @@ Data <- R6::R6Class("Data",
                             calRatio <- 1.5
                           }
                           stoneRatios[[i]] <- calRatio
+                        }
+                        names(stoneRatios) <- stoneIDs
+                        return(stoneRatios)
+                        #  }
+                      },
+
+                      convert_data_to_titles = function(data, sensemakerframeworkrobject) {
+                        # update the projectID with the name
+                        framework_name <- sensemakerframeworkrobject$get_parent_framework_name()
+                        data[["project_id"]] <- unlist(purrr::map(data[["project_id"]], ~ {framework_name}))
+                        # update the single select signifier list data
+                        lists <- sensemakerframeworkrobject$get_single_select_list_ids(sig_class = "signifier")
+                        purrr::walk(lists, function(x) data[[x]] <<-
+                                      unlist(purrr::map(data[[x]], function(y) ifelse(is.na(y), NA,
+                                                                                      sensemakerframeworkrobject$get_list_item_title(x, y)) )))
+                        # update multi_select_id data column names
+                        purrr::walk(sensemakerframeworkrobject$get_multiselect_list_ids(),
+                                    function(x) purrr::walk(sensemakerframeworkrobject$get_list_items_ids(x), function(y)
+                                      colnames(data)[colnames(data) == paste0(x, "_", y)] <<- paste0(sensemakerframeworkrobject$get_signifier_title(x), "_",
+                                                                                                     sensemakerframeworkrobject$get_list_item_title(x, y))))
+                        # update multi_select selected column names
+                        purrr::walk(sensemakerframeworkrobject$get_multiselect_list_ids(),
+                                    function(x) purrr::walk(sensemakerframeworkrobject$get_list_items_ids(x), function(y)
+                                      colnames(data)[colnames(data) == paste0(x, "_", y, "_selected")] <<- paste0(sensemakerframeworkrobject$get_signifier_title(x), "_",
+                                                                                                                  sensemakerframeworkrobject$get_list_item_title(x, y), "_selected")))
+                        # update free text box entries
+                        purrr::walk(sensemakerframeworkrobject$get_freetext_ids(),
+                                    function(x) {colnames(data)[colnames(data) == x] <<- sensemakerframeworkrobject$get_signifier_title(x);
+                                    if (sensemakerframeworkrobject$get_signifier_allow_na(x)) {colnames(data)[colnames(data) == paste0(x, "_NA")] <<- paste0(sensemakerframeworkrobject$get_signifier_title(x), "_NA")}})
+
+                        # update single select entries
+                        purrr::walk(sensemakerframeworkrobject$get_single_select_list_ids(sig_class = "signifier"),
+                                    function(x) {colnames(data)[colnames(data) == x] <<- sensemakerframeworkrobject$get_signifier_title(x);
+                                    if (sensemakerframeworkrobject$get_signifier_allow_na(x)){colnames(data)[colnames(data) == paste0(x, "_NA")] <<- paste0(sensemakerframeworkrobject$get_signifier_title(x), "_NA") }})
+                        purrr::walk(sensemakerframeworkrobject$get_single_select_list_ids(sig_class = "single_select_item"),
+                                    function(x) colnames(data)[colnames(data) == x] <<- paste0(sensemakerframeworkrobject$get_signifier_title(stringr::str_split(x, "_")[[1]][[1]]), "_selected"))
+
+                        # triads
+                        purrr::walk(sensemakerframeworkrobject$get_triad_ids(),
+                                    function(x) {colnames(data)[colnames(data) == paste0(x, "X")] <<- paste0(sensemakerframeworkrobject$get_signifier_title(x), "X");
+                                    colnames(data)[colnames(data) == paste0(x, "Y")] <<- paste0(sensemakerframeworkrobject$get_signifier_title(x), "Y");
+                                    if (sensemakerframeworkrobject$get_signifier_allow_na(x))
+                                    {colnames(data)[colnames(data) == paste0(x, "_NA")] <<- paste0(sensemakerframeworkrobject$get_signifier_title(x), "_NA")}
+                                    })
+                        purrr::walk(sensemakerframeworkrobject$get_triad_ids(),
+                                    function(x) purrr::walk(sensemakerframeworkrobject$get_triad_anchor_ids(x),
+                                                            function(y)  colnames(data)[colnames(data) == paste0(x, "_", y)] <<-
+                                                              paste0(sensemakerframeworkrobject$get_signifier_title(x), "_", sensemakerframeworkrobject$get_triad_anchor_text_by_id(x, y))))
+                        purrr::walk(sensemakerframeworkrobject$get_triad_ids(), ~ {colnames(data)[colnames(data) == paste0(.x, "_Zone")] <<- paste0(sensemakerframeworkrobject$get_signifier_title(.x), "_Zone")})
+                        # dyads
+                        purrr::walk(sensemakerframeworkrobject$get_dyad_ids(),
+                                    function(x) {colnames(data)[colnames(data) == paste0(x, "X")] <<- paste0(sensemakerframeworkrobject$get_signifier_title(x), "X");
+                                    colnames(data)[colnames(data) == paste0(x, "XR")] <<- paste0(sensemakerframeworkrobject$get_signifier_title(x), "XR");
+                                    if (sensemakerframeworkrobject$get_signifier_allow_na(x))
+                                    {colnames(data)[colnames(data) == paste0(x, "_NA")] <<- paste0(sensemakerframeworkrobject$get_signifier_title(x), "_NA")}
+                                    })
+                        purrr::walk(sensemakerframeworkrobject$get_dyad_ids(),
+                                    function(x) purrr::walk(sensemakerframeworkrobject$get_dyad_anchor_ids(x),
+                                                            function(y)  colnames(data)[colnames(data) == paste0(x, "_", y)] <<-
+                                                              paste0(sensemakerframeworkrobject$get_signifier_title(x), "_", sensemakerframeworkrobject$get_dyad_anchor_text_by_id(x, y))))
+                        purrr::walk(sensemakerframeworkrobject$get_dyad_ids(), ~ {colnames(data)[colnames(data) == paste0(.x, "_Zone")] <<- paste0(sensemakerframeworkrobject$get_signifier_title(.x), "_Zone")})
+                        # stones
+                        purrr::walk(sensemakerframeworkrobject$get_stones_ids(), function(x)
+                          purrr::walk(sensemakerframeworkrobject$get_stones_stone_ids(x), function(y) {
+                            colnames(data)[colnames(data) == paste0(x, "_", y, "XRight")] <<-
+                              paste0(sensemakerframeworkrobject$get_signifier_title(x), "_", sensemakerframeworkrobject$get_stones_stone_title_by_id(x, y), "XRight");
+                            colnames(data)[colnames(data) == paste0(x, "_", y, "YTop")] <<-
+                              paste0(sensemakerframeworkrobject$get_signifier_title(x), "_", sensemakerframeworkrobject$get_stones_stone_title_by_id(x, y), "YTop");
+                            colnames(data)[colnames(data) == paste0(x, "_", y, "_x_Zone")] <<-
+                              paste0(sensemakerframeworkrobject$get_signifier_title(x), "_", sensemakerframeworkrobject$get_stones_stone_title_by_id(x, y), "_x_Zone");
+                            colnames(data)[colnames(data) == paste0(x, "_", y, "_y_Zone")] <<-
+                              paste0(sensemakerframeworkrobject$get_signifier_title(x), "_", sensemakerframeworkrobject$get_stones_stone_title_by_id(x, y), "_y_Zone");
+                            colnames(data)[colnames(data) == paste0(x, "_", y, "_4_Zone")] <<-
+                              paste0(sensemakerframeworkrobject$get_signifier_title(x), "_", sensemakerframeworkrobject$get_stones_stone_title_by_id(x, y), "_4_Zone");
+                            colnames(data)[colnames(data) == paste0(x, "_", y, "_9_Zone")] <<-
+                              paste0(sensemakerframeworkrobject$get_signifier_title(x), "_", sensemakerframeworkrobject$get_stones_stone_title_by_id(x, y), "_9_Zone")
+                          }))
+                        # unique_id
+                        purrr::walk(sensemakerframeworkrobject$get_uniqueid_ids(), ~ {colnames(data)[colnames(data) == .x] <<- sensemakerframeworkrobject$get_signifier_title(.x)})
+                        # image select
+                        purrr::walk(sensemakerframeworkrobject$get_imageselect_ids(), ~ {colnames(data)[colnames(data) == .x] <<- sensemakerframeworkrobject$get_signifier_title(.x)})
+                        # audio
+                        purrr::walk(sensemakerframeworkrobject$get_audio_ids(), ~ {colnames(data)[colnames(data) == .x] <<- sensemakerframeworkrobject$get_signifier_title(.x)})
+                        # photo
+                        purrr::walk(sensemakerframeworkrobject$get_photo_ids(), ~ {colnames(data)[colnames(data) == .x] <<- sensemakerframeworkrobject$get_signifier_title(.x)})
+
+                        # NOTE and ToDo - we can't finish this because of the issues with differences in syntax for the other list item options.
 
 
+                        #  print(colnames(data))
+
+                        return(data)
+
+                      },
+
+                      apply_fragment_level_updates = function(df, sensemakerframeworkrobject) {
+
+                        # so much could go wrong here but we are allowing this to crash if it does
+
+                        for (i in 1:length(self$fragment_level_upload)) {
+                          load_data <- self$fragment_level_upload[[i]]
+                          # make sure that the column names are R compatable names
+                          purrr::walk(colnames(load_data), ~ {colnames(load_data)[colnames(load_data) == .x] <<- make.names(stringr::str_remove_all(.x, " "))})
+                          colnames(load_data)[[1]] <- "FragmentID"
+                          # stop if any of the columns already exist in the main data frame
+                          if (any(unlist(purrr::map(colnames(load_data)[2:length(colnames(load_data))], ~ {.x %in% colnames(df)} )) == TRUE)) {
+                            print("upload file should not have column names already as signifier IDs")
+                            stop()
+                          }
+                          # add the new data to the main data frame
+                          df <-  dplyr::left_join(x = df, y = load_data, by = c("FragmentID"))
+                          # now update the frameworkr to the new list items
+                          purrr::walk(colnames(load_data)[2:length(colnames(load_data))], ~ {
+                            list_item_ids <- sort(unique(load_data[[.x]]));
+                            temp_items <- data.frame(id = list_item_ids, title = list_item_ids, tooltip = list_item_ids,
+                                                     visible = rep_len("TRUE", length(list_item_ids)),
+                                                     other_signifier_id = rep_len("", length(list_item_ids)));
+                            sensemakerframeworkrobject$add_list(title = .x, tooltip = .x, allow_na = FALSE, fragment = FALSE, required = FALSE,
+                                                                sticky = FALSE, items = temp_items,  max_responses = 1, min_responses = 1,
+                                                                other_item_id = NULL, other_signifier_id = NULL, theader = NULL,
+                                                                id = .x)
+
+                          })
+                        }
+                        return(df)
+                      },
+
+                      apply_FK_level_updates = function(df, sensemakerframeworkrobject) {
+
+                        for (i in 1:length(self$FK_level_upload)) {
+                          load_data <- self$FK_level_upload[[i]]
+                          # make sure that the column names are R compatable names
+                          purrr::walk(colnames(load_data), ~ {colnames(load_data)[colnames(load_data) == .x] <<- make.names(stringr::str_remove_all(.x, " "))})
+                          df <-  dplyr::left_join(x = df, y = load_data, by = c(colnames(load_data)[[1]], colnames(load_data)[[1]]))
                         }
 
 
-                        names(stoneRatios) <- stoneIDs
-                        return(stoneRatios)
-
-
-                        #  }
                       }
+
 
 
 
