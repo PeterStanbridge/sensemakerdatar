@@ -12,5 +12,8 @@ LazyData: true
 Imports: 
     assertive,
     assertr,
+    lubridate,
     purrr,
-    sensemakerframeworkr
+    sensemakerframeworkr,
+    stringr,
+    XML
