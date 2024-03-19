@@ -86,7 +86,7 @@ Data <- R6::R6Class("Data",
                       dashboard_title = NULL,
                       #' @field dashboard_combined_frameworks_names Named vector of the combined dashboard frameworks. Names with ids as list title
                       dashboard_combined_frameworks_names = NULL,
-                      #' @field dashboard_combined_frameworks_rev reverse of above. ids as content, titles as names
+                      #' @field dashboard_combined_frameworks_ids reverse of above. ids as content, titles as names
                       dashboard_combined_frameworks_ids = NULL,
                       #' @field dashboard_version The dashboard version - whether 1 or 2
                       dashboard_version = NULL,
@@ -321,13 +321,30 @@ Data <- R6::R6Class("Data",
                       },
                       #' @description
                       #' Get the stone_data data
-                      #' @return The stone_data data data.frame
-                      get_stone_data_data = function() {
-                        return(self$data[["stone_data"]])
+                      #' @param id Stone ID to return - defalt NULL, return all
+                      #' @param include_id default FALSE, TRUE to return ID as names.
+                      #' @return List of stone data frames
+                      get_stone_data_data = function(id = NULL, include_id = TRUE) {
+                        if (is.null(id)) {
+                          if (include_id) {
+                            return(self$data[["stone_data"]])
+                          } else {
+                            return(unlist(self$data[["stone_data"]]))
+                          }
+                        }
+                        if (id %in% names(self$data[["stone_data"]])) {
+                          if (include_id) {
+                            return(self$data[["stone_data"]][[id]])
+                          } else {
+                            return(unlist(self$data[["stone_data"]][[id]]))
+                          }
+                        }
                       },
                       #' @description
                       #' Get the stone_data data
-                      #' @return The stone_data data data.frame
+                      #' @param stones_id vector of stone IDs to return stone data
+                      #' @param include_ids if TRUE returns stoneID as return list name
+                      #' @return The list of stone ratios
                       get_stones_ratio = function(stones_id = "", include_ids = FALSE) {
                         if (stones_id != "") {
                           if (!(stones_id %in% names(self$stone_ratios))) {return(NULL)}
