@@ -50,8 +50,6 @@ Data <- R6::R6Class("Data",
                       dat = NULL,
                       #' @field df_keep Always the full dataset even through linked fw selections- enables restore of full dataset when deselecting linked frameworks
                       df_keep = NULL,
-                      #' @field df_titles Dataframe of the data containing titles and not ids
-                      df_titles = NULL,
                       #' @field df_multi_select The transformed multi-select MCQ data
                       df_multi_select = NULL,
                       #' @field df_multi_select_full The transformed multi-select MCQ data - always full set
@@ -695,7 +693,7 @@ Data <- R6::R6Class("Data",
 
                         # populate the data class fields including the generic array "data" which can be extended by application developers
                         self$data <- vector("list", length = 9)
-                        names(self$data) <- c("df1", "dat", "df_keep", "df_titles", "df_multi_select", "df_multi_select_full", "stone_data", "title_data", "title_use")
+                        names(self$data) <- c("df1", "dat", "df_keep",  "df_multi_select", "df_multi_select_full", "stone_data", "title_data", "title_use")
 
                         if (!is.null(self$df1)) {
                           self$data[["df1"]] <- self$df1
@@ -933,8 +931,8 @@ Data <- R6::R6Class("Data",
 
 
                         # create a title version of the data frame. ToDo this isn't finished because of query with Manami/Ramya
-                        self$df_titles <- private$convert_data_to_titles(df, sensemakerframeworkrobject, column_type = "ALL")
-                        self$data[["df_titles"]] <- self$df_titles
+                        self$title_data <- private$convert_data_to_titles(df, sensemakerframeworkrobject, column_type = "ALL")
+                        self$data[["title_DATA"]] <- self$title_data
                         df_chat <- df %>% dplyr::select(c("FragmentID", sensemakerframeworkrobject$get_freetext_ids(), unlist(unname(purrr::map(sensemakerframeworkrobject$get_list_ids(exclude_multiple = TRUE), ~ {sensemakerframeworkrobject$get_list_column_names(.x)})))))
 
                         self$df_chat_titles <- private$convert_data_to_titles(df_chat, sensemakerframeworkrobject, column_type = "CHAT")
