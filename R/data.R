@@ -56,6 +56,8 @@ Data <- R6::R6Class("Data",
                       df_multi_select = NULL,
                       #' @field df_multi_select_full The transformed multi-select MCQ data - always full set
                       df_multi_select_full = NULL,
+                      #' @field df_chat_titles same as df_titles but only those columns that are categorical and text
+                      df_chat_titles = NULL,
                       #' @field stone_ratios Stone ratios of each of the stone canvases
                       stone_ratios = NULL,
                       #' @field stone_data Stone transformed data into long from from column form
@@ -461,28 +463,28 @@ Data <- R6::R6Class("Data",
                           stop()
                         }
 
-                        if  (any(c(csvfilename, csvfiledf) != "")  & any(c(framework_id, dashboard_id) != "")) {
-                          print("you cannot have file name or file while also passing framework id or dashboard id")
-                          stop()
-                        }
+                     #   if  (any(c(csvfilename, csvfiledf) != "")  & any(c(framework_id, dashboard_id) != "")) {
+                       #   print("you cannot have file name or file while also passing framework id or dashboard id")
+                       #   stop()
+                    #    }
 
 
-                        if (any(c(framework_id, dashboard_id) == "") &  token == "") {
+                        if (any(c(framework_id, dashboard_id) != "") &  token == "") {
                           print("if providing a framework id or dashboard id you must provide a token")
                           stop()
                         }
 
-                        if (csvfiledf != "") {
-                          if (!is.data.frame(csvfiledf)) {
-                            print("csvfiledf should be a dataframe")
-                            stop()
-                          } else {
-                            if (!('project_id' %in% colnames(csvfiledf))) {
-                              print("data frame 'csvfiledf' must have a column 'project_id' with the framework id present")
-                              stop()
-                            }
-                          }
-                        }
+                     #   if (csvfiledf != "") {
+                     #     if (is.data.frame(csvfiledf)) {
+                     #       print("csvfiledf should be a dataframe")
+                     #       stop()
+                     #     } else {
+                     #       if (!('project_id' %in% colnames(csvfiledf))) {
+                      #        print("data frame 'csvfiledf' must have a column 'project_id' with the framework id present")
+                      #        stop()
+                      #      }
+                      #    }
+                      #  }
 
                         if (csvfilename != "") {
                           assertive::assert_all_are_existing_files(x = csvfilename, severity = "stop")
@@ -602,10 +604,14 @@ Data <- R6::R6Class("Data",
                             print("file 'csvfilename' must have a column 'project_id' with the framework id present")
                             stop()
                           }
+                          is_demonstrator <- private$get_is_demonstrator(token)
+                          self$demonstrator <- is_demonstrator
                         }
 
                         if (is.data.frame(csvfiledf)) {
                           df <- csvfiledf
+                          is_demonstrator <- private$get_is_demonstrator(token)
+                          self$demonstrator <- is_demonstrator
                         }
 
                         # polymorphic parsed json passed in
@@ -619,7 +625,6 @@ Data <- R6::R6Class("Data",
                         }
                         # preliminary process of the dashboard - get the framework id and the frqmework data.
                         if (dashboard_id != "") {
-
                           # get the dashboard definition.
                           # try version one of the dashboard
                           dashboard_definition <- private$get_v1_DashboardDefinition(end_point, dashboard_id, token)
@@ -685,16 +690,8 @@ Data <- R6::R6Class("Data",
                         # Main framework title
                         self$framework_title <- self$sm_framework$get_parent_framework_name()
 
-
-
-
                         # start processing data
                         self$df1 <- private$process_data(df, sensemakerframeworkrobject)
-
-
-
-
-
 
                         # populate the data class fields including the generic array "data" which can be extended by application developers
                         self$data <- vector("list", length = 9)
@@ -936,8 +933,13 @@ Data <- R6::R6Class("Data",
 
 
                         # create a title version of the data frame. ToDo this isn't finished because of query with Manami/Ramya
-                        self$df_titles <- private$convert_data_to_titles(df, sensemakerframeworkrobject)
+                        self$df_titles <- private$convert_data_to_titles(df, sensemakerframeworkrobject, column_type = "ALL")
                         self$data[["df_titles"]] <- self$df_titles
+                        df_chat <- df %>% dplyr::select(c("FragmentID", sensemakerframeworkrobject$get_freetext_ids(), unlist(unname(purrr::map(sensemakerframeworkrobject$get_list_ids(exclude_multiple = TRUE), ~ {sensemakerframeworkrobject$get_list_column_names(.x)})))))
+
+                        self$df_chat_titles <- private$convert_data_to_titles(df_chat, sensemakerframeworkrobject, column_type = "CHAT")
+                        self$data[["df_chat_titles"]] <- self$df_chat_titles
+
 
                         # add any fragmentID level extra column data
                         if (!is.null(self$fragment_level_upload)) {
@@ -1720,10 +1722,13 @@ Data <- R6::R6Class("Data",
                         #  }
                       },
 
-                      convert_data_to_titles = function(data, sensemakerframeworkrobject) {
+                      convert_data_to_titles = function(data, sensemakerframeworkrobject, column_type = "ALL") {
+
                         # update the projectID with the name
                         framework_name <- sensemakerframeworkrobject$get_parent_framework_name()
+
                         data[["project_id"]] <- unlist(purrr::map(data[["project_id"]], ~ {framework_name}))
+
                         # update the single select signifier list data
                         lists <- sensemakerframeworkrobject$get_single_select_list_ids(sig_class = "signifier")
                         purrr::walk(lists, function(x) data[[x]] <<-
@@ -1751,37 +1756,11 @@ Data <- R6::R6Class("Data",
                         purrr::walk(sensemakerframeworkrobject$get_single_select_list_ids(sig_class = "single_select_item"),
                                     function(x) colnames(data)[colnames(data) == x] <<- paste0(sensemakerframeworkrobject$get_signifier_title(stringr::str_split(x, "_")[[1]][[1]]), "_selected"))
 
-                        # triads
-                        purrr::walk(sensemakerframeworkrobject$get_triad_ids(),
-                                    function(x) {colnames(data)[colnames(data) == paste0(x, "X")] <<- paste0(sensemakerframeworkrobject$get_signifier_title(x), "X");
-                                    colnames(data)[colnames(data) == paste0(x, "Y")] <<- paste0(sensemakerframeworkrobject$get_signifier_title(x), "Y");
-                                    if (sensemakerframeworkrobject$get_signifier_allow_na(x))
-                                    {colnames(data)[colnames(data) == paste0(x, "_NA")] <<- paste0(sensemakerframeworkrobject$get_signifier_title(x), "_NA")}
-                                    })
-                        purrr::walk(sensemakerframeworkrobject$get_triad_ids(),
-                                    function(x) purrr::walk(sensemakerframeworkrobject$get_triad_anchor_ids(x),
-                                                            function(y)  colnames(data)[colnames(data) == paste0(x, "_", y)] <<-
-                                                              paste0(sensemakerframeworkrobject$get_signifier_title(x), "_", sensemakerframeworkrobject$get_triad_anchor_text_by_id(x, y))))
+                        # zones
                         purrr::walk(sensemakerframeworkrobject$get_triad_ids(), ~ {colnames(data)[colnames(data) == paste0(.x, "_Zone")] <<- paste0(sensemakerframeworkrobject$get_signifier_title(.x), "_Zone")})
-                        # dyads
-                        purrr::walk(sensemakerframeworkrobject$get_dyad_ids(),
-                                    function(x) {colnames(data)[colnames(data) == paste0(x, "X")] <<- paste0(sensemakerframeworkrobject$get_signifier_title(x), "X");
-                                    colnames(data)[colnames(data) == paste0(x, "XR")] <<- paste0(sensemakerframeworkrobject$get_signifier_title(x), "XR");
-                                    if (sensemakerframeworkrobject$get_signifier_allow_na(x))
-                                    {colnames(data)[colnames(data) == paste0(x, "_NA")] <<- paste0(sensemakerframeworkrobject$get_signifier_title(x), "_NA")}
-                                    })
-                        purrr::walk(sensemakerframeworkrobject$get_dyad_ids(),
-                                    function(x) purrr::walk(sensemakerframeworkrobject$get_dyad_anchor_ids(x),
-                                                            function(y)  colnames(data)[colnames(data) == paste0(x, "_", y)] <<-
-                                                              paste0(sensemakerframeworkrobject$get_signifier_title(x), "_", sensemakerframeworkrobject$get_dyad_anchor_text_by_id(x, y))))
                         purrr::walk(sensemakerframeworkrobject$get_dyad_ids(), ~ {colnames(data)[colnames(data) == paste0(.x, "_Zone")] <<- paste0(sensemakerframeworkrobject$get_signifier_title(.x), "_Zone")})
-                        # stones
                         purrr::walk(sensemakerframeworkrobject$get_stones_ids(), function(x)
                           purrr::walk(sensemakerframeworkrobject$get_stones_stone_ids(x), function(y) {
-                            colnames(data)[colnames(data) == paste0(x, "_", y, "XRight")] <<-
-                              paste0(sensemakerframeworkrobject$get_signifier_title(x), "_", sensemakerframeworkrobject$get_stones_stone_title_by_id(x, y), "XRight");
-                            colnames(data)[colnames(data) == paste0(x, "_", y, "YTop")] <<-
-                              paste0(sensemakerframeworkrobject$get_signifier_title(x), "_", sensemakerframeworkrobject$get_stones_stone_title_by_id(x, y), "YTop");
                             colnames(data)[colnames(data) == paste0(x, "_", y, "_x_Zone")] <<-
                               paste0(sensemakerframeworkrobject$get_signifier_title(x), "_", sensemakerframeworkrobject$get_stones_stone_title_by_id(x, y), "_x_Zone");
                             colnames(data)[colnames(data) == paste0(x, "_", y, "_y_Zone")] <<-
@@ -1791,18 +1770,52 @@ Data <- R6::R6Class("Data",
                             colnames(data)[colnames(data) == paste0(x, "_", y, "_9_Zone")] <<-
                               paste0(sensemakerframeworkrobject$get_signifier_title(x), "_", sensemakerframeworkrobject$get_stones_stone_title_by_id(x, y), "_9_Zone")
                           }))
-                        # unique_id
-                        purrr::walk(sensemakerframeworkrobject$get_uniqueid_ids(), ~ {colnames(data)[colnames(data) == .x] <<- sensemakerframeworkrobject$get_signifier_title(.x)})
-                        # image select
-                        purrr::walk(sensemakerframeworkrobject$get_imageselect_ids(), ~ {colnames(data)[colnames(data) == .x] <<- sensemakerframeworkrobject$get_signifier_title(.x)})
-                        # audio
-                        purrr::walk(sensemakerframeworkrobject$get_audio_ids(), ~ {colnames(data)[colnames(data) == .x] <<- sensemakerframeworkrobject$get_signifier_title(.x)})
-                        # photo
-                        purrr::walk(sensemakerframeworkrobject$get_photo_ids(), ~ {colnames(data)[colnames(data) == .x] <<- sensemakerframeworkrobject$get_signifier_title(.x)})
+                        # we are adding the shape sliders now
+                         if (column_type == "ALL") {
+                          # triads
+                          purrr::walk(sensemakerframeworkrobject$get_triad_ids(),
+                                      function(x) {colnames(data)[colnames(data) == paste0(x, "X")] <<- paste0(sensemakerframeworkrobject$get_signifier_title(x), "X");
+                                      colnames(data)[colnames(data) == paste0(x, "Y")] <<- paste0(sensemakerframeworkrobject$get_signifier_title(x), "Y");
+                                      if (sensemakerframeworkrobject$get_signifier_allow_na(x))
+                                      {colnames(data)[colnames(data) == paste0(x, "_NA")] <<- paste0(sensemakerframeworkrobject$get_signifier_title(x), "_NA")}
+                                      })
+                          purrr::walk(sensemakerframeworkrobject$get_triad_ids(),
+                                      function(x) purrr::walk(sensemakerframeworkrobject$get_triad_anchor_ids(x),
+                                                              function(y)  colnames(data)[colnames(data) == paste0(x, "_", y)] <<-
+                                                                paste0(sensemakerframeworkrobject$get_signifier_title(x), "_", sensemakerframeworkrobject$get_triad_anchor_text_by_id(x, y))))
 
-                        # NOTE and ToDo - we can't finish this because of the issues with differences in syntax for the other list item options.
+                          # dyads
+                          purrr::walk(sensemakerframeworkrobject$get_dyad_ids(),
+                                      function(x) {colnames(data)[colnames(data) == paste0(x, "X")] <<- paste0(sensemakerframeworkrobject$get_signifier_title(x), "X");
+                                      colnames(data)[colnames(data) == paste0(x, "XR")] <<- paste0(sensemakerframeworkrobject$get_signifier_title(x), "XR");
+                                      if (sensemakerframeworkrobject$get_signifier_allow_na(x))
+                                      {colnames(data)[colnames(data) == paste0(x, "_NA")] <<- paste0(sensemakerframeworkrobject$get_signifier_title(x), "_NA")}
+                                      })
+                          purrr::walk(sensemakerframeworkrobject$get_dyad_ids(),
+                                      function(x) purrr::walk(sensemakerframeworkrobject$get_dyad_anchor_ids(x),
+                                                              function(y)  colnames(data)[colnames(data) == paste0(x, "_", y)] <<-
+                                                                paste0(sensemakerframeworkrobject$get_signifier_title(x), "_", sensemakerframeworkrobject$get_dyad_anchor_text_by_id(x, y))))
 
+                          # stones
+                          purrr::walk(sensemakerframeworkrobject$get_stones_ids(), function(x)
+                            purrr::walk(sensemakerframeworkrobject$get_stones_stone_ids(x), function(y) {
+                              colnames(data)[colnames(data) == paste0(x, "_", y, "XRight")] <<-
+                                paste0(sensemakerframeworkrobject$get_signifier_title(x), "_", sensemakerframeworkrobject$get_stones_stone_title_by_id(x, y), "XRight");
+                              colnames(data)[colnames(data) == paste0(x, "_", y, "YTop")] <<-
+                                paste0(sensemakerframeworkrobject$get_signifier_title(x), "_", sensemakerframeworkrobject$get_stones_stone_title_by_id(x, y), "YTop")}))
 
+                          # unique_id
+                          purrr::walk(sensemakerframeworkrobject$get_uniqueid_ids(), ~ {colnames(data)[colnames(data) == .x] <<- sensemakerframeworkrobject$get_signifier_title(.x)})
+                          # image select
+                          purrr::walk(sensemakerframeworkrobject$get_imageselect_ids(), ~ {colnames(data)[colnames(data) == .x] <<- sensemakerframeworkrobject$get_signifier_title(.x)})
+                          # audio
+                          purrr::walk(sensemakerframeworkrobject$get_audio_ids(), ~ {colnames(data)[colnames(data) == .x] <<- sensemakerframeworkrobject$get_signifier_title(.x)})
+                          # photo
+                          purrr::walk(sensemakerframeworkrobject$get_photo_ids(), ~ {colnames(data)[colnames(data) == .x] <<- sensemakerframeworkrobject$get_signifier_title(.x)})
+
+                          # NOTE and ToDo - we can't finish this because of the issues with differences in syntax for the other list item options.
+
+                        }
                         #  print(colnames(data))
 
                         return(data)
