@@ -621,6 +621,8 @@ Data <- R6::R6Class("Data",
                           }
                           is_demonstrator <- private$get_is_demonstrator(token)
                           self$demonstrator <- is_demonstrator
+                        #  print("df is")
+                        #  print(head(df))
                         }
 
                         if (is.data.frame(csvfiledf)) {
@@ -754,6 +756,7 @@ Data <- R6::R6Class("Data",
                         # process dyads
                         # Add the new percentage X columns for the dyads, keeping the decemal columns in place - side effects on df
                         if(sensemakerframeworkrobject$get_dyad_count() > 0) {
+
                           purrr::walk(sensemakerframeworkrobject$get_dyad_ids(), ~ {df[[sensemakerframeworkrobject$get_dyad_aspercent_x_column_name(.x)]] <<- df[[sensemakerframeworkrobject$get_dyad_column_name(.x, column = "X", original = TRUE)]] * 100}, df)
                           # rename the dyad x column names - heaps of legacy code - side effect on df column names
                           purrr::walk(sensemakerframeworkrobject$get_dyad_ids(), ~ {names(df)[which(names(df) == sensemakerframeworkrobject$get_dyad_column_name(.x, column = "X", original = TRUE))] <<- sensemakerframeworkrobject$get_dyad_column_name(.x, column = "X", original = FALSE)}, df)
