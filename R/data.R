@@ -1,7 +1,7 @@
 # NOTE - Fields are public as coders will be able to add their own logic on any
 #        thing framework that may not yet be available in the methods.
 # try using base split to pass via a map2 or pmap
-#
+# ToDo - remove the individual data fields and keep only "data"
 # N O T E !!!!!
 # New fully recursive graph code will be generated with # new graph comment. All old code kept for now for backward compatability commented # old method
 #
@@ -748,7 +748,7 @@ Data <- R6::R6Class("Data",
                           df[["meta_platform_verion"]] <- as.character( df[["meta_platform_verion"]])
                         }
 
-
+# adding in commen
                         # add the NarrID column (used for filter indexing) and set the "id" column to "FragmentID" (reads better in the code)
                         df[["NarrID"]] <- 1:nrow(df)
                         names(df)[[which(names(df) == "id")]] <- "FragmentID"
