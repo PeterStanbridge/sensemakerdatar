@@ -38,6 +38,10 @@
 #' triad_01_image <- pt$get_triad_background_image(fw_triads[[1]])
 Data <- R6::R6Class("Data",
                     public = list(
+                      #' @field is_invalid Boolean - TRUE if the attempt is invalid
+                      is_invalid = FALSE,
+                      #' @field zero_records Boolean - TRUE if the data retrieval returns no records
+                      has_zero_records = FALSE,
                       #' @field demonstrator Boolean - TRUE if the token is a demonstrator account.
                       demonstrator = NULL,
                       # this will be a list of lists containing the data.
@@ -456,6 +460,14 @@ Data <- R6::R6Class("Data",
                       get_data = function(csvfilename, csvfiledf, framework_id, dashboard_id, token, sensemakerframeworkrobject, polymorphic_definition_json,
                                           fragment_level_csv, fragment_level_parsed, FK_level_csv, FK_level_parsed, upload_na_identifier) {
 
+                        if (is.null(framework_id)) {
+                          self$is_invalid <- TRUE
+                          return(self)
+                        }
+                        if (framework_id == "nothing selected") {
+                          self$is_invalid <- TRUE
+                          return(self)
+                        }
                         # checking that the parameters are correct.
                         # either one of filename/csvfiledf OR framework_id/dashboard_id
                         # if dashboard_id or framework_id then must have token.
@@ -669,7 +681,12 @@ Data <- R6::R6Class("Data",
                         if (is.null(df)) {
                           is_demonstrator <- private$get_is_demonstrator(token)
                           self$demonstrator <- is_demonstrator
+
                           df <- private$get_API_framework_data(end_point, self$framework_id, token, is_demonstrator)
+                          if (nrow(df) == 0) {
+                            self$has_zero_records <- TRUE
+                            return(self)
+                          }
                         }
                         # Now we have df as the data frame required for processing - but does the dataframe match the definition
                         # get the framework_id if not present
@@ -1087,6 +1104,7 @@ Data <- R6::R6Class("Data",
 
                         for (triad_id in sensemakerframeworkrobject$get_triad_ids()) {
                           df[[paste0(triad_id, "_Zone")]] <- private$get_triad_zone(triad_id, df, sensemakerframeworkrobject)
+                          df[[paste0(triad_id, "_Zone")]] <- factor(df[[paste0(triad_id, "_Zone")]], levels = c("L", "R", "T", "Centre", "LR", "LT", "TR"), ordered = TRUE)
                           # add the zones as list item
                           list_items <- data.frame(id = c("L", "R", "T", "Centre", "LR", "LT", "TR"), title = c("Left", "Right", "Top", "Centre", "Left Right", "Left Top", "Top Right"), tooltip = c("Left", "Right", "Top", "Centre", "Left Right", "Left Top", "Top Right"), visible = c(TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE), other_signifier_id = c("", "", "", "", "", "", ""))
                           temp_title <- paste(sensemakerframeworkrobject$get_signifier_title(triad_id), "-", "_Zone")
@@ -1123,8 +1141,9 @@ Data <- R6::R6Class("Data",
 
                         for (dyad_id in sensemakerframeworkrobject$get_dyad_ids()) {
                           df[[paste0(dyad_id, "_Zone")]] <- private$get_dyad_zone(dyad_id, df, sensemakerframeworkrobject)
+                          df[[paste0(dyad_id, "_Zone")]] <- factor(df[[paste0(dyad_id, "_Zone")]], levels = c("Left", "Centre_Left", "Centre", "Centre_Right", "Right"), ordered = TRUE)
                           # add the zones as list item
-                          list_items <- data.frame(id = c("Left", "Centre-Left", "Centre", "Centre-Right", "Right"), title = c("Left", "Centre Left", "Centre", "Centre Right", "Right"), tooltip = c("Left", "Centre Left", "Centre", "Centre Right", "Right"), visible = c(TRUE, TRUE, TRUE, TRUE, TRUE), other_signifier_id = c("", "", "", "", ""))
+                          list_items <- data.frame(id = c("Left", "Centre_Left", "Centre", "Centre_Right", "Right"), title = c("Left", "Centre Left", "Centre", "Centre Right", "Right"), tooltip = c("Left", "Centre Left", "Centre", "Centre Right", "Right"), visible = c(TRUE, TRUE, TRUE, TRUE, TRUE), other_signifier_id = c("", "", "", "", ""))
                           temp_title <- paste(sensemakerframeworkrobject$get_signifier_title(dyad_id), "-", "_Zone")
                           sensemakerframeworkrobject$add_list(title = temp_title, tooltip = temp_title, allow_na = FALSE, fragment = FALSE, required = FALSE, sticky = FALSE, items = list_items,  max_responses = 1, min_responses = 1, other_item_id = NULL, other_signifier_id = NULL,  sig_class = "zone", theader = NULL, id = paste0(dyad_id, "_Zone"))
                         }
@@ -1140,9 +1159,9 @@ Data <- R6::R6Class("Data",
                             next
                           }
                           if (df[i,leftLabel] > 80) {dyadZone[[i]] <- "Right"}
-                          if (df[i,leftLabel] > 60 & df[i,leftLabel] <= 80) {dyadZone[[i]] <- "Centre-Right"}
+                          if (df[i,leftLabel] > 60 & df[i,leftLabel] <= 80) {dyadZone[[i]] <- "Centre_Right"}
                           if (df[i,leftLabel] > 40 & df[i,leftLabel] <= 60) {dyadZone[[i]] <- "Centre"}
-                          if (df[i,leftLabel] > 20 & df[i,leftLabel] <= 40) {dyadZone[[i]] <- "Centre-Left"}
+                          if (df[i,leftLabel] > 20 & df[i,leftLabel] <= 40) {dyadZone[[i]] <- "Centre_Left"}
                           if (df[i,leftLabel] <= 20) {dyadZone[[i]] <- "Left"}
                         }
                         return(unlist(dyadZone))
@@ -1154,19 +1173,23 @@ Data <- R6::R6Class("Data",
                             #  x axis zones
                             df[[paste0(stones_id, "_", stone_id, "_x_Zone")]] <- private$get_stone_zone(stones_id, stone_id, df, sensemakerframeworkrobject, "x")
                             df[[paste0(stones_id, "_", stone_id, "_y_Zone")]] <- private$get_stone_zone(stones_id, stone_id, df, sensemakerframeworkrobject, "y")
-                            df[[paste0(stones_id, "_", stone_id, "_4_Zone")]] <-  private$get_stone_4_zone(stones_id, stone_id, df, sensemakerframeworkrobject)
-                            df[[paste0(stones_id, "_", stone_id, "_9_Zone")]] <-  private$get_stone_9_zone(stones_id, stone_id, df, sensemakerframeworkrobject)
+                            df[[paste0(stones_id, "_", stone_id, "_4_Zone")]] <- private$get_stone_4_zone(stones_id, stone_id, df, sensemakerframeworkrobject)
+                            df[[paste0(stones_id, "_", stone_id, "_9_Zone")]] <- private$get_stone_9_zone(stones_id, stone_id, df, sensemakerframeworkrobject)
+                            df[[paste0(stones_id, "_", stone_id, "_x_Zone")]] <- factor(df[[paste0(stones_id, "_", stone_id, "_x_Zone")]], levels = c("Left", "Centre_Left", "Centre", "Centre_Right", "Right"), ordered = TRUE)
+                            df[[paste0(stones_id, "_", stone_id, "_y_Zone")]] <- factor(df[[paste0(stones_id, "_", stone_id, "_y_Zone")]], levels = c("Left", "Centre_Left", "Centre", "Centre_Right", "Right"), ordered = TRUE)
+                            df[[paste0(stones_id, "_", stone_id, "_4_Zone")]] <- factor(df[[paste0(stones_id, "_", stone_id, "_4_Zone")]], levels =  c("Top_Left", "Top_Right", "Bottom_Left", "Bottom_Right"), ordered = TRUE)
+                            df[[paste0(stones_id, "_", stone_id, "_9_Zone")]] <- factor(df[[paste0(stones_id, "_", stone_id, "_9_Zone")]], levels =  c("Top_Left", "Top_Centre", "Top_Right",  "Centre_Left", "Centre", "Centre_Right", "Bottom_Left", "Bottom_Centre", "Bottom_Right"), ordered = TRUE)
                             # add the zones as list item
                             # 1. x zones
-                            list_items <- data.frame(id = c("Left", "Centre-Left", "Centre", "Centre-Right", "Right"), title = c("Left", "Centre Left", "Centre", "Centre Right", "Right"), tooltip = c("Left", "Centre Left", "Centre", "Centre Right", "Right"), visible = c(TRUE, TRUE, TRUE, TRUE, TRUE), other_signifier_id = c("", "", "", "", ""))
+                            list_items <- data.frame(id = c("Left", "Centre_Left", "Centre", "Centre_Right", "Right"), title = c("Left", "Centre Left", "Centre", "Centre Right", "Right"), tooltip = c("Left", "Centre Left", "Centre", "Centre Right", "Right"), visible = c(TRUE, TRUE, TRUE, TRUE, TRUE), other_signifier_id = c("", "", "", "", ""))
                             temp_title <- paste(sensemakerframeworkrobject$get_signifier_title(stones_id), "_", sensemakerframeworkrobject$get_stones_stone_title_by_id(stones_id, stone_id),  "_", "x_Zone")
                             sensemakerframeworkrobject$add_list(title = temp_title, tooltip = temp_title, allow_na = FALSE, fragment = FALSE, required = FALSE, sticky = FALSE, items = list_items,  max_responses = 1, min_responses = 1, other_item_id = NULL, other_signifier_id = NULL,  sig_class = "zone", theader = NULL, id = paste0(stones_id, "_", stone_id, "_x_Zone"))
                             # 2. y zones
-                            list_items <- data.frame(id = c("Left", "Centre-Left", "Centre", "Centre-Right", "Right"), title = c("Left", "Centre Left", "Centre", "Centre Right", "Right"), tooltip = c("Left", "Centre Left", "Centre", "Centre Right", "Right"), visible = c(TRUE, TRUE, TRUE, TRUE, TRUE), other_signifier_id = c("", "", "", "", ""))
+                            list_items <- data.frame(id = c("Left", "Centre_Left", "Centre", "Centre_Right", "Right"), title = c("Left", "Centre Left", "Centre", "Centre Right", "Right"), tooltip = c("Left", "Centre Left", "Centre", "Centre Right", "Right"), visible = c(TRUE, TRUE, TRUE, TRUE, TRUE), other_signifier_id = c("", "", "", "", ""))
                             temp_title <- paste(sensemakerframeworkrobject$get_signifier_title(stones_id), "_", sensemakerframeworkrobject$get_stones_stone_title_by_id(stones_id, stone_id),  "_", "y _Zone")
                             sensemakerframeworkrobject$add_list(title = temp_title, tooltip = temp_title, allow_na = FALSE, fragment = FALSE, required = FALSE, sticky = FALSE, items = list_items,  max_responses = 1, min_responses = 1, other_item_id = NULL, other_signifier_id = NULL,  sig_class = "zone", theader = NULL, id = paste0(stones_id, "_", stone_id, "_y_Zone"))
                             # 3. 4 zones
-                            list_items <- data.frame(id = c("Top_Left", "Top_Right", "Bottom_Left", "Bottom-Right"), title = c("Top Left", "Top Right", "Bottom Left", "Bottom Right"), tooltip = c("Top Left", "Top Right", "Bottom Left", "Bottom Right"), visible = c(TRUE, TRUE, TRUE, TRUE), other_signifier_id = c("", "", "", ""))
+                            list_items <- data.frame(id = c("Top_Left", "Top_Right", "Bottom_Left", "Bottom_Right"), title = c("Top Left", "Top Right", "Bottom Left", "Bottom Right"), tooltip = c("Top Left", "Top Right", "Bottom Left", "Bottom Right"), visible = c(TRUE, TRUE, TRUE, TRUE), other_signifier_id = c("", "", "", ""))
                             temp_title <- paste(sensemakerframeworkrobject$get_signifier_title(stones_id), "_", sensemakerframeworkrobject$get_stones_stone_title_by_id(stones_id, stone_id),  "_", "4_Zone")
                             sensemakerframeworkrobject$add_list(title = temp_title, tooltip = temp_title, allow_na = FALSE, fragment = FALSE, required = FALSE, sticky = FALSE, items = list_items,  max_responses = 1, min_responses = 1, other_item_id = NULL, other_signifier_id = NULL,  sig_class = "zone", theader = NULL, id = paste0(stones_id, "_", stone_id, "_4_Zone"))
                             # 4. 9 zones
@@ -1197,9 +1220,9 @@ Data <- R6::R6Class("Data",
                             next
                           }
                           if (df[i,label] > 0.8) {stone_zone[[i]] <- "Right"}
-                          if (df[i,label] > 0.6 & df[i,label] <= 0.8) {stone_zone[[i]] <- "Centre-Right"}
+                          if (df[i,label] > 0.6 & df[i,label] <= 0.8) {stone_zone[[i]] <- "Centre_Right"}
                           if (df[i,label] > 0.4 & df[i,label] <= 0.8) {stone_zone[[i]] <- "Centre"}
-                          if (df[i,label] > 0.2 & df[i,label] <= 0.4) {stone_zone[[i]] <- "Centre-Left"}
+                          if (df[i,label] > 0.2 & df[i,label] <= 0.4) {stone_zone[[i]] <- "Centre_Left"}
                           if (df[i,label] <= 0.2) {stone_zone[[i]] <- "Left"}
                         }
                         return(unlist(stone_zone))
@@ -1448,7 +1471,9 @@ Data <- R6::R6Class("Data",
                             for (data_idx in seq_along(sig_col)) {
                               sig_col[[data_idx]] <- entries %>% dplyr::filter(start_item_id == sig_col[[data_idx]]) %>% dplyr::select(end_item_id)
                             }
-                            fw_data[[sig_id]] <- as.character(sig_col)
+                            if (!is.null(sig_col)) {
+                              fw_data[[sig_id]] <- as.character(sig_col)
+                            }
                           }
                           df <- dplyr::bind_rows(df, fw_data)
                         }
