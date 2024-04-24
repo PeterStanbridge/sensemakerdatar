@@ -1680,7 +1680,7 @@ Data <- R6::R6Class("Data",
 
                       # put the multi-seect mcq data into long form structure ready for graphing
                       transform_multi_select = function(df, sensemakerframeworkrobject) {
-
+print("in multi_select")
                         # No data at all so just return with the emmty tdf1
                         if (nrow(df) == 0) {
                           return(df)
@@ -1704,6 +1704,7 @@ Data <- R6::R6Class("Data",
                           multi_MCQs[[i]][["DisplayValue"]] <- factor(multi_MCQs[[i]][["DisplayValue"]], levels = names(unlist(mcqItems)))
                           multi_MCQs[[i]][["attributeKey"]] <- factor(multi_MCQs[[i]][["attributeKey"]], levels = multi_IDs[[i]])
                         }
+                        print("out multi_select")
                         return(multi_MCQs)
                       },
 
