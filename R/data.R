@@ -38,6 +38,8 @@
 #' triad_01_image <- pt$get_triad_background_image(fw_triads[[1]])
 Data <- R6::R6Class("Data",
                     public = list(
+                      #' @field List of the data list names that are standard export data frames. NOTE - this will be user (coder) extensible
+                      export_data_list_names = c("df1", "dat", "df_keep", "title_data", "df_chat_titles"),
                       #' @field is_invalid Boolean - TRUE if the attempt is invalid
                       is_invalid = FALSE,
                       #' @field zero_records Boolean - TRUE if the data retrieval returns no records
@@ -45,20 +47,26 @@ Data <- R6::R6Class("Data",
                       #' @field demonstrator Boolean - TRUE if the token is a demonstrator account.
                       demonstrator = NULL,
                       # this will be a list of lists containing the data.
-                      #' @field data The full list of data objects keyed by the name of the field. NOTE - this will be user (coder) extendible
+                      #' @field data The full list of data objects keyed by the name of the field. NOTE - this will be user (coder) extensible
                       data = list(NULL),
                       # Common lists used from within the data list- all initially set to full dataset
                       #' @field df1 The full dataset for any given framework, thus if linked framework selected, will have only the linked framework data, not the full set
+                      #' NOTE Depreciated
                       df1 = NULL,
                       #' @field dat  Filtered data so always the data being displayed based on a filter on the main df1 dataframe
+                      #'  NOTE Depreciated
                       dat = NULL,
                       #' @field df_keep Always the full dataset even through linked fw selections- enables restore of full dataset when deselecting linked frameworks
+                      #'  NOTE Depreciated
                       df_keep = NULL,
                       #' @field df_multi_select The transformed multi-select MCQ data
+                      #'  NOTE Depreciated
                       df_multi_select = NULL,
                       #' @field df_multi_select_full The transformed multi-select MCQ data - always full set
+                      #'  NOTE Depreciated
                       df_multi_select_full = NULL,
                       #' @field df_chat_titles same as df_titles but only those columns that are categorical and text
+                      #' df_chat_titles
                       df_chat_titles = NULL,
                       #' @field stone_ratios Stone ratios of each of the stone canvases
                       stone_ratios = NULL,
@@ -128,6 +136,43 @@ Data <- R6::R6Class("Data",
                                                            polymorphic_definition_json, fragment_level_csv, fragment_level_parsed,
                                                            FK_level_csv, FK_level_parsed, upload_na_identifier)
 
+                      },
+                      #' @description Add a new data frame name to the export data list names. These are the data frames in list "data" that are
+                      #' standard export format.
+                      #' @param new_name - the name of a new data frame
+                      add_export_data_list_names = function(new_name) {
+                        self$export_data_list_names <- append(self$export_data_list_names, new_name)
+                      },
+                      #' @description Add a new data frame name to the data list object
+                      #' @param data_frame - the data frame to add
+                      #' @param name - the name to give the data frame in the data list.
+                      #' @param add_to_export_list_names - if this is a standard data data frame then whether to add to the
+                      #' export_data_list_names list.
+                      add_data_data_frame = function(data_frame, name, add_to_export_list_names = FALSE) {
+                        temp_list <- vector("list", length = 1)
+                        names(temp_list) <- name
+                        temp_list[[1]] <- data_frame
+                        self$data <- append(self$data, temp_list)
+                        if (add_to_export_list_names) {self$add_export_data_list_names(name)}
+                      },
+                      #' @description get the data lists names
+                      #' @param export_only default FALSE, if TRUE return only those that are in the export list names
+                      #' These are names of data entries that are standard SM data frames
+                      get_data_list_names = function(export_only = FALSE) {
+                        if (export_only) {return(self$get_export_data_list_names())}
+                        return(names(self$data))
+                      },
+                      #' @description get the data list names that are standard export data data frames
+                      #' @returns A vector of export data list names
+                      get_export_data_list_names = function() {
+                        return(self$export_data_list_names)
+                      },
+                      #' @description get the data object (data frame) from data list object
+                      #' @param name - the data list name to return (for names use "get_export_data_list_names function
+                      #' for those that are standard export data frames or get_data_list_names function for all of them)
+                      #' @returns A data list data object (normally data frame)
+                      get_data_dataframe = function(name) {
+                        return(self$data[[name]])
                       },
                       #' @description
                       #' is the account accessing this framework a demonstrator account, TRUE or FALSE.
@@ -269,29 +314,6 @@ Data <- R6::R6Class("Data",
                         if (return_type == "system") {return(system)}
                         if (return_type == "both") {return(names(self$data))}
                         if (return_type == "user") {return(names(self$data[-pmatch(system, names(self$data))]))}
-                      },
-                      #' @description
-                      #' add a dataframe to the data field
-                      #' @param data_frame the data.frame to add
-                      #' @param data_frame_name the name of the dataframe to add (will access it by get_framework_data(<data_frame_name>))
-                      #' @return will return the data frame or NULL if it isn't a dataframe or the name is invalid or blank
-                      add_framework_data_frame = function(data_frame, data_frame_name) {
-                        if (is.null(data_frame_name)) {return(NULL)}
-                        if (data_frame_name == "") {return(NULL)}
-                        if (make.names(data_frame_name) != data_frame_name) {return(NULL)}
-                        if (is.null(data_frame)) {return(NULL)}
-                        if (all(data_frame == "")) {return(NULL)}
-                        if (!is.data.frame(data_frame)) {return(NULL)}
-                        self$data[[data_frame_name]] <- data_frame
-                        return(data_frame)
-                      },
-                      #' @description
-                      #' Get the data
-                      #' @param data_name - the name of the data to be returned. System values are "df1", "dat", "df_keep", "df_multi_select", "df_multi_select_full" and "stone_data", "title_data", "title_use". User defined names are allowed
-                      #' @return The data data.frame
-                      get_framework_data = function(data_name) {
-                        if (!(data_name %in% names(self$data))) {return(NULL)}
-                        return(self$data[[data_name]])
                       },
                       #' @description
                       #' Get the df1 data
@@ -727,9 +749,10 @@ Data <- R6::R6Class("Data",
                         # start processing data
                         self$df1 <- private$process_data(df, sensemakerframeworkrobject)
 
+
                         # populate the data class fields including the generic array "data" which can be extended by application developers
                         self$data <- vector("list", length = 9)
-                        names(self$data) <- c("df1", "dat", "df_keep",  "df_multi_select", "df_multi_select_full", "stone_data", "title_data", "title_use")
+                        names(self$data) <- c("df1", "dat", "df_keep",  "df_multi_select", "df_multi_select_full", "stone_data", "title_data", "title_use", "df_chat_titles")
 
                         if (!is.null(self$df1)) {
                           self$data[["df1"]] <- self$df1
@@ -738,6 +761,9 @@ Data <- R6::R6Class("Data",
                           self$df_keep <- self$df1
                           self$data[["df_keep"]] <- self$df1
                         }
+
+                        self$data[["title_data"]] <- self$title_data
+                        self$data[["df_chat_titles"]] <- self$df_chat_titles
 
                         if (!is.null(self$data[["df_multi_select"]])) {
                           self$data[["df_multi_select"]] <- self$df_multi_select
@@ -969,11 +995,13 @@ Data <- R6::R6Class("Data",
 
                         # create a title version of the data frame. ToDo this isn't finished because of query with Manami/Ramya
                         self$title_data <- private$convert_data_to_titles(df, sensemakerframeworkrobject, column_type = "ALL")
-                        self$data[["title_DATA"]] <- self$title_data
+                       # self$data[["title_data"]] <- self$title_data
                         df_chat <- df %>% dplyr::select(c("FragmentID", sensemakerframeworkrobject$get_freetext_ids(), unlist(unname(purrr::map(sensemakerframeworkrobject$get_list_ids(exclude_multiple = TRUE), ~ {sensemakerframeworkrobject$get_list_column_names(.x)})))))
 
                         self$df_chat_titles <- private$convert_data_to_titles(df_chat, sensemakerframeworkrobject, column_type = "CHAT")
-                        self$data[["df_chat_titles"]] <- self$df_chat_titles
+                        #self$add_data_data_frame(self$df_chat_titles, name =  "df_chat_titles", add_to_export_list_names = TRUE)
+                       # self$data[["df_chat_titles"]] <- self$df_chat_titles
+
 
 
                         # add any fragmentID level extra column data
@@ -992,8 +1020,6 @@ Data <- R6::R6Class("Data",
 
 
                         # add any new fragments data
-
-
 
                         return(df)
                       },
@@ -1680,7 +1706,6 @@ Data <- R6::R6Class("Data",
 
                       # put the multi-seect mcq data into long form structure ready for graphing
                       transform_multi_select = function(df, sensemakerframeworkrobject) {
-print("in multi_select")
                         # No data at all so just return with the emmty tdf1
                         if (nrow(df) == 0) {
                           return(df)
@@ -1704,7 +1729,6 @@ print("in multi_select")
                           multi_MCQs[[i]][["DisplayValue"]] <- factor(multi_MCQs[[i]][["DisplayValue"]], levels = names(unlist(mcqItems)))
                           multi_MCQs[[i]][["attributeKey"]] <- factor(multi_MCQs[[i]][["attributeKey"]], levels = multi_IDs[[i]])
                         }
-                        print("out multi_select")
                         return(multi_MCQs)
                       },
 
