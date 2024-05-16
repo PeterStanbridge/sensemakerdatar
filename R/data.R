@@ -482,14 +482,14 @@ Data <- R6::R6Class("Data",
                       get_data = function(csvfilename, csvfiledf, framework_id, dashboard_id, token, sensemakerframeworkrobject, polymorphic_definition_json,
                                           fragment_level_csv, fragment_level_parsed, FK_level_csv, FK_level_parsed, upload_na_identifier) {
 
-                        if (is.null(framework_id)) {
+
+                        if (all(is.null(c(framework_id, dashboard_id)))) {
                           self$is_invalid <- TRUE
                           return(self)
                         }
-                        if (framework_id == "nothing selected") {
-                          self$is_invalid <- TRUE
-                          return(self)
-                        }
+
+                        if (is.null(framework_id)) {framework_id <- ""}
+                        if (is.null(dashboard_id)) {dashboard_id <- ""}
                         # checking that the parameters are correct.
                         # either one of filename/csvfiledf OR framework_id/dashboard_id
                         # if dashboard_id or framework_id then must have token.
@@ -1459,9 +1459,11 @@ Data <- R6::R6Class("Data",
                             # A non list item
                             if (all(is.na(stringr::str_locate(fw_mappings[[fw_id]][i, "end"], "_")) == TRUE)) {
                               if ((any(grepl(fw_mappings[[fw_id]][i, "end"], colnames(df), fixed = TRUE) == TRUE)) & (any(grepl(fw_mappings[[fw_id]][i, "start"], colnames(fw_data), fixed = TRUE) == TRUE))) {
+                                # if the signifier id is not in the list of signifiers (for whatever reason) then next
+                                if (!(fw_mappings[[fw_id]][i, "end"] %in% sensemakerframeworkrobject$get_all_signifier_ids())) {next}
                                 # if this is a multi-select list then process the underscore versions so next
                                 if (sensemakerframeworkrobject$get_signifier_type(fw_mappings[[fw_id]][i, "end"]) == "list" &&  sensemakerframeworkrobject$get_list_max_responses(fw_mappings[[fw_id]][i, "end"]) > 1) {next}
-                                # change the column names
+                                 # change the column names
                                 colnames(fw_data) <- stringr::str_replace_all(colnames(fw_data), fw_mappings[[fw_id]][i, "start"], fw_mappings[[fw_id]][i, "end"])
                               }
                             } else {
