@@ -536,7 +536,8 @@ Data <- R6::R6Class("Data",
                       #  }
 
                         if (csvfilename != "") {
-                          assertive::assert_all_are_existing_files(x = csvfilename, severity = "stop")
+                          stopifnot(all(unlist(unname(purrr::map(csvfilename, ~ {file.exists(.x)})))))
+                         # assertive::assert_all_are_existing_files(x = csvfilename, severity = "stop")
                         }
 
                         # =========== fragment level level update files or parsed data =================
