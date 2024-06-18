@@ -721,7 +721,7 @@ Data <- R6::R6Class("Data",
                         # get the sensemakerframeworkr object if it hasn't been passed
                         if (!("Signifiers" %in% class(sensemakerframeworkrobject))) {
                           sensemakerframeworkrobject <- sensemakerframeworkr::Signifiers$new(jsonfilename = NULL, layoutfilename = NULL, parsedjson = NULL, parsedlayout = NULL, workbenchid = framework_id, token = token)
-                        }
+                          }
 
                         # check that the sensemakerframeworkr projectid is the same as the project id passed in or obtained in the data
                         if (framework_id != sensemakerframeworkrobject$get_parent_framework_id()) {
@@ -739,6 +739,7 @@ Data <- R6::R6Class("Data",
                         # now process the dashboard completely - this function has side effects on the dashboard definition,
                         # data and framework definition
                         if (dashboard_id != "") {
+
                           df <- do.call(paste0("process_dashboard_definition_", self$dashboard_version), args = list(df, framework_id, end_point, dashboard_id, token, is_demonstrator, sensemakerframeworkrobject), envir = private)
                         }
 
@@ -746,7 +747,6 @@ Data <- R6::R6Class("Data",
                         self$sm_framework <- sensemakerframeworkrobject
                         # Main framework title
                         self$framework_title <- self$sm_framework$get_parent_framework_name()
-
                         # start processing data
                         self$df1 <- private$process_data(df, sensemakerframeworkrobject)
 
@@ -1355,7 +1355,7 @@ Data <- R6::R6Class("Data",
                         if (self$is_combined_dashboard()) {
                           df <- private$combine_data(df, framework_id, end_point, dashboard_id, token, is_demonstrator, sensemakerframeworkrobject)
                         }
-
+                        write.csv(x = df, file = "data.csv", na = "", row.names = FALSE)
                         if(self$dashboard_has_filters()) {
                           df <- private$filter_data_v1(df, framework_id, end_point, dashboard_id, token, is_demonstrator, sensemakerframeworkrobject)
                         }
@@ -1426,8 +1426,11 @@ Data <- R6::R6Class("Data",
                         if (nrow(filter_defs) > 0) {
                           from_dte <- lubridate::as_date(filter_defs[["value"]][[1]][[1]])
                           to_dte <- lubridate::as_date(filter_defs[["value"]][[1]][[2]])
-                          qry <- paste0("ServerEntryDate >= ", "\"",  from_dte, "\"",  " & ServerEntryDate <= ", "\"", to_dte, "\"")
-                          query_string <- ifelse(is.null(query_string), qry, paste0(query_string, " & ", qry))
+                          diff_in_days<- difftime(to_dte, from_dte, units = c("days"))
+                          if (diff_in_days != 30) {
+                           qry <- paste0("ServerEntryDate >= ", "\"",  from_dte, "\"",  " & ServerEntryDate <= ", "\"", to_dte, "\"")
+                           query_string <- ifelse(is.null(query_string), qry, paste0(query_string, " & ", qry))
+                          }
                         }
 
                         if (is.null(query_string)) {return(df)}
