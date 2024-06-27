@@ -1751,6 +1751,7 @@ Data <- R6::R6Class("Data",
                         for (i in seq_along(stoneIDs)) {
 
                           imagePath <- sensemakerframeworkrobject$get_stones_background_image(stoneIDs[[i]])
+                          imagePath <- utils::URLencode(imagePath)
 
                           imageSplit <- stringr::str_split(imagePath, "\\.")
                           if (!(grepl("https", imageSplit[[1]][[1]], fixed = TRUE))) {
@@ -1772,8 +1773,9 @@ Data <- R6::R6Class("Data",
 
                           #   imageType <- imageSplit[[1]][[length(imageSplit[[1]])]]
                           z <- tempfile()
-                          download.file(imagePath, paste0(z, ".jpeg"), mode="wb")
-                          img <- imager::load.image(file = paste0(z, ".jpeg"))
+                          file_extension <- tools::file_ext(imagePath)
+                          download.file(imagePath, paste0(z, ".", file_extension), mode="wb")
+                          img <- imager::load.image(file = paste0(z, ".", file_extension))
                           calRatio <- imager::width(img) / imager::height(img)
                           #    if (imageType %in% c("jpg", "jpeg")) {
                           # pic <- readJPEG(paste0(z, ".jpeg"))
