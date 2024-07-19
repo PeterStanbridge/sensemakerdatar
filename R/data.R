@@ -50,32 +50,32 @@ Data <- R6::R6Class("Data",
                       #' @field data The full list of data objects keyed by the name of the field. NOTE - this will be user (coder) extensible
                       data = list(NULL),
                       # Common lists used from within the data list- all initially set to full dataset
-                      #' @field df1 The full dataset for any given framework, thus if linked framework selected, will have only the linked framework data, not the full set
-                      #' NOTE Depreciated
-                      df1 = NULL,
-                      #' @field dat  Filtered data so always the data being displayed based on a filter on the main df1 dataframe
-                      #'  NOTE Depreciated
-                      dat = NULL,
-                      #' @field df_keep Always the full dataset even through linked fw selections- enables restore of full dataset when deselecting linked frameworks
-                      #'  NOTE Depreciated
-                      df_keep = NULL,
-                      #' @field df_multi_select The transformed multi-select MCQ data
-                      #'  NOTE Depreciated
-                      df_multi_select = NULL,
-                      #' @field df_multi_select_full The transformed multi-select MCQ data - always full set
-                      #'  NOTE Depreciated
-                      df_multi_select_full = NULL,
-                      #' @field df_chat_titles same as df_titles but only those columns that are categorical and text
-                      #' df_chat_titles
-                      df_chat_titles = NULL,
+                    #  #' @field df1 The full dataset for any given framework, thus if linked framework selected, will have only the linked framework data, not the full set
+                    #  #' NOTE Depreciated
+                    #  df1 = NULL,
+                     # #' @field dat  Filtered data so always the data being displayed based on a filter on the main df1 dataframe
+                     # #'  NOTE Depreciated
+                     # dat = NULL,
+                    #  #' @field df_keep Always the full dataset even through linked fw selections- enables restore of full dataset when deselecting linked frameworks
+                    #  #'  NOTE Depreciated
+                    #  df_keep = NULL,
+                    #  #' @field df_multi_select The transformed multi-select MCQ data
+                    #  #'  NOTE Depreciated
+                    #  df_multi_select = NULL,
+                    #  #' @field df_multi_select_full The transformed multi-select MCQ data - always full set
+                    #  #'  NOTE Depreciated
+                    #  df_multi_select_full = NULL,
+                    #  #' @field df_chat_titles same as df_titles but only those columns that are categorical and text
+                   #   #' df_chat_titles
+                   #   df_chat_titles = NULL,
                       #' @field stone_ratios Stone ratios of each of the stone canvases
                       stone_ratios = NULL,
-                      #' @field stone_data Stone transformed data into long from from column form
-                      stone_data = NULL,
-                      #' @field title_data data containing titles, not ids
-                      title_data = NULL,
-                      #' @field title_use Filtered data containing titles not ids, used for display on a filter
-                      title_use = NULL,
+                    #  #' @field stone_data Stone transformed data into long from from column form
+                    #  stone_data = NULL,
+                   #   #' @field title_data data containing titles, not ids
+                   #   title_data = NULL,
+                   #   #' @field title_use Filtered data containing titles not ids, used for display on a filter
+                    #  title_use = NULL,
                       #' @field sm_framework the framework definition
                       sm_framework = NULL,
                       #' @field framework_definition_json The framework json for non-dashboard or dashbpard parent
@@ -482,6 +482,9 @@ Data <- R6::R6Class("Data",
                       get_data = function(csvfilename, csvfiledf, framework_id, dashboard_id, token, sensemakerframeworkrobject, polymorphic_definition_json,
                                           fragment_level_csv, fragment_level_parsed, FK_level_csv, FK_level_parsed, upload_na_identifier) {
 
+                        # populate the data class fields including the generic array "data" which can be extended by application developers
+                        self$data <- vector("list", length = 9)
+                        names(self$data) <- c("df1", "dat", "df_keep",  "df_multi_select", "df_multi_select_full", "stone_data", "title_data", "title_use", "df_chat_titles")
 
                         if (all(is.null(c(framework_id, dashboard_id)))) {
                           self$is_invalid <- TRUE
@@ -748,36 +751,37 @@ Data <- R6::R6Class("Data",
                         # Main framework title
                         self$framework_title <- self$sm_framework$get_parent_framework_name()
                         # start processing data
-                        self$df1 <- private$process_data(df, sensemakerframeworkrobject)
+                        #self$df1 <- private$process_data(df, sensemakerframeworkrobject)
+                        self$data[["df1"]] <- private$process_data(df, sensemakerframeworkrobject)
 
 
-                        # populate the data class fields including the generic array "data" which can be extended by application developers
-                        self$data <- vector("list", length = 9)
-                        names(self$data) <- c("df1", "dat", "df_keep",  "df_multi_select", "df_multi_select_full", "stone_data", "title_data", "title_use", "df_chat_titles")
 
-                        if (!is.null(self$df1)) {
-                          self$data[["df1"]] <- self$df1
-                          self$dat <- self$df1
-                          self$data[["dat"]] <- self$df1
-                          self$df_keep <- self$df1
-                          self$data[["df_keep"]] <- self$df1
+                        if (!is.null(self$data[["df1"]])) {
+                          #self$data[["df1"]] <- self$df1
+                          #self$dat <- self$df1
+                         # self$data[["dat"]] <- self$df1
+                          self$data[["dat"]] <- self$data[["df1"]]
+                         # self$df_keep <- self$df1
+                          #self$data[["df_keep"]] <- self$df1
+                          self$data[["df_keep"]] <- self$data[["df1"]]
                         }
 
-                        self$data[["title_data"]] <- self$title_data
-                        self$data[["df_chat_titles"]] <- self$df_chat_titles
+                        #self$data[["title_data"]] <- self$title_data
+                       # self$data[["df_chat_titles"]] <- self$df_chat_titles
 
-                        if (!is.null(self$data[["df_multi_select"]])) {
-                          self$data[["df_multi_select"]] <- self$df_multi_select
-                        }
-                        if (!is.null(self$df_multi_select_full)) {
-                          self$data[["df_multi_select_full"]] <- self$df_multi_select_full
-                          self$df_multi_select <- self$df_multi_select_full
-                          self$data[["df_multi_select"]] <- self$df_multi_select_full
+                       # if (!is.null(self$data[["df_multi_select"]])) {
+                       #   self$data[["df_multi_select"]] <- self$df_multi_select
+                       # }
+                       # if (!is.null(self$df_multi_select_full)) {
+                        if (!is.null(self$data[["df_multi_select_full"]])) {
+                         # self$data[["df_multi_select_full"]] <- self$df_multi_select_full
+                          #self$df_multi_select <- self$df_multi_select_full
+                          self$data[["df_multi_select"]] <- self$data[["df_multi_select_full"]]
                         }
 
-                        if (!is.null(self$stone_data)) {
-                          self$data[["stone_data"]] <- self$stone_data
-                        }
+                      #  if (!is.null(self$stone_data)) {
+                        #  self$data[["stone_data"]] <- self$stone_data
+                        #}
                       },
 
 
@@ -929,7 +933,8 @@ Data <- R6::R6Class("Data",
                         }
 
                         # multi-select MCQ data into new long form tables
-                        self$df_multi_select_full <- private$transform_multi_select(df, sensemakerframeworkrobject)
+                        #self$df_multi_select_full <- private$transform_multi_select(df, sensemakerframeworkrobject)
+                        self$data[["df_multi_select_full"]] <- private$transform_multi_select(df, sensemakerframeworkrobject)
 
                         # ------------- Process stones ---------------
                         # Calculate stone ratios
@@ -962,7 +967,8 @@ Data <- R6::R6Class("Data",
                             stone_data[[stones_id]] <- stonedf1
                           }
                           # set the field
-                          self$stone_data <- stone_data
+                         # self$stone_data <- stone_data
+                          self$data[["stone_data"]] <- stone_data
                         }
 
 
@@ -995,11 +1001,13 @@ Data <- R6::R6Class("Data",
 
 
                         # create a title version of the data frame. ToDo this isn't finished because of query with Manami/Ramya
-                        self$title_data <- private$convert_data_to_titles(df, sensemakerframeworkrobject, column_type = "ALL")
+                       # self$title_data <- private$convert_data_to_titles(df, sensemakerframeworkrobject, column_type = "ALL")
+                        self$data[["title_data"]] <- private$convert_data_to_titles(df, sensemakerframeworkrobject, column_type = "ALL")
                        # self$data[["title_data"]] <- self$title_data
                         df_chat <- df %>% dplyr::select(c("FragmentID", sensemakerframeworkrobject$get_freetext_ids(), unlist(unname(purrr::map(sensemakerframeworkrobject$get_list_ids(exclude_multiple = TRUE), ~ {sensemakerframeworkrobject$get_list_column_names(.x)})))))
 
-                        self$df_chat_titles <- private$convert_data_to_titles(df_chat, sensemakerframeworkrobject, column_type = "CHAT")
+                        #self$df_chat_titles <- private$convert_data_to_titles(df_chat, sensemakerframeworkrobject, column_type = "CHAT")
+                        self$data[["df_chat_titles"]] <- private$convert_data_to_titles(df_chat, sensemakerframeworkrobject, column_type = "CHAT")
                         #self$add_data_data_frame(self$df_chat_titles, name =  "df_chat_titles", add_to_export_list_names = TRUE)
                        # self$data[["df_chat_titles"]] <- self$df_chat_titles
 
