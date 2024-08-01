@@ -10,9 +10,19 @@ License: What license is it under?
 Encoding: UTF-8
 LazyData: true
 Imports: 
+    dplyr,
+    httr,
+    imager,
+    jsonlite,
     lubridate,
     purrr,
+    readr,
     sensemakerframeworkr,
+    stringi,
     stringr,
+    svgtools,
+    tidyr,
+    tools,
+    utils,
     XML
 RoxygenNote: 7.3.1

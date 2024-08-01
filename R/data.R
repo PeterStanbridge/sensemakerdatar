@@ -1324,11 +1324,15 @@ Data <- R6::R6Class("Data",
 
                         # Get the data from the API saving to temp folder, read csv into dataframe, remove temp file and return dataframe
                         df1FileName <- tempfile(pattern = "", fileext = ".csv")
-                        r1 <- httr::GET(paste0("http://", end_point, ".sensemaker-suite.com/apis/capture/", framework_id,"/?type=csv", sep=""),
-                                        httr::add_headers(.headers = c('Authorization'= paste('Bearer ', token))),
-                                        httr::write_disk(df1FileName, overwrite=TRUE), httr::verbose())
-                        DF1I <- read.csv(df1FileName, stringsAsFactors = FALSE, encoding = 'UTF-8', na.strings = "", as.is = TRUE, check.names = FALSE, nrows = ifelse(isDemonstratorAccount, 20, -5))
-                        unlink(df1FileName)
+                      #  r1 <- httr::GET(paste0("http://", end_point, ".sensemaker-suite.com/apis/capture/", framework_id,"/?type=csv", sep=""),
+                      #                  httr::add_headers(.headers = c('Authorization'= paste('Bearer ', token))),
+                       #                 httr::write_disk(df1FileName, overwrite=TRUE), httr::verbose())
+                       # DF1I <- read.csv(df1FileName, stringsAsFactors = FALSE, encoding = 'UTF-8', na.strings = "", as.is = TRUE, check.names = FALSE, nrows = ifelse(isDemonstratorAccount, 20, -5))
+                        r1 <-  httr::GET(paste0("https://api-gateway.sensemaker-suite.com/v2/frameworks/", framework_id, "/captures?includeLabels=false"),
+                                         httr::add_headers(.headers = c('Authorization'= paste('Bearer ', token), 'Accept' = 'text/csv; version=1')),
+                                         httr::write_disk(df1FileName, overwrite=TRUE), httr::verbose())
+                        DF1I <- as.data.frame(readr::read_csv(file = df1FileName, col_names = TRUE))
+                         unlink(df1FileName)
 
                         if (nrow(DF1I) > 0) {
                           # all meta-columns should be character
@@ -1340,6 +1344,7 @@ Data <- R6::R6Class("Data",
                             DF1I[[col]] <- as.character( DF1I[[col]])
                           }
                         }
+
 
                         return(DF1I)
                       },
@@ -1363,7 +1368,7 @@ Data <- R6::R6Class("Data",
                         if (self$is_combined_dashboard()) {
                           df <- private$combine_data(df, framework_id, end_point, dashboard_id, token, is_demonstrator, sensemakerframeworkrobject)
                         }
-                        write.csv(x = df, file = "data.csv", na = "", row.names = FALSE)
+                      #  write.csv(x = df, file = "data.csv", na = "", row.names = FALSE)
                         if(self$dashboard_has_filters()) {
                           df <- private$filter_data_v1(df, framework_id, end_point, dashboard_id, token, is_demonstrator, sensemakerframeworkrobject)
                         }
@@ -1379,6 +1384,7 @@ Data <- R6::R6Class("Data",
 
                         # Filter out those that have showFilter
                         filter_defs <- self$dashboard_definition_v1$filters %>% dplyr::filter(showFilter == TRUE)
+
                         query_string <- NULL
 
                         if (nrow(filter_defs) > 0) {
@@ -1435,10 +1441,22 @@ Data <- R6::R6Class("Data",
                           from_dte <- lubridate::as_date(filter_defs[["value"]][[1]][[1]])
                           to_dte <- lubridate::as_date(filter_defs[["value"]][[1]][[2]])
                           diff_in_days<- difftime(to_dte, from_dte, units = c("days"))
-                          if (diff_in_days != 30) {
+                          # If the miin/max of the actual data don't overlay with the min/max of the query then you
+                          # know that the query was set up for dates that are not applicable so return full dataset
+                          min_max_date <- df %>%
+                            # transform to date format with lubridate
+                            dplyr::mutate(ServerEntryDate = lubridate::ymd(ServerEntryDate)) %>%
+                            # find min and max
+                            dplyr::summarise(
+                              min = min(ServerEntryDate),
+                              max = max(ServerEntryDate))
+                          if (difftime(min_max_date[, "max"], from_dte, units = c("days")) > 0) {return(df)}
+                          if (difftime(to_dte, min_max_date[, "min"], units = c("days")) < 0) {return(df)}
+
+
                            qry <- paste0("ServerEntryDate >= ", "\"",  from_dte, "\"",  " & ServerEntryDate <= ", "\"", to_dte, "\"")
                            query_string <- ifelse(is.null(query_string), qry, paste0(query_string, " & ", qry))
-                          }
+
                         }
 
                         if (is.null(query_string)) {return(df)}
@@ -1457,7 +1475,6 @@ Data <- R6::R6Class("Data",
                           # get combined framework data and load definition (maybe not) and do the date application (needed for filtering so done now)
 
                           fw_data <- private$get_API_framework_data(end_point, fw_id, token, self$demonstrator)
-
 
                           fw_data <- private$apply_dates(fw_data)
 
@@ -1515,6 +1532,7 @@ Data <- R6::R6Class("Data",
                               fw_data[[sig_id]] <- as.character(sig_col)
                             }
                           }
+
                           df <- dplyr::bind_rows(df, fw_data)
                         }
 
