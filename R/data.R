@@ -3,7 +3,7 @@
 # try using base split to pass via a map2 or pmap
 # ToDo - remove the individual data fields and keep only "data"
 # N O T E !!!!!
-# New fully recursive graph code will be generated with # new graph comment. All old code kept for now for backward compatability commented # old method
+# New fully recursive graph code will be generated with # new graph comment. All old code kept for now for backward compatibility commented # old method
 #
 # The new method philosophy.
 # A header field with the parent project header properties - id, name etc. All methods referring to parent will be via the header property id
