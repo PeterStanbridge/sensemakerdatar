@@ -335,15 +335,25 @@ Data <- R6::R6Class("Data",
                       },
                       #' @description
                       #' Get the df_multi_select data
+                      #' @param id - the mcq to be returned. Optional, NULL will bring back all MCQs.
                       #' @return The df_multi_select data data.frame
-                      get_df_multi_select_data = function() {
-                        return(self$data[["df_multi_select"]])
+                      get_df_multi_select_data = function(id = NULL) {
+                        if(is.null(id)) {
+                          return(self$data[["df_multi_select"]])
+                        } else {
+                          return(self$data[["df_multi_select"]][[id]])
+                        }
                       },
                       #' @description
                       #' Get the df_multi_select_full data
-                      #' @return The df_multi_select_full data data.frame
-                      get_df_multi_select_full_data = function() {
-                        return(self$data[["df_multi_select_full"]])
+                      #' @param id - the mcq to be returned. Optional, NULL will bring back all MCQs.
+                      #' @return A list of data frames if id is NULL otherwise a single data frame for the passed in id.
+                      get_df_multi_select_full_data = function(id = NULL) {
+                        if(is.null(id)) {
+                          return(self$data[["df_multi_select_full"]])
+                        } else {
+                          return(self$data[["df_multi_select_full"]][[id]])
+                        }
                       },
                       #' @description
                       #' Get the stone_data data
@@ -464,8 +474,80 @@ Data <- R6::R6Class("Data",
                       #' @return Parsed JSON file of the polymorphic signifier definitions
                       get_polymorphic_signifiers = function() {
                         return(self$polymorphic_signifiers)
-                      }
+                      },
+                   #' @description
+                   #' Executes a list of queryies on the database and either updates existing data frames or adds a new one
+                   #'@param query_file - default NULL. A file with columns containing at least "name" and "expression" and "include"
+                   #' @param queries - a vector of the queries to execute. In double quotes so internal quotes to be single.
+                   #' @param data_names - The names of the new data list data frame entries A vector the same length as queries
+                   #' @returns NULL
+                   execute_queries = function(query_file = NULL, queries = NULL, data_names = NULL) {
+                     # queries and data_names vectors must be the same length and data_names unique
+                     if (!is.null(query_file)) {
+                       stopifnot(file.exists(query_file))
+                       df <- read.csv(query_file, stringsAsFactors = FALSE)
+                       stopifnot(all(c("name", "expression", "include") %in% colnames(df)))
+                       df <- df %>% filter(include == "Y")
+                       queries <- df[["expression"]]
+                       data_names <- df[["name"]]
+                     }
+                     stopifnot(length(queries) == length(data_names))
+                     stopifnot(length(queries) == length(unique(data_names)))
+                     purrr::walk2(queries, data_names, ~ {self$execute_data_query(.x, NULL, .y)})
+                   },
 
+                      #' @description
+                      #' Executes a query on the database and either updates existing data frames or adds a new one
+                      #'
+                      #' @param query - the query to execute. In double quotes so internal quotes to be single.
+                      #' @param data_frames - default NULL, values "ALL" or a list of data names in the data list.
+                      #' @param data_name - default NULL, the name of the new data list data frame entry if query to create a new entry
+                      #' @returns the filtered data frame (note: the internal dataframe list will be also updated in accordance with whether data_frames or data_name passed)
+                   execute_data_query = function(query, data_frames = NULL, data_name = NULL) {
+                     # one and only one of data_frames and data_name can be passed.
+                     stopifnot((is.null(data_frames) & !is.null(data_name)) | (!is.null(data_frames) & is.null(data_name)))
+                     # data_name should only have one entry. Name should not already exist.
+                     if (!is.null(data_name)) {
+                       stopifnot(length(data_name) == 1)
+                       stopifnot(!(data_name %in% self$get_data_list_names()))
+                     }
+                     # If data_frames contains an ALL it should be the only entry
+                     # otherwise the names in the list should all be in the names already there.
+                     if (!is.null(data_frames)) {
+                       if ("ALL" %in% data_frames) {
+                         stopifnot(length(data_frames) == 1)
+                       } else {
+                         stopifnot(all(data_frames %in% self$get_data_list_names()))
+                       }
+                     }
+                     # query must not be null or blank
+                     if (is.null(query)) {return(NULL)}
+                     if (trimws(query) == "") {return(NULL)}
+                     # set up parse query and catch a parse error - return ERROR if there is one.
+                     parse_query <- function(query) {
+                       return(parse(text = query))
+                     }
+
+                     tryCatch(withCallingHandlers(parse_query(query), error = function(e) {write.to.log(sys.calls())}
+                                                  , warning=function(w) {write.to.log(sys.calls())
+                                                    invokeRestart("muffleWarning")})
+                              , error = function(e) { return("ERROR") })
+
+                     # do the main query
+                     filtered_data_string <- parse(text = paste0("self$data[['df1']] %>% dplyr::filter(", query, ")"))
+                     filtered_data <- eval(filtered_data_string)
+                     if (!is.null(data_name)) {
+                       self$add_data_data_frame(data_frame = filtered_data, name = data_name)
+                       return(filtered_data)
+                     }
+                     if (!is.null(data_frames)) {
+                       if (data_frames == "ALL") {
+                         data_frames <- self$get_data_list_names()
+                       }
+                       use_data_frames <- purrr::keep(data_frames, ~ {!is.null(self$data[[.x]]) && "FragmentID" %in% colnames(self$data[[.x]])})
+                       purrr::walk(use_data_frames, ~ {self$data[[.x]] <- self$data[[.x]] %>% dplyr::filter(FragmentID %in% filtered_data$FragmentID)})
+                     }
+                   }
                     ),
 
                     private = list(
@@ -1320,7 +1402,7 @@ Data <- R6::R6Class("Data",
                         return(df)
                       },
 
-                      get_API_framework_data = function(end_point, framework_id, token, isDemonstratorAccount = FALSE) {
+                      get_API_framework_data = function(end_point, framework_id, token, isDemonstratorAccount = FALSE, out_msg = FALSE) {
 
                         # Get the data from the API saving to temp folder, read csv into dataframe, remove temp file and return dataframe
                         df1FileName <- tempfile(pattern = "", fileext = ".csv")
@@ -1330,7 +1412,7 @@ Data <- R6::R6Class("Data",
                        # DF1I <- read.csv(df1FileName, stringsAsFactors = FALSE, encoding = 'UTF-8', na.strings = "", as.is = TRUE, check.names = FALSE, nrows = ifelse(isDemonstratorAccount, 20, -5))
                         r1 <-  httr::GET(paste0("https://api-gateway.sensemaker-suite.com/v2/frameworks/", framework_id, "/captures?includeLabels=false"),
                                          httr::add_headers(.headers = c('Authorization'= paste('Bearer ', token), 'Accept' = 'text/csv; version=1')),
-                                         httr::write_disk(df1FileName, overwrite=TRUE), httr::verbose())
+                                         httr::write_disk(df1FileName, overwrite=TRUE), httr::verbose(data_out = out_msg, data_in = FALSE, info = FALSE, ssl = FALSE))
                         DF1I <- as.data.frame(readr::read_csv(file = df1FileName, col_names = TRUE))
                          unlink(df1FileName)
 
@@ -1635,12 +1717,12 @@ Data <- R6::R6Class("Data",
                         return(ret_df)
                       },
 
-                      get_framework_definition = function(end_point, framework_id, token) {
+                      get_framework_definition = function(end_point, framework_id, token, out_msg = FALSE) {
 
                         return(jsonlite::fromJSON(httr::content(httr::GET(
                           paste0("https://", end_point, ".sensemaker-suite.com/apis/projectdefinition/",  framework_id),
                           httr::add_headers(.headers = c('Authorization' = paste("Bearer", token, sep = " ")
-                                                         , 'Content-Type' = 'application/json'))
+                                                         , 'Content-Type' = 'application/json')), httr::verbose(data_out = out_msg, data_in = FALSE, info = FALSE, ssl = FALSE)
                         ), as = 'text', encoding = 'utf-8'), simplifyVector = TRUE, simplifyDataFrame = TRUE ,flatten = FALSE))
 
 
@@ -1653,7 +1735,7 @@ Data <- R6::R6Class("Data",
                           return(jsonlite::fromJSON(httr::content(httr::GET(
                             paste0("https://", end_point, ".sensemaker-suite.com/apis/dashboards/",  dashboard_id),
                             httr::add_headers(.headers = c('Authorization' = paste("Bearer", token, sep = " ")
-                                                           , 'Content-Type' = 'application/json'))
+                                                           , 'Content-Type' = 'application/json')), httr::verbose(data_out = out_msg, data_in = FALSE, info = FALSE, ssl = FALSE)
                           ), as = 'text', encoding = 'utf-8'), simplifyVector = TRUE, simplifyDataFrame = TRUE ,flatten = FALSE))
                         }
                         )
@@ -1670,7 +1752,7 @@ Data <- R6::R6Class("Data",
                         return(out)
                       },
 
-                      get_v2_DashboardDefinition = function(end_point, dashboard_id, token) {
+                      get_v2_DashboardDefinition = function(end_point, dashboard_id, token, out_msg = FALSE) {
                         # we are in the get dashboard definition
 
 
@@ -1679,13 +1761,13 @@ Data <- R6::R6Class("Data",
                         v2_definition <- jsonlite::fromJSON(httr::content(httr::GET(
                           paste0("https://api-gateway.sensemaker-suite.com/v2/dashboards/", dashboard_id),
                           httr::add_headers(.headers = c('Authorization' = paste("Bearer", token, sep = " ")
-                                                         , 'Content-Type' = 'application/json')),  httr::verbose()
+                                                         , 'Content-Type' = 'application/json')),  httr::verbose(data_out = out_msg, data_in = FALSE, info = FALSE, ssl = FALSE)
                         ), as = 'text', encoding = 'utf-8'), simplifyVector = TRUE, simplifyDataFrame = TRUE ,flatten = FALSE)
 
                         v2_layout <- jsonlite::fromJSON(httr::content(httr::GET(
                           paste0("https://api-gateway.sensemaker-suite.com/v2/dashboards/", dashboard_id, "/layouts"),
                           httr::add_headers(.headers = c('Authorization' = paste("Bearer", token, sep = " ")
-                                                         , 'Content-Type' = 'application/json')),  httr::verbose()
+                                                         , 'Content-Type' = 'application/json')),  httr::verbose(data_out = out_msg, data_in = FALSE, info = FALSE, ssl = FALSE)
                         ), as = 'text', encoding = 'utf-8'), simplifyVector = TRUE, simplifyDataFrame = TRUE ,flatten = FALSE)
 
                         # get the json from the returned project definition
@@ -1693,7 +1775,7 @@ Data <- R6::R6Class("Data",
                         v2_filters <- jsonlite::fromJSON(httr::content(httr::GET(
                           paste0("https://api-gateway.sensemaker-suite.com/v2/dashboards/", dashboard_id, "/filters"),
                           httr::add_headers(.headers = c('Authorization' = paste("Bearer", token, sep = " ")
-                                                         , 'Content-Type' = 'application/json')),  httr::verbose()
+                                                         , 'Content-Type' = 'application/json')),  httr::verbose(data_out = out_msg, data_in = FALSE, info = FALSE, ssl = FALSE)
                         ), as = 'text', encoding = 'utf-8'), simplifyVector = TRUE, simplifyDataFrame = TRUE ,flatten = FALSE)
 
                         ret_list <- list(v2_definition = v2_definition, v2_layout = v2_layout, v2_filters = v2_filters)
@@ -1702,7 +1784,7 @@ Data <- R6::R6Class("Data",
                       },
 
                       # Demonstrator accounts only allowed a subset of the data.
-                      get_is_demonstrator = function(trToken) {
+                      get_is_demonstrator = function(trToken, out_msg = FALSE) {
 
                         out <- try({
                           #
@@ -1710,7 +1792,7 @@ Data <- R6::R6Class("Data",
                           sessionDetails <- jsonlite::fromJSON(httr::content(httr::GET(
                             paste0("https://api.singularity.icatalyst.com/api/session"),
                             httr::add_headers(.headers = c('Authorization' = paste("Bearer", trToken, sep = " ")
-                                                           , 'Content-Type' = 'application/json'))
+                                                           , 'Content-Type' = 'application/json')), httr::verbose(data_out = out_msg, data_in = FALSE, info = FALSE, ssl = FALSE)
                           ), as = 'text', encoding = 'utf-8'), simplifyVector = TRUE, simplifyDataFrame = TRUE ,flatten = FALSE)
 
                           # if there is only one true accessrole line here and the  accessrole:true and code for that is "f48150ea-ba3d-4108-9575-94408ff4cc99" then demonstrator true
