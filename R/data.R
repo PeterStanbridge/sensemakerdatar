@@ -174,6 +174,99 @@ Data <- R6::R6Class("Data",
                       get_data_dataframe = function(name) {
                         return(self$data[[name]])
                       },
+                   #' @description get the data count of those responends not responding to a signifier. If the signifier is required then count is zero.
+                   #' @param df_name - Default "dat", one of the data frames in the export data list (get_export_data_list_names method)
+                   #' @param sig_id - Default NULL, a signifier id from the framework. Either this or the col_name must be provided.
+                   #' @param col_name - Default NULL, a column name from the data. Either this or the sig_id must be provided
+                   #' @returns Count of the number of non-responses by the respondent.
+                   get_not_responded_count = function(df_name = "dat", sig_id = NULL, col_name = NULL) {
+
+                     stopifnot(df_name %in% self$get_export_data_list_names())
+                     stopifnot(any(c(is.null(sig_id), is.null(col_name))))
+                     stopifnot(!all(c(is.null(sig_id), is.null(col_name))))
+
+                     if (!is.null(col_name)) {
+                       stopifnot((col_name %in% colnames(self$data[[df_name]])))
+                       if (col_name %in% self$sm_framework$get_all_signifier_ids(sig_class = "signifier")) {
+                         sig_id <- col_name
+                       } else {
+                         sig_id <- get_signifier_id_from_column_name(col_name)
+                       }
+                       if (is.null(sig_id)) {
+                         return(NULL)
+                       }
+                     }
+
+                     if (!is.null(sig_id)) {
+                       stopifnot(sig_id %in% self$sm_framework$get_all_signifier_ids(sig_class = c("signifier", "date")))
+                      # if (self$sm_framework$get_signifier_required(sig_id)) {
+                      #   return(0)
+                      # } else {
+                         non_entry <- length(which(is.na(self$data[[df_name]][[self$sm_framework$get_a_col_name(sig_id)]]) == TRUE))
+                         if (self$sm_framework$get_signifier_allow_na(sig_id)) {
+                           not_applicables_count <- length(which(self$data[[df_name]][[self$sm_framework$get_signifier_na_column_name(sig_id)]] == 1))
+                           non_entry <- non_entry - not_applicables_count
+                         }
+                         return(non_entry)
+                      # }
+                     }
+                   },
+                   #' @description get the data count of those responends not responding to a signifier. If the signifier is required then count is zero.
+                   #' @param df_name - Default "dat", one of the data frames in the export data list (get_export_data_list_names method)
+                   #' @param sig_id - Default NULL, a signifier id from the framework. Either this or the col_name must be provided.
+                   #' @param col_name - Default NULL, a column name from the data. Either this or the sig_id must be provided
+                   #' @returns Count of the number of non-responses by the respondent.
+                   get_not_applicable_count = function(df_name = "dat", sig_id = NULL, col_name = NULL) {
+
+                     stopifnot(df_name %in% self$get_export_data_list_names())
+                     stopifnot(any(c(is.null(sig_id), is.null(col_name))))
+                     stopifnot(!all(c(is.null(sig_id), is.null(col_name))))
+
+                     if (!is.null(col_name)) {
+                       stopifnot((col_name %in% colnames(self$data[[df_name]])))
+                       if (col_name %in% self$sm_framework$get_all_signifier_ids(sig_class = "signifier")) {
+                         sig_id <- col_name
+                       } else {
+                         sig_id <- get_signifier_id_from_column_name(col_name)
+                       }
+                       if (is.null(sig_id)) {
+                         return(NULL)
+                       }
+                     }
+
+                     if (!is.null(sig_id)) {
+                       stopifnot(sig_id %in% self$sm_framework$get_all_signifier_ids(sig_class = c("signifier", "date")))
+                       if (!self$sm_framework$get_signifier_allow_na(sig_id)) {
+                         return(0)
+                       } else {
+                           return(length(which(self$data[[df_name]][[self$sm_framework$get_signifier_na_column_name(sig_id)]] == 1)))
+                         }
+                       }
+                   },
+                   #' @description get the signifier ID from a signifier/zone etc column name.
+                   #' @param col_name - Column name
+                   #' @returns The signifier ID associated with the column name else NULL
+                   get_signifier_id_from_column_name = function(col_name) {
+                     if (col_name %in% self$sm_framework$get_all_signifier_ids(sig_class = "signifier")) {return(col_name)}
+                     split_string <- stringr::str_split_1(string = col_name, pattern = "_")
+                     if (length(split_string) == 1) {
+                        if (stringr::str_ends(col_name, "XR")) {
+                          return(stringr::str_remove(col_name, "XR"))
+                        }
+                       if (stringr::str_ends(col_name, "X")) {
+                         return(stringr::str_remove(col_name, "X"))
+                       }
+                       if (stringr::str_ends(col_name, "Y")) {
+                         return(stringr::str_remove(col_name, "Y"))
+                       }
+                       if (col_name %in% self$sm_framework$get_all_signifier_ids(sig_class = "date")) {
+                         return(col_name)
+                       }
+                     } else {
+                       return(split_string[[1]])
+                     }
+                     return(NULL)
+                   },
                       #' @description
                       #' is the account accessing this framework a demonstrator account, TRUE or FALSE.
                       #' @return TRUE or FALSE
@@ -739,7 +832,10 @@ Data <- R6::R6Class("Data",
                             print("file 'csvfilename' must have a column 'project_id' with the framework id present")
                             stop()
                           }
-                          is_demonstrator <- private$get_is_demonstrator(token)
+                          is_demonstrator <- FALSE
+                          if (is.null(df)) {
+                            is_demonstrator <- private$get_is_demonstrator(token)
+                          }
                           self$demonstrator <- is_demonstrator
                         #  print("df is")
                         #  print(head(df))
@@ -747,6 +843,7 @@ Data <- R6::R6Class("Data",
 
                         if (is.data.frame(csvfiledf)) {
                           df <- csvfiledf
+
                           is_demonstrator <- private$get_is_demonstrator(token)
                           self$demonstrator <- is_demonstrator
                         }
@@ -869,7 +966,6 @@ Data <- R6::R6Class("Data",
 
                       # Do all the things needed to be done to the main data data frame including creating new transformed data frames for multi-select MCQs and stones
                       process_data = function(df, sensemakerframeworkrobject) {
-
                         # we need the framework id for some of the calls
                         framework_id <- sensemakerframeworkrobject$get_parent_framework_id()
 
@@ -881,7 +977,9 @@ Data <- R6::R6Class("Data",
 # adding in commen
                         # add the NarrID column (used for filter indexing) and set the "id" column to "FragmentID" (reads better in the code)
                         df[["NarrID"]] <- 1:nrow(df)
-                        names(df)[[which(names(df) == "id")]] <- "FragmentID"
+                        if (!("FragmentID" %in% colnames(df))) {
+                          names(df)[[which(names(df) == "id")]] <- "FragmentID"
+                        }
 
                         # process dyads
                         # Add the new percentage X columns for the dyads, keeping the decemal columns in place - side effects on df
