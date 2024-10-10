@@ -112,6 +112,8 @@ Data <- R6::R6Class("Data",
                       fragment_level_upload = NULL,
                       #' @field FK_level_upload dataframe of fragment level list updates to data
                       FK_level_upload = NULL,
+                      #' @field stop_words - stop words specific to this framework to use in any NLP requirements.
+                      stop_words = NULL,
                       #' @description
                       #' Create a new `data` object.
                       #' @details
@@ -137,6 +139,25 @@ Data <- R6::R6Class("Data",
                                                            FK_level_csv, FK_level_parsed, upload_na_identifier)
 
                       },
+                   #' @description Add stop words associated with the fragments in this framework data
+                   #' @param stop_words - A vector of stopwords, setting to NULL will clear the stop_list
+                   #' @param add_replace - default "replace". "append" or "replace" any stopwords previously added.
+                   add_stop_words = function(stop_words, add_replace = "replace") {
+                     stopifnot(add_replace %in% c("replace", "append"))
+                     if (!is.null(stop_words)) {
+                      stopifnot(is.vector(stop_words))
+                       stopifnot(length(stop_words) > 0)
+                     } else {
+                       self$stop_words <- NULL
+                       return()
+                     }
+                     if (add_replace == "replace") {
+                       self$stop_words <- stop_words
+                     } else {
+                       self$stopwords <- append(self$stop_words, stop_words)
+                     }
+                     return()
+                   },
                       #' @description Add a new data frame name to the export data list names. These are the data frames in list "data" that are
                       #' standard export format.
                       #' @param new_name - the name of a new data frame
@@ -620,7 +641,6 @@ Data <- R6::R6Class("Data",
                      parse_query <- function(query) {
                        return(parse(text = query))
                      }
-
                      tryCatch(withCallingHandlers(parse_query(query), error = function(e) {write.to.log(sys.calls())}
                                                   , warning=function(w) {write.to.log(sys.calls())
                                                     invokeRestart("muffleWarning")})
