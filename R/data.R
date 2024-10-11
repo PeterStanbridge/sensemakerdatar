@@ -192,9 +192,13 @@ Data <- R6::R6Class("Data",
                       #' @param name - the data list name to return (for names use "get_export_data_list_names function
                       #' for those that are standard export data frames or get_data_list_names function for all of them)
                       #' @returns A data list data object (normally data frame)
-                      get_data_dataframe = function(name) {
-                        return(self$data[[name]])
-                      },
+                   get_data_dataframe = function(name, as_tibble = FALSE) {
+                     if (as_tibble) {
+                       return(as_tibble(self$data[[name]]))
+                     } else {
+                       return(self$data[[name]])
+                     }
+                   },
                    #' @description get the data count of those responends not responding to a signifier. If the signifier is required then count is zero.
                    #' @param df_name - Default "dat", one of the data frames in the export data list (get_export_data_list_names method)
                    #' @param sig_id - Default NULL, a signifier id from the framework. Either this or the col_name must be provided.
