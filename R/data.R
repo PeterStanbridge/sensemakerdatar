@@ -35,7 +35,7 @@
 #' library(sensemakerdatar)
 #' my_fw <- signifiers$new("mydir/projectFramework.json", NULL, NULL, NULL)
 #' fw_triads <- self$get_signifier_ids_by_type("triad")
-#' triad_01_image <- pt$get_triad_background_image(fw_triads[[1]])this can be removed at some point
+#' triad_01_image <- pt$get_triad_background_image(fw_triads[[1]])
 Data <- R6::R6Class("Data",
                     public = list(
                       #' @field export_data_list_names List of the data list names that are standard export data frames. NOTE - this will be user (coder) extensible
