@@ -661,7 +661,17 @@ Data <- R6::R6Class("Data",
                        if (data_frames == "ALL") {
                          data_frames <- self$get_data_list_names()
                        }
-                       use_data_frames <- purrr::keep(data_frames, ~ {!is.null(self$data[[.x]]) && "FragmentID" %in% colnames(self$data[[.x]])})
+                       #use_data_frames <- purrr::keep(data_frames, ~ {!is.null(self$data[[.x]]) && "FragmentID" %in% colnames(self$data[[.x]])})
+                       # Only use those data frames within this list that are not null and have fragmentid in one of their column names. Made complicated in that some of the entries
+                       # in the list of data frames are themselves lists of data frames. The recursion shouldn't go below this so existing code should always work.
+                       use_data_frames <- purrr::keep(data_frames, function(x) {
+                         if (is.data.frame(fwd$data[[x]])) {
+                           !is.null(fwd$data[[x]]) && "FragmentID" %in% colnames(fwd$data[[x]])
+                         } else {
+                           !is.null(fwd$data[[x]]) && unlist(purrr::map(names(fwd$data[[x]]), function(y) {
+                             "FragmentID" %in% colnames(fwd$data[[x]][[y]])}))
+                         }
+                       })
                        purrr::walk(use_data_frames, ~ {self$data[[.x]] <- self$data[[.x]] %>% dplyr::filter(FragmentID %in% filtered_data$FragmentID)})
                      }
                    }
