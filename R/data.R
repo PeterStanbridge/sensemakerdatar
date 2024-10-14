@@ -665,14 +665,23 @@ Data <- R6::R6Class("Data",
                        # Only use those data frames within this list that are not null and have fragmentid in one of their column names. Made complicated in that some of the entries
                        # in the list of data frames are themselves lists of data frames. The recursion shouldn't go below this so existing code should always work.
                        use_data_frames <- purrr::keep(data_frames, function(x) {
-                         if (is.data.frame(fwd$data[[x]])) {
-                           !is.null(fwd$data[[x]]) && "FragmentID" %in% colnames(fwd$data[[x]])
+                         if (is.data.frame(self$data[[x]])) {
+                           !is.null(selfStart()$data[[x]]) && "FragmentID" %in% colnames(self$data[[x]])
                          } else {
-                           !is.null(fwd$data[[x]]) && unlist(purrr::map(names(fwd$data[[x]]), function(y) {
-                             "FragmentID" %in% colnames(fwd$data[[x]][[y]])}))
+                           !is.null(self$data[[x]]) && unlist(purrr::map(names(self$data[[x]]), function(y) {
+                             "FragmentID" %in% colnames(self$data[[x]][[y]])}))
                          }
                        })
-                       purrr::walk(use_data_frames, ~ {self$data[[.x]] <- self$data[[.x]] %>% dplyr::filter(FragmentID %in% filtered_data$FragmentID)})
+                       #purrr::walk(use_data_frames, ~ {self$data[[.x]] <- self$data[[.x]] %>% dplyr::filter(FragmentID %in% filtered_data$FragmentID)})
+                       purrr::walk(use_data_frames, function(x) {
+                         if (is.data.frame(self$data[[x]])) {
+                           self$data[[x]] <- self$data[[x]] %>% dplyr::filter(FragmentID %in% filtered_data$FragmentID)
+                         } else {
+                           purrr::walk(names(self$data[[x]]), function(y) {
+                             self$data[[x]][[y]] <- self$data[[x]][[y]] %>% dplyr::filter(FragmentID %in% filtered_data$FragmentID)
+                           })
+                         }
+                       })
                      }
                    }
                     ),
