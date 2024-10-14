@@ -666,7 +666,7 @@ Data <- R6::R6Class("Data",
                        # in the list of data frames are themselves lists of data frames. The recursion shouldn't go below this so existing code should always work.
                        use_data_frames <- purrr::keep(data_frames, function(x) {
                          if (is.data.frame(self$data[[x]])) {
-                           !is.null(selfStart()$data[[x]]) && "FragmentID" %in% colnames(self$data[[x]])
+                           !is.null(self$data[[x]]) && "FragmentID" %in% colnames(self$data[[x]])
                          } else {
                            !is.null(self$data[[x]]) && unlist(purrr::map(names(self$data[[x]]), function(y) {
                              "FragmentID" %in% colnames(self$data[[x]][[y]])}))
