@@ -38,11 +38,11 @@
 #' triad_01_image <- pt$get_triad_background_image(fw_triads[[1]])
 Data <- R6::R6Class("Data",
                     public = list(
-                      #' @field List of the data list names that are standard export data frames. NOTE - this will be user (coder) extensible
+                      #' @field export_data_list_names List of the data list names that are standard export data frames. NOTE - this will be user (coder) extensible
                       export_data_list_names = c("df1", "dat", "df_keep", "title_data", "df_chat_titles"),
                       #' @field is_invalid Boolean - TRUE if the attempt is invalid
                       is_invalid = FALSE,
-                      #' @field zero_records Boolean - TRUE if the data retrieval returns no records
+                      #' @field has_zero_records Boolean - TRUE if the data retrieval returns no records
                       has_zero_records = FALSE,
                       #' @field demonstrator Boolean - TRUE if the token is a demonstrator account.
                       demonstrator = NULL,
@@ -168,7 +168,6 @@ Data <- R6::R6Class("Data",
                       #' @param data_frame - the data frame to add
                       #' @param name - the name to give the data frame in the data list.
                       #' @param add_to_export_list_names - if this is a standard data data frame then whether to add to the
-                      #' export_data_list_names list.
                       add_data_data_frame = function(data_frame, name, add_to_export_list_names = FALSE) {
                         temp_list <- vector("list", length = 1)
                         names(temp_list) <- name
@@ -190,6 +189,7 @@ Data <- R6::R6Class("Data",
                       },
                       #' @description get the data object (data frame) from data list object
                       #' @param name - the data list name to return (for names use "get_export_data_list_names function
+                      #' @param as_tibble - default FALSE, if TRUE, export as a tidyverse tibble object.
                       #' for those that are standard export data frames or get_data_list_names function for all of them)
                       #' @returns A data list data object (normally data frame)
                    get_data_dataframe = function(name, as_tibble = FALSE) {
