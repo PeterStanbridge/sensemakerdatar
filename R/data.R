@@ -1113,7 +1113,7 @@ Data <- R6::R6Class("Data",
                         # add the meta columns - those that have more than 1 unique option, but not more than 30. (and we omit crazy duplicates that can come in with numeric values with decimals)
                         metaColNamesX <- purrr::keep(colnames(df)[grepl("meta", colnames(df))][!(colnames(df)[grepl("meta", colnames(df))] %in%
                                                                                                    private$omit_meta_cols)],
-                                                     ~ {dplyr::between(length(sort(unique(df[!is.na(df[[.x]]), .x]))),  2, 30) & all(duplicated(sort(unique(df[!is.na(df[[.x]]), .x]))) == FALSE)}, df)
+                                                     ~ {dplyr::between(length(sort(unique(df[!is.na(df[[.x]]), .x]))),  2, 40) & all(duplicated(sort(unique(df[!is.na(df[[.x]]), .x]))) == FALSE)}, df)
 
                         # Add to the sensemaker frameworkr object - side effects on the sensemakerframeworkrobject object
                         purrr::walk(metaColNamesX, ~ {data_vals <- sort(unique(df[!is.na(df[[.x]]), .x])); list_items <- data.frame(id = data_vals, title = data_vals,
