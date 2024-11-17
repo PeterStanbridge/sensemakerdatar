@@ -1734,10 +1734,12 @@ Data <- R6::R6Class("Data",
                                 } else {
                                   temp_data <- data.frame(end_sig_id = end_sig_id, end_item_id = end_item_id, start_sig_id = start_sig_id, start_item_id = start_item_id)
                                   mcq_data <- dplyr::bind_rows(mcq_data, temp_data)
+
                                 }
                               }
                             }
                           }
+
                           mcq_item_list <- vector("list", length = length(unique(mcq_data[["start_sig_id"]]))  )
                           names(mcq_item_list) <- unique(mcq_data[["start_sig_id"]])
                           mcq_start_list <- unique(mcq_data[["start_sig_id"]]) #names(mcq_item_list)
@@ -1751,6 +1753,7 @@ Data <- R6::R6Class("Data",
                             for (data_idx in seq_along(sig_col)) {
                               sig_col[[data_idx]] <- entries %>% dplyr::filter(start_item_id == sig_col[[data_idx]]) %>% dplyr::select(end_item_id)
                             }
+                            sig_col <- unname(unlist(sig_col))
                             if (!is.null(sig_col)) {
                               fw_data[[sig_id]] <- as.character(sig_col)
                             }
