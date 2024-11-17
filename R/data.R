@@ -1751,8 +1751,13 @@ Data <- R6::R6Class("Data",
                             sig_id  <- entries[1, "end_sig_id"]
                             sig_col <- fw_data[[sig_id]]
                             for (data_idx in seq_along(sig_col)) {
-                              sig_col[[data_idx]] <- entries %>% dplyr::filter(start_item_id == sig_col[[data_idx]]) %>% dplyr::select(end_item_id)
+                              entry <- entries %>% dplyr::filter(start_item_id == sig_col[[data_idx]]) %>% dplyr::select(end_item_id)
+                              entry <- entry$end_item_id
+                              if (length(entry) == 0) {entry <- NA}
+                              sig_col[[data_idx]] <- entry
+                             # sig_col[[data_idx]] <- entries %>% dplyr::filter(start_item_id == sig_col[[data_idx]]) %>% dplyr::select(end_item_id)
                             }
+
                             sig_col <- unname(unlist(sig_col))
                             if (!is.null(sig_col)) {
                               fw_data[[sig_id]] <- as.character(sig_col)
