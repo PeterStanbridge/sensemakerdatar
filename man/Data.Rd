@@ -841,7 +841,7 @@ Parsed JSON file of the polymorphic signifier definitions
 \if{html}{\out{<a id="method-Data-add_accumulation_data"></a>}}
 \if{latex}{\out{\hypertarget{method-Data-add_accumulation_data}{}}}
 \subsection{Method \code{add_accumulation_data()}}{
-Create an accumulated dataset based on EntryYrMth (for now ToDo add other column options) for animation graphics.
+Create an accumulated data set based on specified column (default to EntryYrMth) for animation graphics.
 This method creates a side effect by adding a new data frame to the data field list.
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Data$add_accumulation_data(df_name, col_name = "EntryYrMth", data_name = NULL)}\if{html}{\out{</div>}}

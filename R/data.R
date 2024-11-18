@@ -595,7 +595,7 @@ Data <- R6::R6Class("Data",
                       },
                    #'
                    #' @description
-                   #' Create an accumulated dataset based on EntryYrMth (for now ToDo add other column options) for animation graphics.
+                   #' Create an accumulated data set based on specified column (default to EntryYrMth) for animation graphics.
                    #' This method creates a side effect by adding a new data frame to the data field list.
                    #' @param df_name The name of the data frame to use to accumulate the data.
                    #' @param col_name The column name to accumulate on. Defaults to EntryYrMth
