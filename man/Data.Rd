@@ -136,6 +136,7 @@ triad_01_image <- pt$get_triad_background_image(fw_triads[[1]])
 \item \href{#method-Data-get_dashboard_combined_frameworks_ids}{\code{Data$get_dashboard_combined_frameworks_ids()}}
 \item \href{#method-Data-get_has_polymorphic_signifiers}{\code{Data$get_has_polymorphic_signifiers()}}
 \item \href{#method-Data-get_polymorphic_signifiers}{\code{Data$get_polymorphic_signifiers()}}
+\item \href{#method-Data-add_accumulation_data}{\code{Data$add_accumulation_data()}}
 \item \href{#method-Data-execute_queries}{\code{Data$execute_queries()}}
 \item \href{#method-Data-execute_data_query}{\code{Data$execute_data_query()}}
 \item \href{#method-Data-clone}{\code{Data$clone()}}
@@ -834,6 +835,28 @@ Get the polymorphic signifiers
 
 \subsection{Returns}{
 Parsed JSON file of the polymorphic signifier definitions
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Data-add_accumulation_data"></a>}}
+\if{latex}{\out{\hypertarget{method-Data-add_accumulation_data}{}}}
+\subsection{Method \code{add_accumulation_data()}}{
+Create an accumulated dataset based on EntryYrMth (for now ToDo add other column options) for animation graphics.
+This method creates a side effect by adding a new data frame to the data field list.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Data$add_accumulation_data(df_name, col_name = "EntryYrMth", data_name = NULL)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{df_name}}{The name of the data frame to use to accumulate the data.}
+
+\item{\code{col_name}}{The column name to accumulate on. Defaults to EntryYrMth}
+
+\item{\code{data_name}}{The data list name to hold the data. Defaults to NULL in which case the name will be a paste of "accumulate_" and the data_name and col_name}
+}
+\if{html}{\out{</div>}}
 }
 }
 \if{html}{\out{<hr>}}

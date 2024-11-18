@@ -593,9 +593,42 @@ Data <- R6::R6Class("Data",
                       get_polymorphic_signifiers = function() {
                         return(self$polymorphic_signifiers)
                       },
+                   #'
+                   #' @description
+                   #' Create an accumulated dataset based on EntryYrMth (for now ToDo add other column options) for animation graphics.
+                   #' This method creates a side effect by adding a new data frame to the data field list.
+                   #' @param df_name The name of the data frame to use to accumulate the data.
+                   #' @param col_name The column name to accumulate on. Defaults to EntryYrMth
+                   #' @param data_name The data list name to hold the data. Defaults to NULL in which case the name will be a paste of "accumulate_" and the data_name and col_name
+                   #' @returns NULL
+                   add_accumulation_data = function(df_name, col_name = "EntryYrMth", data_name = NULL) {
+                     stopifnot(df_name %in% names(self$data))
+                     df <- self$data[[df_name]]
+                     stopifnot(col_name %in% colnames(df))
+                     if (is.null(data_name)) {
+                       data_name <- paste0("accumulate_",df_name, "_", col_name)
+                     } else {
+                       stopifnot(is.name(data_name))
+                     }
+
+                     unique_breaks <- sort(unique(df[[col_name]]))
+                     stopifnot(length(unique_breaks) > 0)
+
+                     df_list <- vector("list", length = length(unique_breaks))
+                     df_acc_list <- vector("list", length = length(unique_breaks))
+                     accumulate_db <- NULL
+                     purrr::iwalk(unique_breaks, ~ {
+                       df_list[[.y]] <<- df[df[[col_name]] == .x, ]
+                       purrr::iwalk(unique_breaks, ~ {df_acc_list[[.y]] <<- dplyr::bind_rows(df_list[1:.y])})
+                       purrr::iwalk(unique_breaks, ~ {df_acc_list[[.y]][[col_name]] <<- .x})
+                       accumulate_db <<- dplyr::bind_rows(df_acc_list[1:length(df_acc_list)])
+                     })
+                     self$add_data_data_frame(data_frame = accumulate_db, name = data_name, add_to_export_list_names = FALSE)
+                   },
+
                    #' @description
                    #' Executes a list of queryies on the database and either updates existing data frames or adds a new one
-                   #'@param query_file - default NULL. A file with columns containing at least "name" and "expression" and "include"
+                   #' @param query_file - default NULL. A file with columns containing at least "name" and "expression" and "include"
                    #' @param queries - a vector of the queries to execute. In double quotes so internal quotes to be single.
                    #' @param data_names - The names of the new data list data frame entries A vector the same length as queries
                    #' @returns NULL
