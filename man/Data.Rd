@@ -865,13 +865,20 @@ This method creates a side effect by adding a new data frame to the data field l
 \subsection{Method \code{execute_queries()}}{
 Executes a list of queryies on the database and either updates existing data frames or adds a new one
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Data$execute_queries(query_file = NULL, queries = NULL, data_names = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Data$execute_queries(
+  query_file = NULL,
+  query_df = NULL,
+  queries = NULL,
+  data_names = NULL
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{query_file}}{- default NULL. A file with columns containing at least "name" and "expression" and "include"}
+
+\item{\code{query_df}}{- default NULL, a data frame previously read from a query_file file.}
 
 \item{\code{queries}}{- a vector of the queries to execute. In double quotes so internal quotes to be single.}
 

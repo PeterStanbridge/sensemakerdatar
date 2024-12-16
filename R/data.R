@@ -629,14 +629,22 @@ Data <- R6::R6Class("Data",
                    #' @description
                    #' Executes a list of queryies on the database and either updates existing data frames or adds a new one
                    #' @param query_file - default NULL. A file with columns containing at least "name" and "expression" and "include"
+                   #' @param query_df - default NULL, a data frame previously read from a query_file file.
                    #' @param queries - a vector of the queries to execute. In double quotes so internal quotes to be single.
                    #' @param data_names - The names of the new data list data frame entries A vector the same length as queries
                    #' @returns NULL
-                   execute_queries = function(query_file = NULL, queries = NULL, data_names = NULL) {
+                   execute_queries = function(query_file = NULL, query_df = NULL, queries = NULL, data_names = NULL) {
                      # queries and data_names vectors must be the same length and data_names unique
                      if (!is.null(query_file)) {
                        stopifnot(file.exists(query_file))
                        df <- read.csv(query_file, stringsAsFactors = FALSE)
+                       stopifnot(all(c("name", "expression", "include") %in% colnames(df)))
+                       df <- df %>% filter(include == "Y")
+                       queries <- df[["expression"]]
+                       data_names <- df[["name"]]
+                     }
+                     if (!is.null(query_df)) {
+                       stopifnot(is.data.frame(query_df))
                        stopifnot(all(c("name", "expression", "include") %in% colnames(df)))
                        df <- df %>% filter(include == "Y")
                        queries <- df[["expression"]]
