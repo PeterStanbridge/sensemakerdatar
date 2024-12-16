@@ -645,6 +645,7 @@ Data <- R6::R6Class("Data",
                      }
                      if (!is.null(query_df)) {
                        stopifnot(is.data.frame(query_df))
+                       df <- query_df
                        stopifnot(all(c("name", "expression", "include") %in% colnames(df)))
                        df <- df %>% filter(include == "Y")
                        queries <- df[["expression"]]
