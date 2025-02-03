@@ -270,7 +270,7 @@ Data <- R6::R6Class("Data",
                       #' @param region_df - a data frame with cols name, xmin, xmax, ymin, ymax and seq  (df sorted by seq)
                       #' @param col_x - value of xRight in stone data. (or NA).
                       #' @param col_y - value of yTop in stone data. (or NA)
-                      #' @returns Count of the number of non-responses by the respondent.
+                      #' @returns The stone region the stone drop is placed in.
                       get_stone_region = function(region_df, col_x, col_y) {
                         stopifnot(class(region_df) == "data.frame")
                         # if NA then there will be no zone
@@ -285,9 +285,20 @@ Data <- R6::R6Class("Data",
                         ymaxs <- region_df[["ymax"]]
                         ret_value <<- "outside_regions"
                         # simple check the passed in x and y value with the ranges and set the name for the region
-                        purrr::pwalk(list(names, xmins, xmaxs, ymins, ymaxs), function(name, xmin, xmax, ymin, ymax) {
-                          if (col_x >= xmin & col_x <= xmax &  col_y >= ymin & col_y <= ymax) {ret_value <<- name}
-                        })
+                        for (i in seq_along(names)) {
+                          name <- names[[i]]
+                          xmin <- xmins[[i]]
+                          xmax <- xmaxs[[i]]
+                          ymin <- ymins[[i]]
+                          ymax <- ymaxs[[i]]
+                          if (col_x >= xmin & col_x <= xmax &  col_y >= ymin & col_y <= ymax) {
+                            ret_value <- name
+                            break
+                          }
+                        }
+                       # purrr::pwalk(list(names, xmins, xmaxs, ymins, ymaxs), function(name, xmin, xmax, ymin, ymax) {
+                        #  if (col_x >= xmin & col_x <= xmax &  col_y >= ymin & col_y <= ymax) {ret_value <<- name}
+                        #})
                         return(ret_value)
                       },
 
