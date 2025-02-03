@@ -50,32 +50,32 @@ Data <- R6::R6Class("Data",
                       #' @field data The full list of data objects keyed by the name of the field. NOTE - this will be user (coder) extensible
                       data = list(NULL),
                       # Common lists used from within the data list- all initially set to full dataset
-                    #  #' @field df1 The full dataset for any given framework, thus if linked framework selected, will have only the linked framework data, not the full set
-                    #  #' NOTE Depreciated
-                    #  df1 = NULL,
-                     # #' @field dat  Filtered data so always the data being displayed based on a filter on the main df1 dataframe
-                     # #'  NOTE Depreciated
-                     # dat = NULL,
-                    #  #' @field df_keep Always the full dataset even through linked fw selections- enables restore of full dataset when deselecting linked frameworks
-                    #  #'  NOTE Depreciated
-                    #  df_keep = NULL,
-                    #  #' @field df_multi_select The transformed multi-select MCQ data
-                    #  #'  NOTE Depreciated
-                    #  df_multi_select = NULL,
-                    #  #' @field df_multi_select_full The transformed multi-select MCQ data - always full set
-                    #  #'  NOTE Depreciated
-                    #  df_multi_select_full = NULL,
-                    #  #' @field df_chat_titles same as df_titles but only those columns that are categorical and text
-                   #   #' df_chat_titles
-                   #   df_chat_titles = NULL,
+                      #  #' @field df1 The full dataset for any given framework, thus if linked framework selected, will have only the linked framework data, not the full set
+                      #  #' NOTE Depreciated
+                      #  df1 = NULL,
+                      # #' @field dat  Filtered data so always the data being displayed based on a filter on the main df1 dataframe
+                      # #'  NOTE Depreciated
+                      # dat = NULL,
+                      #  #' @field df_keep Always the full dataset even through linked fw selections- enables restore of full dataset when deselecting linked frameworks
+                      #  #'  NOTE Depreciated
+                      #  df_keep = NULL,
+                      #  #' @field df_multi_select The transformed multi-select MCQ data
+                      #  #'  NOTE Depreciated
+                      #  df_multi_select = NULL,
+                      #  #' @field df_multi_select_full The transformed multi-select MCQ data - always full set
+                      #  #'  NOTE Depreciated
+                      #  df_multi_select_full = NULL,
+                      #  #' @field df_chat_titles same as df_titles but only those columns that are categorical and text
+                      #   #' df_chat_titles
+                      #   df_chat_titles = NULL,
                       #' @field stone_ratios Stone ratios of each of the stone canvases
                       stone_ratios = NULL,
-                    #  #' @field stone_data Stone transformed data into long from from column form
-                    #  stone_data = NULL,
-                   #   #' @field title_data data containing titles, not ids
-                   #   title_data = NULL,
-                   #   #' @field title_use Filtered data containing titles not ids, used for display on a filter
-                    #  title_use = NULL,
+                      #  #' @field stone_data Stone transformed data into long from from column form
+                      #  stone_data = NULL,
+                      #   #' @field title_data data containing titles, not ids
+                      #   title_data = NULL,
+                      #   #' @field title_use Filtered data containing titles not ids, used for display on a filter
+                      #  title_use = NULL,
                       #' @field sm_framework the framework definition
                       sm_framework = NULL,
                       #' @field framework_definition_json The framework json for non-dashboard or dashbpard parent
@@ -139,25 +139,25 @@ Data <- R6::R6Class("Data",
                                                            FK_level_csv, FK_level_parsed, upload_na_identifier)
 
                       },
-                   #' @description Add stop words associated with the fragments in this framework data
-                   #' @param stop_words - A vector of stopwords, setting to NULL will clear the stop_list
-                   #' @param add_replace - default "replace". "append" or "replace" any stopwords previously added.
-                   add_stop_words = function(stop_words, add_replace = "replace") {
-                     stopifnot(add_replace %in% c("replace", "append"))
-                     if (!is.null(stop_words)) {
-                      stopifnot(is.vector(stop_words))
-                       stopifnot(length(stop_words) > 0)
-                     } else {
-                       self$stop_words <- NULL
-                       return()
-                     }
-                     if (add_replace == "replace") {
-                       self$stop_words <- stop_words
-                     } else {
-                       self$stopwords <- append(self$stop_words, stop_words)
-                     }
-                     return()
-                   },
+                      #' @description Add stop words associated with the fragments in this framework data
+                      #' @param stop_words - A vector of stopwords, setting to NULL will clear the stop_list
+                      #' @param add_replace - default "replace". "append" or "replace" any stopwords previously added.
+                      add_stop_words = function(stop_words, add_replace = "replace") {
+                        stopifnot(add_replace %in% c("replace", "append"))
+                        if (!is.null(stop_words)) {
+                          stopifnot(is.vector(stop_words))
+                          stopifnot(length(stop_words) > 0)
+                        } else {
+                          self$stop_words <- NULL
+                          return()
+                        }
+                        if (add_replace == "replace") {
+                          self$stop_words <- stop_words
+                        } else {
+                          self$stopwords <- append(self$stop_words, stop_words)
+                        }
+                        return()
+                      },
                       #' @description Add a new data frame name to the export data list names. These are the data frames in list "data" that are
                       #' standard export format.
                       #' @param new_name - the name of a new data frame
@@ -192,106 +192,198 @@ Data <- R6::R6Class("Data",
                       #' @param as_tibble - default FALSE, if TRUE, export as a tidyverse tibble object.
                       #' for those that are standard export data frames or get_data_list_names function for all of them)
                       #' @returns A data list data object (normally data frame)
-                   get_data_dataframe = function(name, as_tibble = FALSE) {
-                     if (as_tibble) {
-                       return(as_tibble(self$data[[name]]))
-                     } else {
-                       return(self$data[[name]])
-                     }
-                   },
-                   #' @description get the data count of those responends not responding to a signifier. If the signifier is required then count is zero.
-                   #' @param df_name - Default "dat", one of the data frames in the export data list (get_export_data_list_names method)
-                   #' @param sig_id - Default NULL, a signifier id from the framework. Either this or the col_name must be provided.
-                   #' @param col_name - Default NULL, a column name from the data. Either this or the sig_id must be provided
-                   #' @returns Count of the number of non-responses by the respondent.
-                   get_not_responded_count = function(df_name = "dat", sig_id = NULL, col_name = NULL) {
-
-                     stopifnot(df_name %in% self$get_export_data_list_names())
-                     stopifnot(any(c(is.null(sig_id), is.null(col_name))))
-                     stopifnot(!all(c(is.null(sig_id), is.null(col_name))))
-
-                     if (!is.null(col_name)) {
-                       stopifnot((col_name %in% colnames(self$data[[df_name]])))
-                       if (col_name %in% self$sm_framework$get_all_signifier_ids(sig_class = "signifier")) {
-                         sig_id <- col_name
-                       } else {
-                         sig_id <- get_signifier_id_from_column_name(col_name)
-                       }
-                       if (is.null(sig_id)) {
-                         return(NULL)
-                       }
-                     }
-
-                     if (!is.null(sig_id)) {
-                       stopifnot(sig_id %in% self$sm_framework$get_all_signifier_ids(sig_class = c("signifier", "date")))
-                      # if (self$sm_framework$get_signifier_required(sig_id)) {
-                      #   return(0)
-                      # } else {
-                         non_entry <- length(which(is.na(self$data[[df_name]][[self$sm_framework$get_a_col_name(sig_id)]]) == TRUE))
-                         if (self$sm_framework$get_signifier_allow_na(sig_id)) {
-                           not_applicables_count <- length(which(self$data[[df_name]][[self$sm_framework$get_signifier_na_column_name(sig_id)]] == 1))
-                           non_entry <- non_entry - not_applicables_count
-                         }
-                         return(non_entry)
-                      # }
-                     }
-                   },
-                   #' @description get the data count of those responends not responding to a signifier. If the signifier is required then count is zero.
-                   #' @param df_name - Default "dat", one of the data frames in the export data list (get_export_data_list_names method)
-                   #' @param sig_id - Default NULL, a signifier id from the framework. Either this or the col_name must be provided.
-                   #' @param col_name - Default NULL, a column name from the data. Either this or the sig_id must be provided
-                   #' @returns Count of the number of non-responses by the respondent.
-                   get_not_applicable_count = function(df_name = "dat", sig_id = NULL, col_name = NULL) {
-
-                     stopifnot(df_name %in% self$get_export_data_list_names())
-                     stopifnot(any(c(is.null(sig_id), is.null(col_name))))
-                     stopifnot(!all(c(is.null(sig_id), is.null(col_name))))
-
-                     if (!is.null(col_name)) {
-                       stopifnot((col_name %in% colnames(self$data[[df_name]])))
-                       if (col_name %in% self$sm_framework$get_all_signifier_ids(sig_class = "signifier")) {
-                         sig_id <- col_name
-                       } else {
-                         sig_id <- get_signifier_id_from_column_name(col_name)
-                       }
-                       if (is.null(sig_id)) {
-                         return(NULL)
-                       }
-                     }
-
-                     if (!is.null(sig_id)) {
-                       stopifnot(sig_id %in% self$sm_framework$get_all_signifier_ids(sig_class = c("signifier", "date")))
-                       if (!self$sm_framework$get_signifier_allow_na(sig_id)) {
-                         return(0)
-                       } else {
-                           return(length(which(self$data[[df_name]][[self$sm_framework$get_signifier_na_column_name(sig_id)]] == 1)))
-                         }
-                       }
-                   },
-                   #' @description get the signifier ID from a signifier/zone etc column name.
-                   #' @param col_name - Column name
-                   #' @returns The signifier ID associated with the column name else NULL
-                   get_signifier_id_from_column_name = function(col_name) {
-                     if (col_name %in% self$sm_framework$get_all_signifier_ids(sig_class = "signifier")) {return(col_name)}
-                     split_string <- stringr::str_split_1(string = col_name, pattern = "_")
-                     if (length(split_string) == 1) {
-                        if (stringr::str_ends(col_name, "XR")) {
-                          return(stringr::str_remove(col_name, "XR"))
+                      get_data_dataframe = function(name, as_tibble = FALSE) {
+                        if (as_tibble) {
+                          return(as_tibble(self$data[[name]]))
+                        } else {
+                          return(self$data[[name]])
                         }
-                       if (stringr::str_ends(col_name, "X")) {
-                         return(stringr::str_remove(col_name, "X"))
-                       }
-                       if (stringr::str_ends(col_name, "Y")) {
-                         return(stringr::str_remove(col_name, "Y"))
-                       }
-                       if (col_name %in% self$sm_framework$get_all_signifier_ids(sig_class = "date")) {
-                         return(col_name)
-                       }
-                     } else {
-                       return(split_string[[1]])
-                     }
-                     return(NULL)
-                   },
+                      },
+                      #' @description Add stone regions to the data and framework definition from a file of region zones for a single stones id.
+                      #' @param region_file - Default "dat", one of the data frames in the export data list (get_export_data_list_names method)
+                      #' @param stones_id - Default NULL, a signifier id from the framework. Either this or the col_name must be provided.
+                      #' @returns
+                      add_stone_regions = function(region_file, stones_id) {
+                        stopifnot(stones_id %in% self$sm_framework$get_stones_ids())
+                        stopifnot(!is.null(region_file))
+                        stopifnot(trimws(region_file) != "")
+                        stopifnot((class(region_file) %in% c("data.frame", "character")))
+                        if (class(region_file) == "character") {
+                          stopifnot(stringr::str_ends(region_file, ".csv"))
+                          stopifnot(file.exists(region_file))
+                          region_file <- read.csv(region_file, check.names = FALSE, stringsAsFactors = FALSE)
+                          stopifnot(all(c("name",	"xmin",	"xmax",	"ymin",	"ymax")) %in% colnames(region_file))
+                        } else {
+                          stopifnot(all(c("name",	"xmin",	"xmax",	"ymin",	"ymax", "seq") %in% colnames(region_file)))
+                        }
+                        # sort in sequence order
+                        region_file <- region_file |> dplyr::arrange(seq)
+
+                        # get the stone ids for the stones id passed in
+                        stones_ids <- self$sm_framework$get_stones_stone_ids(id = stones_id)
+
+                        # we process one at a time.
+                        purrr::walk(stone_ids, function(stone_id) {
+                          region_values <<- vector("list", length = nrow(fwd$data[["df1"]]))
+                          names(region_values) <- fwd$data[["df1"]][["FragmentID"]]
+                          FragmentIDs <- fwd$data[["df1"]][["FragmentID"]]
+                          col_names <- fwd$sm_framework$get_stones_stone_compositional_column_names(sig_id = stones_id, stone_id = stone_id)
+                          col_xs <- fwd$data[["df1"]][[col_names[[1]]]]
+                          col_ys <- fwd$data[["df1"]][[col_names[[2]]]]
+                          purrr::pwalk(list(FragmentIDs, col_xs, col_ys), function(fragment_id, x_value, y_value) {
+                            region_values[[fragment_id]] <<- self$get_stone_region(region_file, x_value, y_value)
+                          })
+                          #currentposition
+                          temp_df <- data.frame(FragmentID = names(region_values), place_holder = unlist(unname(region_values)))
+                          names(temp_df)[2] <-  paste0(stones_id, "_", stone_id, "_Region")
+                          self$add_column_to_dataframe(temp_df)
+                          # Now add the values as a list in the framework definition
+                          reg_title <-  paste(self$sm_framework$get_signifier_title(stones_id), self$sm_framework$get_stones_stone_title_by_id(stones_id, stone_id), "region")
+                          items <- sort(region_file[["name"]])
+                          item_df <- data.frame(id = items, title = items, tooltip = items, visible = rep_len(TRUE, length(items)), other_signifier_id = rep_len("", length(items)))
+                          fwd$sm_framework$add_list(title = reg_title, tooltip = reg_title, allow_na = FALSE, fragment = FALSE, required = TRUE, sticky = FALSE, items = item_df,
+                                                    max_responses = 1, min_responses = 1, other_item_id = "", other_signifier_id = "", sig_class = "region", id = paste0(stones_id, "_", stone_id, "_Region"))
+
+                        })
+
+                      },
+                      add_column_to_dataframe = function(df, data_frame = NULL, add_to_data_list_dfs = TRUE) {
+                        stopifnot(is.logical(add_to_data_list_dfs))
+                        stopifnot((!is.null(data_frame) & isFALSE(add_to_data_list_dfs)) | (is.null(data_frame) & isTRUE(add_to_data_list_dfs)))
+                        if (!is.null(data_frame)) {
+                          stopifnot(data_frame %in% self$get_export_data_list_names())
+                        }
+                        stopifnot(is.data.frame(df))
+                        stopifnot(colnames(df)[[1]] == "FragmentID")
+                        if (isTRUE(add_to_data_list_dfs)) {
+                          data_frame <- self$get_export_data_list_names()
+                        }
+                        purrr::walk(data_frame, function(df_name) {
+                          self$data[[df_name]] <<- dplyr::left_join(x = self$data[[df_name]], y = df, by = dplyr::join_by(FragmentID))
+                        })
+
+
+                      },
+
+
+                      #' @description return the region name from a stone region data frame.
+                      #' @param region_df - a data frame with cols name, xmin, xmax, ymin, ymax and seq  (df sorted by seq)
+                      #' @param col_x - value of xRight in stone data. (or NA).
+                      #' @param col_y - value of yTop in stone data. (or NA)
+                      #' @returns Count of the number of non-responses by the respondent.
+                      get_stone_region = function(region_df, col_x, col_y) {
+                        stopifnot(class(region_df) == "data.frame")
+                        # if NA then there will be no zone
+                        if (any(is.na(c(col_x, col_y)))) {
+                          return("no_value")
+                        }
+                        # Set up lists for pwalk through each of the region columns
+                        names <- region_df[["name"]]
+                        xmins <- region_df[["xmin"]]
+                        xmaxs <- region_df[["xmax"]]
+                        ymins <- region_df[["ymin"]]
+                        ymaxs <- region_df[["ymax"]]
+                        ret_value <<- "outside_regions"
+                        # simple check the passed in x and y value with the ranges and set the name for the region
+                        purrr::pwalk(list(names, xmins, xmaxs, ymins, ymaxs), function(name, xmin, xmax, ymin, ymax) {
+                          if (col_x >= xmin & col_x <= xmax &  col_y >= ymin & col_y <= ymax) {ret_value <<- name}
+                        })
+                        return(ret_value)
+                      },
+
+                      #' @description get the data count of those responends not responding to a signifier. If the signifier is required then count is zero.
+                      #' @param df_name - Default "dat", one of the data frames in the export data list (get_export_data_list_names method)
+                      #' @param sig_id - Default NULL, a signifier id from the framework. Either this or the col_name must be provided.
+                      #' @param col_name - Default NULL, a column name from the data. Either this or the sig_id must be provided
+                      #' @returns Count of the number of non-responses by the respondent.
+                      get_not_responded_count = function(df_name = "dat", sig_id = NULL, col_name = NULL) {
+
+                        stopifnot(df_name %in% self$get_export_data_list_names())
+                        stopifnot(any(c(is.null(sig_id), is.null(col_name))))
+                        stopifnot(!all(c(is.null(sig_id), is.null(col_name))))
+
+                        if (!is.null(col_name)) {
+                          stopifnot((col_name %in% colnames(self$data[[df_name]])))
+                          if (col_name %in% self$sm_framework$get_all_signifier_ids(sig_class = "signifier")) {
+                            sig_id <- col_name
+                          } else {
+                            sig_id <- get_signifier_id_from_column_name(col_name)
+                          }
+                          if (is.null(sig_id)) {
+                            return(NULL)
+                          }
+                        }
+
+                        if (!is.null(sig_id)) {
+                          stopifnot(sig_id %in% self$sm_framework$get_all_signifier_ids(sig_class = c("signifier", "date")))
+                          # if (self$sm_framework$get_signifier_required(sig_id)) {
+                          #   return(0)
+                          # } else {
+                          non_entry <- length(which(is.na(self$data[[df_name]][[self$sm_framework$get_a_col_name(sig_id)]]) == TRUE))
+                          if (self$sm_framework$get_signifier_allow_na(sig_id)) {
+                            not_applicables_count <- length(which(self$data[[df_name]][[self$sm_framework$get_signifier_na_column_name(sig_id)]] == 1))
+                            non_entry <- non_entry - not_applicables_count
+                          }
+                          return(non_entry)
+                          # }
+                        }
+                      },
+                      #' @description get the data count of those responends not responding to a signifier. If the signifier is required then count is zero.
+                      #' @param df_name - Default "dat", one of the data frames in the export data list (get_export_data_list_names method)
+                      #' @param sig_id - Default NULL, a signifier id from the framework. Either this or the col_name must be provided.
+                      #' @param col_name - Default NULL, a column name from the data. Either this or the sig_id must be provided
+                      #' @returns Count of the number of non-responses by the respondent.
+                      get_not_applicable_count = function(df_name = "dat", sig_id = NULL, col_name = NULL) {
+
+                        stopifnot(df_name %in% self$get_export_data_list_names())
+                        stopifnot(any(c(is.null(sig_id), is.null(col_name))))
+                        stopifnot(!all(c(is.null(sig_id), is.null(col_name))))
+
+                        if (!is.null(col_name)) {
+                          stopifnot((col_name %in% colnames(self$data[[df_name]])))
+                          if (col_name %in% self$sm_framework$get_all_signifier_ids(sig_class = "signifier")) {
+                            sig_id <- col_name
+                          } else {
+                            sig_id <- get_signifier_id_from_column_name(col_name)
+                          }
+                          if (is.null(sig_id)) {
+                            return(NULL)
+                          }
+                        }
+
+                        if (!is.null(sig_id)) {
+                          stopifnot(sig_id %in% self$sm_framework$get_all_signifier_ids(sig_class = c("signifier", "date")))
+                          if (!self$sm_framework$get_signifier_allow_na(sig_id)) {
+                            return(0)
+                          } else {
+                            return(length(which(self$data[[df_name]][[self$sm_framework$get_signifier_na_column_name(sig_id)]] == 1)))
+                          }
+                        }
+                      },
+                      #' @description get the signifier ID from a signifier/zone etc column name.
+                      #' @param col_name - Column name
+                      #' @returns The signifier ID associated with the column name else NULL
+                      get_signifier_id_from_column_name = function(col_name) {
+                        if (col_name %in% self$sm_framework$get_all_signifier_ids(sig_class = "signifier")) {return(col_name)}
+                        split_string <- stringr::str_split_1(string = col_name, pattern = "_")
+                        if (length(split_string) == 1) {
+                          if (stringr::str_ends(col_name, "XR")) {
+                            return(stringr::str_remove(col_name, "XR"))
+                          }
+                          if (stringr::str_ends(col_name, "X")) {
+                            return(stringr::str_remove(col_name, "X"))
+                          }
+                          if (stringr::str_ends(col_name, "Y")) {
+                            return(stringr::str_remove(col_name, "Y"))
+                          }
+                          if (col_name %in% self$sm_framework$get_all_signifier_ids(sig_class = "date")) {
+                            return(col_name)
+                          }
+                        } else {
+                          return(split_string[[1]])
+                        }
+                        return(NULL)
+                      },
                       #' @description
                       #' is the account accessing this framework a demonstrator account, TRUE or FALSE.
                       #' @return TRUE or FALSE
@@ -593,68 +685,68 @@ Data <- R6::R6Class("Data",
                       get_polymorphic_signifiers = function() {
                         return(self$polymorphic_signifiers)
                       },
-                   #'
-                   #' @description
-                   #' Create an accumulated data set based on specified column (default to EntryYrMth) for animation graphics.
-                   #' This method creates a side effect by adding a new data frame to the data field list.
-                   #' @param df_name The name of the data frame to use to accumulate the data.
-                   #' @param col_name The column name to accumulate on. Defaults to EntryYrMth
-                   #' @param data_name The data list name to hold the data. Defaults to NULL in which case the name will be a paste of "accumulate_" and the data_name and col_name
-                   #' @returns NULL
-                   add_accumulation_data = function(df_name, col_name = "EntryYrMth", data_name = NULL) {
-                     stopifnot(df_name %in% names(self$data))
-                     df <- self$data[[df_name]]
-                     stopifnot(col_name %in% colnames(df))
-                     if (is.null(data_name)) {
-                       data_name <- paste0("accumulate_",df_name, "_", col_name)
-                     } else {
-                       stopifnot(is.name(data_name))
-                     }
+                      #'
+                      #' @description
+                      #' Create an accumulated data set based on specified column (default to EntryYrMth) for animation graphics.
+                      #' This method creates a side effect by adding a new data frame to the data field list.
+                      #' @param df_name The name of the data frame to use to accumulate the data.
+                      #' @param col_name The column name to accumulate on. Defaults to EntryYrMth
+                      #' @param data_name The data list name to hold the data. Defaults to NULL in which case the name will be a paste of "accumulate_" and the data_name and col_name
+                      #' @returns NULL
+                      add_accumulation_data = function(df_name, col_name = "EntryYrMth", data_name = NULL) {
+                        stopifnot(df_name %in% names(self$data))
+                        df <- self$data[[df_name]]
+                        stopifnot(col_name %in% colnames(df))
+                        if (is.null(data_name)) {
+                          data_name <- paste0("accumulate_",df_name, "_", col_name)
+                        } else {
+                          stopifnot(is.name(data_name))
+                        }
 
-                     unique_breaks <- sort(unique(df[[col_name]]))
-                     stopifnot(length(unique_breaks) > 0)
+                        unique_breaks <- sort(unique(df[[col_name]]))
+                        stopifnot(length(unique_breaks) > 0)
 
-                     df_list <- vector("list", length = length(unique_breaks))
-                     df_acc_list <- vector("list", length = length(unique_breaks))
-                     accumulate_db <- NULL
-                     purrr::iwalk(unique_breaks, ~ {
-                       df_list[[.y]] <<- df[df[[col_name]] == .x, ]
-                       purrr::iwalk(unique_breaks, ~ {df_acc_list[[.y]] <<- dplyr::bind_rows(df_list[1:.y])})
-                       purrr::iwalk(unique_breaks, ~ {df_acc_list[[.y]][[col_name]] <<- .x})
-                       accumulate_db <<- dplyr::bind_rows(df_acc_list[1:length(df_acc_list)])
-                     })
-                     self$add_data_data_frame(data_frame = accumulate_db, name = data_name, add_to_export_list_names = FALSE)
-                   },
+                        df_list <- vector("list", length = length(unique_breaks))
+                        df_acc_list <- vector("list", length = length(unique_breaks))
+                        accumulate_db <- NULL
+                        purrr::iwalk(unique_breaks, ~ {
+                          df_list[[.y]] <<- df[df[[col_name]] == .x, ]
+                          purrr::iwalk(unique_breaks, ~ {df_acc_list[[.y]] <<- dplyr::bind_rows(df_list[1:.y])})
+                          purrr::iwalk(unique_breaks, ~ {df_acc_list[[.y]][[col_name]] <<- .x})
+                          accumulate_db <<- dplyr::bind_rows(df_acc_list[1:length(df_acc_list)])
+                        })
+                        self$add_data_data_frame(data_frame = accumulate_db, name = data_name, add_to_export_list_names = FALSE)
+                      },
 
-                   #' @description
-                   #' Executes a list of queryies on the database and either updates existing data frames or adds a new one
-                   #' @param query_file - default NULL. A file with columns containing at least "name" and "expression" and "include"
-                   #' @param query_df - default NULL, a data frame previously read from a query_file file.
-                   #' @param queries - a vector of the queries to execute. In double quotes so internal quotes to be single.
-                   #' @param data_names - The names of the new data list data frame entries A vector the same length as queries
-                   #' @returns NULL
-                   execute_queries = function(query_file = NULL, query_df = NULL, queries = NULL, data_names = NULL) {
-                     # queries and data_names vectors must be the same length and data_names unique
-                     if (!is.null(query_file)) {
-                       stopifnot(file.exists(query_file))
-                       df <- read.csv(query_file, stringsAsFactors = FALSE)
-                       stopifnot(all(c("name", "expression", "include") %in% colnames(df)))
-                       df <- df %>% filter(include == "Y")
-                       queries <- df[["expression"]]
-                       data_names <- df[["name"]]
-                     }
-                     if (!is.null(query_df)) {
-                       stopifnot(is.data.frame(query_df))
-                       df <- query_df
-                       stopifnot(all(c("name", "expression", "include") %in% colnames(df)))
-                       df <- df %>% filter(include == "Y")
-                       queries <- df[["expression"]]
-                       data_names <- df[["name"]]
-                     }
-                     stopifnot(length(queries) == length(data_names))
-                     stopifnot(length(queries) == length(unique(data_names)))
-                     purrr::walk2(queries, data_names, ~ {self$execute_data_query(.x, NULL, .y)})
-                   },
+                      #' @description
+                      #' Executes a list of queryies on the database and either updates existing data frames or adds a new one
+                      #' @param query_file - default NULL. A file with columns containing at least "name" and "expression" and "include"
+                      #' @param query_df - default NULL, a data frame previously read from a query_file file.
+                      #' @param queries - a vector of the queries to execute. In double quotes so internal quotes to be single.
+                      #' @param data_names - The names of the new data list data frame entries A vector the same length as queries
+                      #' @returns NULL
+                      execute_queries = function(query_file = NULL, query_df = NULL, queries = NULL, data_names = NULL) {
+                        # queries and data_names vectors must be the same length and data_names unique
+                        if (!is.null(query_file)) {
+                          stopifnot(file.exists(query_file))
+                          df <- read.csv(query_file, stringsAsFactors = FALSE)
+                          stopifnot(all(c("name", "expression", "include") %in% colnames(df)))
+                          df <- df %>% filter(include == "Y")
+                          queries <- df[["expression"]]
+                          data_names <- df[["name"]]
+                        }
+                        if (!is.null(query_df)) {
+                          stopifnot(is.data.frame(query_df))
+                          df <- query_df
+                          stopifnot(all(c("name", "expression", "include") %in% colnames(df)))
+                          df <- df %>% filter(include == "Y")
+                          queries <- df[["expression"]]
+                          data_names <- df[["name"]]
+                        }
+                        stopifnot(length(queries) == length(data_names))
+                        stopifnot(length(queries) == length(unique(data_names)))
+                        purrr::walk2(queries, data_names, ~ {self$execute_data_query(.x, NULL, .y)})
+                      },
 
                       #' @description
                       #' Executes a query on the database and either updates existing data frames or adds a new one
@@ -663,69 +755,69 @@ Data <- R6::R6Class("Data",
                       #' @param data_frames - default NULL, values "ALL" or a list of data names in the data list.
                       #' @param data_name - default NULL, the name of the new data list data frame entry if query to create a new entry
                       #' @returns the filtered data frame (note: the internal dataframe list will be also updated in accordance with whether data_frames or data_name passed)
-                   execute_data_query = function(query, data_frames = NULL, data_name = NULL) {
-                     # one and only one of data_frames and data_name can be passed.
-                     stopifnot((is.null(data_frames) & !is.null(data_name)) | (!is.null(data_frames) & is.null(data_name)))
-                     # data_name should only have one entry. Name should not already exist.
-                     if (!is.null(data_name)) {
-                       stopifnot(length(data_name) == 1)
-                       stopifnot(!(data_name %in% self$get_data_list_names()))
-                     }
-                     # If data_frames contains an ALL it should be the only entry
-                     # otherwise the names in the list should all be in the names already there.
-                     if (!is.null(data_frames)) {
-                       if ("ALL" %in% data_frames) {
-                         stopifnot(length(data_frames) == 1)
-                       } else {
-                         stopifnot(all(data_frames %in% self$get_data_list_names()))
-                       }
-                     }
-                     # query must not be null or blank
-                     if (is.null(query)) {return(NULL)}
-                     if (trimws(query) == "") {return(NULL)}
-                     # set up parse query and catch a parse error - return ERROR if there is one.
-                     parse_query <- function(query) {
-                       return(parse(text = query))
-                     }
-                     tryCatch(withCallingHandlers(parse_query(query), error = function(e) {write.to.log(sys.calls())}
-                                                  , warning=function(w) {write.to.log(sys.calls())
-                                                    invokeRestart("muffleWarning")})
-                              , error = function(e) { return("ERROR") })
+                      execute_data_query = function(query, data_frames = NULL, data_name = NULL) {
+                        # one and only one of data_frames and data_name can be passed.
+                        stopifnot((is.null(data_frames) & !is.null(data_name)) | (!is.null(data_frames) & is.null(data_name)))
+                        # data_name should only have one entry. Name should not already exist.
+                        if (!is.null(data_name)) {
+                          stopifnot(length(data_name) == 1)
+                          stopifnot(!(data_name %in% self$get_data_list_names()))
+                        }
+                        # If data_frames contains an ALL it should be the only entry
+                        # otherwise the names in the list should all be in the names already there.
+                        if (!is.null(data_frames)) {
+                          if ("ALL" %in% data_frames) {
+                            stopifnot(length(data_frames) == 1)
+                          } else {
+                            stopifnot(all(data_frames %in% self$get_data_list_names()))
+                          }
+                        }
+                        # query must not be null or blank
+                        if (is.null(query)) {return(NULL)}
+                        if (trimws(query) == "") {return(NULL)}
+                        # set up parse query and catch a parse error - return ERROR if there is one.
+                        parse_query <- function(query) {
+                          return(parse(text = query))
+                        }
+                        tryCatch(withCallingHandlers(parse_query(query), error = function(e) {write.to.log(sys.calls())}
+                                                     , warning=function(w) {write.to.log(sys.calls())
+                                                       invokeRestart("muffleWarning")})
+                                 , error = function(e) { return("ERROR") })
 
-                     # do the main query
-                     filtered_data_string <- parse(text = paste0("self$data[['df1']] %>% dplyr::filter(", query, ")"))
-                     filtered_data <- eval(filtered_data_string)
-                     if (!is.null(data_name)) {
-                       self$add_data_data_frame(data_frame = filtered_data, name = data_name)
-                       return(filtered_data)
-                     }
-                     if (!is.null(data_frames)) {
-                       if (data_frames == "ALL") {
-                         data_frames <- self$get_data_list_names()
-                       }
-                       #use_data_frames <- purrr::keep(data_frames, ~ {!is.null(self$data[[.x]]) && "FragmentID" %in% colnames(self$data[[.x]])})
-                       # Only use those data frames within this list that are not null and have fragmentid in one of their column names. Made complicated in that some of the entries
-                       # in the list of data frames are themselves lists of data frames. The recursion shouldn't go below this so existing code should always work.
-                       use_data_frames <- purrr::keep(data_frames, function(x) {
-                         if (is.data.frame(self$data[[x]])) {
-                           !is.null(self$data[[x]]) && "FragmentID" %in% colnames(self$data[[x]])
-                         } else {
-                           !is.null(self$data[[x]]) && unlist(purrr::map(names(self$data[[x]]), function(y) {
-                             "FragmentID" %in% colnames(self$data[[x]][[y]])}))
-                         }
-                       })
-                       #purrr::walk(use_data_frames, ~ {self$data[[.x]] <- self$data[[.x]] %>% dplyr::filter(FragmentID %in% filtered_data$FragmentID)})
-                       purrr::walk(use_data_frames, function(x) {
-                         if (is.data.frame(self$data[[x]])) {
-                           self$data[[x]] <- self$data[[x]] %>% dplyr::filter(FragmentID %in% filtered_data$FragmentID)
-                         } else {
-                           purrr::walk(names(self$data[[x]]), function(y) {
-                             self$data[[x]][[y]] <- self$data[[x]][[y]] %>% dplyr::filter(FragmentID %in% filtered_data$FragmentID)
-                           })
-                         }
-                       })
-                     }
-                   }
+                        # do the main query
+                        filtered_data_string <- parse(text = paste0("self$data[['df1']] %>% dplyr::filter(", query, ")"))
+                        filtered_data <- eval(filtered_data_string)
+                        if (!is.null(data_name)) {
+                          self$add_data_data_frame(data_frame = filtered_data, name = data_name)
+                          return(filtered_data)
+                        }
+                        if (!is.null(data_frames)) {
+                          if (data_frames == "ALL") {
+                            data_frames <- self$get_data_list_names()
+                          }
+                          #use_data_frames <- purrr::keep(data_frames, ~ {!is.null(self$data[[.x]]) && "FragmentID" %in% colnames(self$data[[.x]])})
+                          # Only use those data frames within this list that are not null and have fragmentid in one of their column names. Made complicated in that some of the entries
+                          # in the list of data frames are themselves lists of data frames. The recursion shouldn't go below this so existing code should always work.
+                          use_data_frames <- purrr::keep(data_frames, function(x) {
+                            if (is.data.frame(self$data[[x]])) {
+                              !is.null(self$data[[x]]) && "FragmentID" %in% colnames(self$data[[x]])
+                            } else {
+                              !is.null(self$data[[x]]) && unlist(purrr::map(names(self$data[[x]]), function(y) {
+                                "FragmentID" %in% colnames(self$data[[x]][[y]])}))
+                            }
+                          })
+                          #purrr::walk(use_data_frames, ~ {self$data[[.x]] <- self$data[[.x]] %>% dplyr::filter(FragmentID %in% filtered_data$FragmentID)})
+                          purrr::walk(use_data_frames, function(x) {
+                            if (is.data.frame(self$data[[x]])) {
+                              self$data[[x]] <- self$data[[x]] %>% dplyr::filter(FragmentID %in% filtered_data$FragmentID)
+                            } else {
+                              purrr::walk(names(self$data[[x]]), function(y) {
+                                self$data[[x]][[y]] <- self$data[[x]][[y]] %>% dplyr::filter(FragmentID %in% filtered_data$FragmentID)
+                              })
+                            }
+                          })
+                        }
+                      }
                     ),
 
                     private = list(
@@ -775,10 +867,10 @@ Data <- R6::R6Class("Data",
                           stop()
                         }
 
-                     #   if  (any(c(csvfilename, csvfiledf) != "")  & any(c(framework_id, dashboard_id) != "")) {
-                       #   print("you cannot have file name or file while also passing framework id or dashboard id")
-                       #   stop()
-                    #    }
+                        #   if  (any(c(csvfilename, csvfiledf) != "")  & any(c(framework_id, dashboard_id) != "")) {
+                        #   print("you cannot have file name or file while also passing framework id or dashboard id")
+                        #   stop()
+                        #    }
 
 
                         if (any(c(framework_id, dashboard_id) != "") &  token == "") {
@@ -786,21 +878,21 @@ Data <- R6::R6Class("Data",
                           stop()
                         }
 
-                     #   if (csvfiledf != "") {
-                     #     if (is.data.frame(csvfiledf)) {
-                     #       print("csvfiledf should be a dataframe")
-                     #       stop()
-                     #     } else {
-                     #       if (!('project_id' %in% colnames(csvfiledf))) {
-                      #        print("data frame 'csvfiledf' must have a column 'project_id' with the framework id present")
-                      #        stop()
-                      #      }
-                      #    }
-                      #  }
+                        #   if (csvfiledf != "") {
+                        #     if (is.data.frame(csvfiledf)) {
+                        #       print("csvfiledf should be a dataframe")
+                        #       stop()
+                        #     } else {
+                        #       if (!('project_id' %in% colnames(csvfiledf))) {
+                        #        print("data frame 'csvfiledf' must have a column 'project_id' with the framework id present")
+                        #        stop()
+                        #      }
+                        #    }
+                        #  }
 
                         if (csvfilename != "") {
                           stopifnot(all(unlist(unname(purrr::map(csvfilename, ~ {file.exists(.x)})))))
-                         # assertive::assert_all_are_existing_files(x = csvfilename, severity = "stop")
+                          # assertive::assert_all_are_existing_files(x = csvfilename, severity = "stop")
                         }
 
                         # =========== fragment level level update files or parsed data =================
@@ -922,8 +1014,8 @@ Data <- R6::R6Class("Data",
                             is_demonstrator <- private$get_is_demonstrator(token)
                           }
                           self$demonstrator <- is_demonstrator
-                        #  print("df is")
-                        #  print(head(df))
+                          #  print("df is")
+                          #  print(head(df))
                         }
 
                         if (is.data.frame(csvfiledf)) {
@@ -988,7 +1080,7 @@ Data <- R6::R6Class("Data",
                         # get the sensemakerframeworkr object if it hasn't been passed
                         if (!("Signifiers" %in% class(sensemakerframeworkrobject))) {
                           sensemakerframeworkrobject <- sensemakerframeworkr::Signifiers$new(jsonfilename = NULL, layoutfilename = NULL, parsedjson = NULL, parsedlayout = NULL, workbenchid = framework_id, token = token)
-                          }
+                        }
 
                         # check that the sensemakerframeworkr projectid is the same as the project id passed in or obtained in the data
                         if (framework_id != sensemakerframeworkrobject$get_parent_framework_id()) {
@@ -1023,27 +1115,27 @@ Data <- R6::R6Class("Data",
                         if (!is.null(self$data[["df1"]])) {
                           #self$data[["df1"]] <- self$df1
                           #self$dat <- self$df1
-                         # self$data[["dat"]] <- self$df1
+                          # self$data[["dat"]] <- self$df1
                           self$data[["dat"]] <- self$data[["df1"]]
-                         # self$df_keep <- self$df1
+                          # self$df_keep <- self$df1
                           #self$data[["df_keep"]] <- self$df1
                           self$data[["df_keep"]] <- self$data[["df1"]]
                         }
 
                         #self$data[["title_data"]] <- self$title_data
-                       # self$data[["df_chat_titles"]] <- self$df_chat_titles
+                        # self$data[["df_chat_titles"]] <- self$df_chat_titles
 
-                       # if (!is.null(self$data[["df_multi_select"]])) {
-                       #   self$data[["df_multi_select"]] <- self$df_multi_select
-                       # }
-                       # if (!is.null(self$df_multi_select_full)) {
+                        # if (!is.null(self$data[["df_multi_select"]])) {
+                        #   self$data[["df_multi_select"]] <- self$df_multi_select
+                        # }
+                        # if (!is.null(self$df_multi_select_full)) {
                         if (!is.null(self$data[["df_multi_select_full"]])) {
-                         # self$data[["df_multi_select_full"]] <- self$df_multi_select_full
+                          # self$data[["df_multi_select_full"]] <- self$df_multi_select_full
                           #self$df_multi_select <- self$df_multi_select_full
                           self$data[["df_multi_select"]] <- self$data[["df_multi_select_full"]]
                         }
 
-                      #  if (!is.null(self$stone_data)) {
+                        #  if (!is.null(self$stone_data)) {
                         #  self$data[["stone_data"]] <- self$stone_data
                         #}
                       },
@@ -1059,7 +1151,7 @@ Data <- R6::R6Class("Data",
                           df[["meta_platform_verion"]] <- as.character( df[["meta_platform_verion"]])
                         }
 
-# adding in commen
+                        # adding in commen
                         # add the NarrID column (used for filter indexing) and set the "id" column to "FragmentID" (reads better in the code)
                         df[["NarrID"]] <- 1:nrow(df)
                         if (!("FragmentID" %in% colnames(df))) {
@@ -1232,7 +1324,7 @@ Data <- R6::R6Class("Data",
                             stone_data[[stones_id]] <- stonedf1
                           }
                           # set the field
-                         # self$stone_data <- stone_data
+                          # self$stone_data <- stone_data
                           self$data[["stone_data"]] <- stone_data
                         }
 
@@ -1266,21 +1358,21 @@ Data <- R6::R6Class("Data",
 
 
                         # create a title version of the data frame. ToDo this isn't finished because of query with Manami/Ramya
-                       # self$title_data <- private$convert_data_to_titles(df, sensemakerframeworkrobject, column_type = "ALL")
+                        # self$title_data <- private$convert_data_to_titles(df, sensemakerframeworkrobject, column_type = "ALL")
                         self$data[["title_data"]] <- private$convert_data_to_titles(df, sensemakerframeworkrobject, column_type = "ALL")
-                       # self$data[["title_data"]] <- self$title_data
+                        # self$data[["title_data"]] <- self$title_data
                         df_chat <- df %>% dplyr::select(c("FragmentID", sensemakerframeworkrobject$get_freetext_ids(), unlist(unname(purrr::map(sensemakerframeworkrobject$get_list_ids(exclude_multiple = TRUE), ~ {sensemakerframeworkrobject$get_list_column_names(.x)})))))
 
                         #self$df_chat_titles <- private$convert_data_to_titles(df_chat, sensemakerframeworkrobject, column_type = "CHAT")
                         self$data[["df_chat_titles"]] <- private$convert_data_to_titles(df_chat, sensemakerframeworkrobject, column_type = "CHAT")
                         #self$add_data_data_frame(self$df_chat_titles, name =  "df_chat_titles", add_to_export_list_names = TRUE)
-                       # self$data[["df_chat_titles"]] <- self$df_chat_titles
+                        # self$data[["df_chat_titles"]] <- self$df_chat_titles
 
 
 
                         # add any fragmentID level extra column data
                         if (!is.null(self$fragment_level_upload)) {
-                        df <- private$apply_fragment_level_updates(df, sensemakerframeworkrobject)
+                          df <- private$apply_fragment_level_updates(df, sensemakerframeworkrobject)
                         }
 
                         # add any FK level extra column data
@@ -1589,15 +1681,13 @@ Data <- R6::R6Class("Data",
 
                         # Get the data from the API saving to temp folder, read csv into dataframe, remove temp file and return dataframe
                         df1FileName <- tempfile(pattern = "", fileext = ".csv")
-                      #  r1 <- httr::GET(paste0("http://", end_point, ".sensemaker-suite.com/apis/capture/", framework_id,"/?type=csv", sep=""),
-                      #                  httr::add_headers(.headers = c('Authorization'= paste('Bearer ', token))),
-                       #                 httr::write_disk(df1FileName, overwrite=TRUE), httr::verbose())
-                       # DF1I <- read.csv(df1FileName, stringsAsFactors = FALSE, encoding = 'UTF-8', na.strings = "", as.is = TRUE, check.names = FALSE, nrows = ifelse(isDemonstratorAccount, 20, -5))
                         r1 <-  httr::GET(paste0("https://api-gateway.sensemaker-suite.com/v2/frameworks/", framework_id, "/captures?includeLabels=false"),
                                          httr::add_headers(.headers = c('Authorization'= paste('Bearer ', token), 'Accept' = 'text/csv; version=1')),
                                          httr::write_disk(df1FileName, overwrite=TRUE), httr::verbose(data_out = out_msg, data_in = FALSE, info = FALSE, ssl = FALSE))
                         DF1I <- as.data.frame(readr::read_csv(file = df1FileName, col_names = TRUE))
-                         unlink(df1FileName)
+                        unlink(df1FileName)
+
+                        #write.csv(DF1I, file = "api_data.csv", row.names = FALSE, na = "")
 
                         if (nrow(DF1I) > 0) {
                           # all meta-columns should be character
@@ -1633,7 +1723,7 @@ Data <- R6::R6Class("Data",
                         if (self$is_combined_dashboard()) {
                           df <- private$combine_data(df, framework_id, end_point, dashboard_id, token, is_demonstrator, sensemakerframeworkrobject)
                         }
-                      #  write.csv(x = df, file = "data.csv", na = "", row.names = FALSE)
+                        #  write.csv(x = df, file = "data.csv", na = "", row.names = FALSE)
                         if(self$dashboard_has_filters()) {
                           df <- private$filter_data_v1(df, framework_id, end_point, dashboard_id, token, is_demonstrator, sensemakerframeworkrobject)
                         }
@@ -1719,8 +1809,8 @@ Data <- R6::R6Class("Data",
                           if (difftime(to_dte, min_max_date[, "min"], units = c("days")) < 0) {return(df)}
 
 
-                           qry <- paste0("ServerEntryDate >= ", "\"",  from_dte, "\"",  " & ServerEntryDate <= ", "\"", to_dte, "\"")
-                           query_string <- ifelse(is.null(query_string), qry, paste0(query_string, " & ", qry))
+                          qry <- paste0("ServerEntryDate >= ", "\"",  from_dte, "\"",  " & ServerEntryDate <= ", "\"", to_dte, "\"")
+                          query_string <- ifelse(is.null(query_string), qry, paste0(query_string, " & ", qry))
 
                         }
 
@@ -1757,7 +1847,7 @@ Data <- R6::R6Class("Data",
                                 if (!(fw_mappings[[fw_id]][i, "end"] %in% sensemakerframeworkrobject$get_all_signifier_ids())) {next}
                                 # if this is a multi-select list then process the underscore versions so next
                                 if (sensemakerframeworkrobject$get_signifier_type(fw_mappings[[fw_id]][i, "end"]) == "list" &&  sensemakerframeworkrobject$get_list_max_responses(fw_mappings[[fw_id]][i, "end"]) > 1) {next}
-                                 # change the column names
+                                # change the column names
                                 colnames(fw_data) <- stringr::str_replace_all(colnames(fw_data), fw_mappings[[fw_id]][i, "start"], fw_mappings[[fw_id]][i, "end"])
                               }
                             } else {
@@ -1797,7 +1887,7 @@ Data <- R6::R6Class("Data",
                               entry <- entry$end_item_id
                               if (length(entry) == 0) {entry <- NA}
                               sig_col[[data_idx]] <- entry
-                             # sig_col[[data_idx]] <- entries %>% dplyr::filter(start_item_id == sig_col[[data_idx]]) %>% dplyr::select(end_item_id)
+                              # sig_col[[data_idx]] <- entries %>% dplyr::filter(start_item_id == sig_col[[data_idx]]) %>% dplyr::select(end_item_id)
                             }
 
                             sig_col <- unname(unlist(sig_col))
@@ -2146,7 +2236,7 @@ Data <- R6::R6Class("Data",
                               paste0(sensemakerframeworkrobject$get_signifier_title(x), "_", sensemakerframeworkrobject$get_stones_stone_title_by_id(x, y), "_9_Zone")
                           }))
                         # we are adding the shape sliders now
-                         if (column_type == "ALL") {
+                        if (column_type == "ALL") {
                           # triads
                           purrr::walk(sensemakerframeworkrobject$get_triad_ids(),
                                       function(x) {colnames(data)[colnames(data) == paste0(x, "X")] <<- paste0(sensemakerframeworkrobject$get_signifier_title(x), "X");
