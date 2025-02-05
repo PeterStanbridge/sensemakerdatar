@@ -220,7 +220,7 @@ Data <- R6::R6Class("Data",
                         region_file <- region_file |> dplyr::arrange(seq)
 
                         # get the stone ids for the stones id passed in
-                        stones_ids <- self$sm_framework$get_stones_stone_ids(id = stones_id)
+                        stone_ids <- self$sm_framework$get_stones_stone_ids(id = stones_id)
 
                         # we process one at a time.
                         purrr::walk(stone_ids, function(stone_id) {
