@@ -12,6 +12,14 @@ A vector of export data list names
 
 A data list data object (normally data frame)
 
+NULL - adds columns to the data frames.
+
+A vector containing for each row of the data frame df, the mapped value.
+
+A single value, which will either be "none" (if all the data values are NA), "multiple" (if the mapping maps to more than one value) or the value mapped.
+
+The stone region the stone drop is placed in.
+
 Count of the number of non-responses by the respondent.
 
 Count of the number of non-responses by the respondent.
@@ -102,6 +110,13 @@ triad_01_image <- pt$get_triad_background_image(fw_triads[[1]])
 \item \href{#method-Data-get_data_list_names}{\code{Data$get_data_list_names()}}
 \item \href{#method-Data-get_export_data_list_names}{\code{Data$get_export_data_list_names()}}
 \item \href{#method-Data-get_data_dataframe}{\code{Data$get_data_dataframe()}}
+\item \href{#method-Data-add_stone_regions}{\code{Data$add_stone_regions()}}
+\item \href{#method-Data-add_column_to_dataframe}{\code{Data$add_column_to_dataframe()}}
+\item \href{#method-Data-add_fk_column_to_dataframe}{\code{Data$add_fk_column_to_dataframe()}}
+\item \href{#method-Data-add_ms_column_to_dataframe}{\code{Data$add_ms_column_to_dataframe()}}
+\item \href{#method-Data-get_ms_value}{\code{Data$get_ms_value()}}
+\item \href{#method-Data-get_single_ms_value}{\code{Data$get_single_ms_value()}}
+\item \href{#method-Data-get_stone_region}{\code{Data$get_stone_region()}}
 \item \href{#method-Data-get_not_responded_count}{\code{Data$get_not_responded_count()}}
 \item \href{#method-Data-get_not_applicable_count}{\code{Data$get_not_applicable_count()}}
 \item \href{#method-Data-get_signifier_id_from_column_name}{\code{Data$get_signifier_id_from_column_name()}}
@@ -303,6 +318,164 @@ get the data object (data frame) from data list object
 
 \item{\code{as_tibble}}{- default FALSE, if TRUE, export as a tidyverse tibble object.
 for those that are standard export data frames or get_data_list_names function for all of them)}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Data-add_stone_regions"></a>}}
+\if{latex}{\out{\hypertarget{method-Data-add_stone_regions}{}}}
+\subsection{Method \code{add_stone_regions()}}{
+Add stone regions to the data and framework definition from a file of region zones for a single stones id.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Data$add_stone_regions(region_file, stones_id)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{region_file}}{- Default "dat", one of the data frames in the export data list (get_export_data_list_names method)}
+
+\item{\code{stones_id}}{- Default NULL, a signifier id from the framework. Either this or the col_name must be provided.}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Data-add_column_to_dataframe"></a>}}
+\if{latex}{\out{\hypertarget{method-Data-add_column_to_dataframe}{}}}
+\subsection{Method \code{add_column_to_dataframe()}}{
+Add a column to one or more of the project data frames based on one record per fragment.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Data$add_column_to_dataframe(
+  df,
+  data_frame = NULL,
+  add_to_data_list_dfs = TRUE
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{df}}{- Data frame to add to the data sets}
+
+\item{\code{data_frame}}{- Default NULL, the name of the data frame to add the data too; must be in the Data list.}
+
+\item{\code{add_to_data_list_dfs}}{- Default TRUE, add to all of the standard fragment data frames in DATA.}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Data-add_fk_column_to_dataframe"></a>}}
+\if{latex}{\out{\hypertarget{method-Data-add_fk_column_to_dataframe}{}}}
+\subsection{Method \code{add_fk_column_to_dataframe()}}{
+Add a foreign key column to one or more of the project data frames based on a column value in the data frame.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Data$add_fk_column_to_dataframe(
+  df,
+  fk_column,
+  data_frame = NULL,
+  add_to_data_list_dfs = TRUE
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{df}}{- Data frame to add to the data sets}
+
+\item{\code{fk_column}}{- The column name from the data frame to act as the foreign key lookup. Must also exist in df.}
+
+\item{\code{data_frame}}{- Default NULL, the name of the data frame to add the data too; must be in the Data list and have FragmentID as column name. .}
+
+\item{\code{add_to_data_list_dfs}}{- Default TRUE, add to all of the standard fragment data frames in DATA with FragmentID as column name.}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Data-add_ms_column_to_dataframe"></a>}}
+\if{latex}{\out{\hypertarget{method-Data-add_ms_column_to_dataframe}{}}}
+\subsection{Method \code{add_ms_column_to_dataframe()}}{
+Add a multi_select MCQ interpretive column to one or more of the project data frames based on a column value in the data frame.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Data$add_ms_column_to_dataframe(
+  ms_df,
+  data_frame = NULL,
+  add_to_data_list_dfs = TRUE
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{ms_df}}{- Data frame to add to the data sets, which must have the column names "new_id"    "sig_id"    "content_id"    "value". sig_id is the multiselect list id, content_id the list item ids.}
+
+\item{\code{data_frame}}{- Default NULL, the name of the data frame to add the data too; must be in the Data list and have FragmentID as column name. .}
+
+\item{\code{add_to_data_list_dfs}}{- Default TRUE, add to all of the standard fragment data frames in DATA with FragmentID as column name.}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Data-get_ms_value"></a>}}
+\if{latex}{\out{\hypertarget{method-Data-get_ms_value}{}}}
+\subsection{Method \code{get_ms_value()}}{
+Returns a list of mapped multi-select list values from a matching table and applies to a main fragment data dataframe. This is a bit of a helper function for the add_ms_column_to_dataframe function above, but could be useful for public use.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Data$get_ms_value(df, id, mcq_values)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{df}}{- A main fragment signified data frame such as the df1 or dat dataframe to apply a multi-select map process.}
+
+\item{\code{id}}{- The multi-select list signifier id to map.}
+
+\item{\code{mcq_values}}{- The mapping for the passed in id. Columns should have col_name a concatenation of the id and item id for each item for the list and a value column for the mapped value.}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Data-get_single_ms_value"></a>}}
+\if{latex}{\out{\hypertarget{method-Data-get_single_ms_value}{}}}
+\subsection{Method \code{get_single_ms_value()}}{
+Returns a single value for the mapping of a multi-select row from the signifier data frame and a mapping file. This is a bit of a helper function for the get_ms_value function above, but could be useful for public use.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Data$get_single_ms_value(dta, mcq_values)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{dta}}{- A single instance of a multi-select MCQ data columns - will contain a set of 1 or NA values.}
+
+\item{\code{mcq_values}}{- The mapping for the data for the list being processed. Columns should have col_name a concatenation of the id and item id for each item for the list and a value column for the mapped value.}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Data-get_stone_region"></a>}}
+\if{latex}{\out{\hypertarget{method-Data-get_stone_region}{}}}
+\subsection{Method \code{get_stone_region()}}{
+return the region name from a stone region data frame.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Data$get_stone_region(region_df, col_x, col_y)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{region_df}}{- a data frame with cols name, xmin, xmax, ymin, ymax and seq  (df sorted by seq)}
+
+\item{\code{col_x}}{- value of xRight in stone data. (or NA).}
+
+\item{\code{col_y}}{- value of yTop in stone data. (or NA)}
 }
 \if{html}{\out{</div>}}
 }

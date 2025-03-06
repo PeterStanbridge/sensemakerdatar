@@ -149,14 +149,14 @@ Data <- R6::R6Class("Data",
                           stopifnot(length(stop_words) > 0)
                         } else {
                           self$stop_words <- NULL
-                          return()
+                          #return()
                         }
                         if (add_replace == "replace") {
                           self$stop_words <- stop_words
                         } else {
                           self$stopwords <- append(self$stop_words, stop_words)
                         }
-                        return()
+                        #return()
                       },
                       #' @description Add a new data frame name to the export data list names. These are the data frames in list "data" that are
                       #' standard export format.
@@ -247,10 +247,16 @@ Data <- R6::R6Class("Data",
                         })
 
                       },
+                      #' @description Add a column to one or more of the project data frames based on one record per fragment.
+                      #' @param df - Data frame to add to the data sets
+                      #' @param data_frame - Default NULL, the name of the data frame to add the data too; must be in the Data list.
+                      #' @param add_to_data_list_dfs - Default TRUE, add to all of the standard fragment data frames in DATA.
+                      #' @returns
                       add_column_to_dataframe = function(df, data_frame = NULL, add_to_data_list_dfs = TRUE) {
                         stopifnot(is.logical(add_to_data_list_dfs))
                         stopifnot((!is.null(data_frame) & isFALSE(add_to_data_list_dfs)) | (is.null(data_frame) & isTRUE(add_to_data_list_dfs)))
                         if (!is.null(data_frame)) {
+                          stopifnot(is.character(data_frame))
                           stopifnot(data_frame %in% self$get_export_data_list_names())
                         }
                         stopifnot(is.data.frame(df))
@@ -264,6 +270,134 @@ Data <- R6::R6Class("Data",
 
 
                       },
+
+                      #' @description Add a foreign key column to one or more of the project data frames based on a column value in the data frame.
+                      #' @param df - Data frame to add to the data sets
+                      #' @param fk_column - The column name from the data frame to act as the foreign key lookup. Must also exist in df.
+                      #' @param data_frame - Default NULL, the name of the data frame to add the data too; must be in the Data list and have FragmentID as column name. .
+                      #' @param add_to_data_list_dfs - Default TRUE, add to all of the standard fragment data frames in DATA with FragmentID as column name.
+                      #' @returns
+                      add_fk_column_to_dataframe = function(df, fk_column, data_frame = NULL, add_to_data_list_dfs = TRUE) {
+
+                        stopifnot(is.logical(add_to_data_list_dfs))
+                        stopifnot((!is.null(data_frame) & isFALSE(add_to_data_list_dfs)) | (is.null(data_frame) & isTRUE(add_to_data_list_dfs)))
+                        stopifnot(is.data.frame(df))
+                        stopifnot(fk_column %in% colnames(df))
+                        if (!is.null(data_frame)) {
+                          stopifnot(is.character(data_frame))
+                          stopifnot(data_frame %in% self$get_export_data_list_names())
+                          stopifnot("FragmentID" %in% colnames(self$data[[data_frame]]))
+                          stopifnot(fk_column %in% colnames(self$data[[data_frame]]))
+                          # cannot have a value in the data frame being updated not in the df file. Otherwise a missing value to swap.
+                          stopifnot(all(unique(self$data[[data_frame]][[fk_column]]) %in% unique(df[[fk_column]])))
+                        }
+
+
+
+
+
+                      },
+
+
+#' @description Add a multi_select MCQ interpretive column to one or more of the project data frames based on a column value in the data frame.
+#' @param ms_df - Data frame to add to the data sets, which must have the column names "new_id"	"sig_id"	"content_id"	"value". sig_id is the multiselect list id, content_id the list item ids.
+#' @param data_frame - Default NULL, the name of the data frame to add the data too; must be in the Data list and have FragmentID as column name. .
+#' @param add_to_data_list_dfs - Default TRUE, add to all of the standard fragment data frames in DATA with FragmentID as column name.
+#' @returns NULL - adds columns to the data frames.
+add_ms_column_to_dataframe = function(ms_df, data_frame = NULL, add_to_data_list_dfs = TRUE) {
+
+  stopifnot(is.logical(add_to_data_list_dfs))
+  stopifnot((!is.null(data_frame) & isFALSE(add_to_data_list_dfs)) | (is.null(data_frame) & isTRUE(add_to_data_list_dfs)))
+  stopifnot(is.data.frame(ms_df))
+  # The dataframe ms_df must have the columns "new_id"	"sig_id"	"content_id"	"value"
+  stopifnot(all(c("new_id",	"sig_id",	"content_id",	"value") %in% colnames(ms_df)))
+  if (!is.null(data_frame)) {
+    stopifnot(is.character(data_frame))
+    stopifnot(data_frame %in% self$get_export_data_list_names())
+  }
+   # add the col_name column if it isn't there
+   if (!("col_name" %in% colnames(ms_df))) {
+     ms_df <- ms_df |> dplyr::mutate(col_name = paste0(sig_id, "_", content_id))
+   }
+
+  # get the data frames in the data list that have the multi-select mcq (as an id) in it and use these for transform.
+
+  if (is.null(data_frame)) {
+    df_list <<- NULL
+    purrr::walk(self$get_data_list_names(export_only = TRUE), function(df_name) {
+      if (all(unique(ms_df[["col_name"]]) %in% colnames(df_name))) {
+        df_list <<- append(df_list, df_name)
+      }
+
+
+    })
+    data_frame <- df_list
+    df_list <<- NULL
+  }
+
+  # go through each of the new columns to add
+  purrr::walk(unique(ms_df[["new_id"]]), function(name) {
+    # filter out this data
+    mcq_values <- ms_df |> dplyr::filter(new_id == name)
+    # There should only be one value for the sig_id column now filtered
+    id <- unique(mcq_values[["sig_id"]])
+    stopifnot(length(id) == 1)
+    # go through each of the data frames and add the new column
+    purrr::walk(data_frame, function(df_name) {
+
+    self$data[[df_name]] <<- self$data[[df_name]] |> dplyr::mutate(!! name := self$get_ms_value(self$data[[df_name]], id, mcq_values))
+    # now add the new mcq to the framework definition
+    items <- sort(unique(self$data[[df_name]][[name]]))
+    list_items <- data.frame(id = items, title = items, tooltip = items, visible = c(TRUE, TRUE), other_signifier_id = c("", ""))
+
+    self$sm_framework$add_list(title = name, tooltip = name, allow_na = FALSE, fragment = FALSE, required = TRUE, sticky = FALSE,items = list_items,
+                               max_responses = 1, min_responses = 1, other_item_id = NULL, other_signifier_id = NULL, sig_class = "signifier",
+                               theader = NULL, id = name)
+    })
+  })
+  return(NULL)
+},
+
+#' @description Returns a list of mapped multi-select list values from a matching table and applies to a main fragment data dataframe. This is a bit of a helper function for the add_ms_column_to_dataframe function above, but could be useful for public use.
+#' @param df - A main fragment signified data frame such as the df1 or dat dataframe to apply a multi-select map process.
+#' @param id - The multi-select list signifier id to map.
+#' @param mcq_values - The mapping for the passed in id. Columns should have col_name a concatenation of the id and item id for each item for the list and a value column for the mapped value.
+#' @returns A vector containing for each row of the data frame df, the mapped value.
+get_ms_value = function(df, id, mcq_values) {
+  ret_vec <- vector(mode = "list", length = nrow(df))
+
+  data_values <- df[, self$sm_framework$get_list_column_names(id = id)]
+
+  for (i in 1:nrow(df)) {
+    ret_vec[[i]] <- self$get_single_ms_value(data_values[i, ], mcq_values)
+
+  }
+
+return(unlist(ret_vec))
+
+},
+
+#' @description Returns a single value for the mapping of a multi-select row from the signifier data frame and a mapping file. This is a bit of a helper function for the get_ms_value function above, but could be useful for public use.
+#' @param dta - A single instance of a multi-select MCQ data columns - will contain a set of 1 or NA values.
+#' @param mcq_values - The mapping for the data for the list being processed. Columns should have col_name a concatenation of the id and item id for each item for the list and a value column for the mapped value.
+#' @returns A single value, which will either be "none" (if all the data values are NA), "multiple" (if the mapping maps to more than one value) or the value mapped.
+get_single_ms_value = function(dta, mcq_values) {
+
+  long_df <- tidyr::gather(data = dta, key = col, sel, colnames(dta))
+
+  if (all(is.na(long_df[["sel"]]))) {
+    return("none")
+  }
+  long_df_sel <- long_df |> dplyr::filter(sel == 1)
+  mcq_values_selected <- mcq_values |> dplyr::filter(col_name %in% long_df_sel[["col"]]) |> dplyr::select(value)
+  if (length(unique(mcq_values_selected[["value"]])) == 1) {
+    return(unique(mcq_values_selected[["value"]]))
+  } else {
+      return("multiple")
+    }
+
+},
+
 
 
                       #' @description return the region name from a stone region data frame.
