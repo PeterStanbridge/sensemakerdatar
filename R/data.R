@@ -325,7 +325,7 @@ add_ms_column_to_dataframe = function(ms_df, data_frame = NULL, add_to_data_list
   if (is.null(data_frame)) {
     df_list <<- NULL
     purrr::walk(self$get_data_list_names(export_only = TRUE), function(df_name) {
-      if (all(unique(ms_df[["col_name"]]) %in% colnames(df_name))) {
+      if (all(unique(ms_df[["col_name"]]) %in% colnames(self$data[[df_name]]))) {
         df_list <<- append(df_list, df_name)
       }
 
@@ -347,12 +347,14 @@ add_ms_column_to_dataframe = function(ms_df, data_frame = NULL, add_to_data_list
 
     self$data[[df_name]] <<- self$data[[df_name]] |> dplyr::mutate(!! name := self$get_ms_value(self$data[[df_name]], id, mcq_values))
     # now add the new mcq to the framework definition
-    items <- sort(unique(self$data[[df_name]][[name]]))
-    list_items <- data.frame(id = items, title = items, tooltip = items, visible = c(TRUE, TRUE), other_signifier_id = c("", ""))
+    if (!(name %in% self$sm_framework$get_list_ids())) {
+      items <- sort(unique(self$data[[df_name]][[name]]))
+      list_items <- data.frame(id = items, title = items, tooltip = items, visible = c(TRUE, TRUE), other_signifier_id = c("", ""))
 
-    self$sm_framework$add_list(title = name, tooltip = name, allow_na = FALSE, fragment = FALSE, required = TRUE, sticky = FALSE,items = list_items,
-                               max_responses = 1, min_responses = 1, other_item_id = NULL, other_signifier_id = NULL, sig_class = "signifier",
-                               theader = NULL, id = name)
+      self$sm_framework$add_list(title = name, tooltip = name, allow_na = FALSE, fragment = FALSE, required = TRUE, sticky = FALSE,items = list_items,
+                                 max_responses = 1, min_responses = 1, other_item_id = NULL, other_signifier_id = NULL, sig_class = "signifier",
+                                 theader = NULL, id = name)
+    }
     })
   })
   return(NULL)
