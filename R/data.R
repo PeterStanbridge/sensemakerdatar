@@ -878,7 +878,7 @@ get_single_ms_value = function(dta, mcq_values) {
                           stopifnot(file.exists(query_file))
                           df <- read.csv(query_file, stringsAsFactors = FALSE)
                           stopifnot(all(c("name", "expression", "include") %in% colnames(df)))
-                          df <- df %>% filter(include == "Y")
+                          df <- df %>% dplyr::filter(include == "Y")
                           queries <- df[["expression"]]
                           data_names <- df[["name"]]
                         }
@@ -886,7 +886,7 @@ get_single_ms_value = function(dta, mcq_values) {
                           stopifnot(is.data.frame(query_df))
                           df <- query_df
                           stopifnot(all(c("name", "expression", "include") %in% colnames(df)))
-                          df <- df %>% filter(include == "Y")
+                          df <- df %>% dplyr::filter(include == "Y")
                           queries <- df[["expression"]]
                           data_names <- df[["name"]]
                         }
