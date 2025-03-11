@@ -935,7 +935,7 @@ get_single_ms_value = function(dta, mcq_values) {
                         filtered_data_string <- parse(text = paste0("self$data[['df1']] %>% dplyr::filter(", query, ")"))
                         filtered_data <- eval(filtered_data_string)
                         if (!is.null(data_name)) {
-                          self$add_data_data_frame(data_frame = filtered_data, name = data_name)
+                          self$add_data_data_frame(data_frame = filtered_data, name = data_name, add_to_export_list_names = TRUE)
                           return(filtered_data)
                         }
                         if (!is.null(data_frames)) {
