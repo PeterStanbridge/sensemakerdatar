@@ -228,12 +228,12 @@ Data <- R6::R6Class("Data",
 
                         # we process one at a time.
                         purrr::walk(stone_ids, function(stone_id) {
-                          region_values <<- vector("list", length = nrow(fwd$data[["df1"]]))
-                          names(region_values) <- fwd$data[["df1"]][["FragmentID"]]
-                          FragmentIDs <- fwd$data[["df1"]][["FragmentID"]]
-                          col_names <- fwd$sm_framework$get_stones_stone_compositional_column_names(sig_id = stones_id, stone_id = stone_id)
-                          col_xs <- fwd$data[["df1"]][[col_names[[1]]]]
-                          col_ys <- fwd$data[["df1"]][[col_names[[2]]]]
+                          region_values <<- vector("list", length = nrow(self$data[["df1"]]))
+                          names(region_values) <- self$data[["df1"]][["FragmentID"]]
+                          FragmentIDs <- self$data[["df1"]][["FragmentID"]]
+                          col_names <- self$sm_framework$get_stones_stone_compositional_column_names(sig_id = stones_id, stone_id = stone_id)
+                          col_xs <- self$data[["df1"]][[col_names[[1]]]]
+                          col_ys <- self$data[["df1"]][[col_names[[2]]]]
                           purrr::pwalk(list(FragmentIDs, col_xs, col_ys), function(fragment_id, x_value, y_value) {
                             region_values[[fragment_id]] <<- self$get_stone_region(region_file, x_value, y_value)
                           })
@@ -245,7 +245,7 @@ Data <- R6::R6Class("Data",
                           reg_title <-  paste(self$sm_framework$get_signifier_title(stones_id), self$sm_framework$get_stones_stone_title_by_id(stones_id, stone_id), "region")
                           items <- sort(region_file[["name"]])
                           item_df <- data.frame(id = items, title = items, tooltip = items, visible = rep_len(TRUE, length(items)), other_signifier_id = rep_len("", length(items)))
-                          fwd$sm_framework$add_list(title = reg_title, tooltip = reg_title, allow_na = FALSE, fragment = FALSE, required = TRUE, sticky = FALSE, items = item_df,
+                          self$sm_framework$add_list(title = reg_title, tooltip = reg_title, allow_na = FALSE, fragment = FALSE, required = TRUE, sticky = FALSE, items = item_df,
                                                     max_responses = 1, min_responses = 1, other_item_id = "", other_signifier_id = "", sig_class = "region", id = paste0(stones_id, "_", stone_id, "_Region"))
 
                         })
