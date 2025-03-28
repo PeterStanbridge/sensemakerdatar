@@ -237,7 +237,7 @@ Data <- R6::R6Class("Data",
                           purrr::pwalk(list(FragmentIDs, col_xs, col_ys), function(fragment_id, x_value, y_value) {
                             region_values[[fragment_id]] <<- self$get_stone_region(region_file, x_value, y_value)
                           })
-                          #currentposition
+
                           temp_df <- data.frame(FragmentID = names(region_values), place_holder = unlist(unname(region_values)))
                           names(temp_df)[2] <-  paste0(stones_id, "_", stone_id, "_Region")
                           self$add_column_to_dataframe(temp_df)
@@ -997,7 +997,7 @@ Data <- R6::R6Class("Data",
                           list_items <- data.frame(id = look_up[["titles"]], title = look_up[["titles"]],
                                                    tooltip = look_up[["titles"]], visible = rep_len(TRUE, length.out = nrow(look_up)),
                                                    other_signifier_id = rep_len("", length.out = nrow(look_up)))
-                          sensemakerframeworkrobject$add_list(title = self$sm_framework$get_signifier_title(id), tooltip = self$sm_framework$get_signifier_title(id), allow_na = FALSE,
+                          self$sm_framework$add_list(title = self$sm_framework$get_signifier_title(id), tooltip = self$sm_framework$get_signifier_title(id), allow_na = FALSE,
                                                               fragment = FALSE, required = TRUE, sticky = FALSE,
                                                               items = list_items,  max_responses = 1, min_responses = 1,
                                                               other_item_id = NULL, other_signifier_id = NULL, sig_class = "image_select",
