@@ -214,10 +214,14 @@ Data <- R6::R6Class("Data",
                           region_file <- read.csv(region_file, check.names = FALSE, stringsAsFactors = FALSE)
                           stopifnot(all(c("name",	"xmin",	"xmax",	"ymin",	"ymax") %in% colnames(region_file)))
                         } else {
-                          stopifnot(all(c("name",	"xmin",	"xmax",	"ymin",	"ymax", "seq") %in% colnames(region_file)))
+                          stopifnot(all(c("name",	"xmin",	"xmax",	"ymin",	"ymax") %in% colnames(region_file)))
                         }
-                        # sort in sequence order
-                        region_file <- region_file |> dplyr::arrange(seq)
+                        if ("seq" %in% colnames(region_file)) {
+                          stopifnot(is.numeric(region_file[["seq"]]))
+                          # sort in sequence order
+                          region_file <- region_file |> dplyr::arrange(seq)
+                        }
+
 
                         # get the stone ids for the stones id passed in
                         stone_ids <- self$sm_framework$get_stones_stone_ids(id = stones_id)
@@ -265,7 +269,9 @@ Data <- R6::R6Class("Data",
                           data_frame <- self$get_export_data_list_names()
                         }
                         purrr::walk(data_frame, function(df_name) {
-                          self$data[[df_name]] <<- dplyr::left_join(x = self$data[[df_name]], y = df, by = dplyr::join_by(FragmentID))
+                          if (length(colnames(self$data[[df_name]])) == length(unique(colnames(self$data[[df_name]])))) {
+                            self$data[[df_name]] <<- dplyr::left_join(x = self$data[[df_name]], y = df, by = dplyr::join_by(FragmentID))
+                          }
                         })
 
 
