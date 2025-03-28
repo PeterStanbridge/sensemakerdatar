@@ -212,7 +212,7 @@ Data <- R6::R6Class("Data",
                           stopifnot(stringr::str_ends(region_file, ".csv"))
                           stopifnot(file.exists(region_file))
                           region_file <- read.csv(region_file, check.names = FALSE, stringsAsFactors = FALSE)
-                          stopifnot(all(c("name",	"xmin",	"xmax",	"ymin",	"ymax")) %in% colnames(region_file))
+                          stopifnot(all(c("name",	"xmin",	"xmax",	"ymin",	"ymax") %in% colnames(region_file)))
                         } else {
                           stopifnot(all(c("name",	"xmin",	"xmax",	"ymin",	"ymax", "seq") %in% colnames(region_file)))
                         }
