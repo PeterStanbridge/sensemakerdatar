@@ -984,15 +984,25 @@ Data <- R6::R6Class("Data",
                           look_up <- data.frame(ids = self$sm_framework$get_imageselect_items(id), titles = self$sm_framework$get_imageselect_items_titles(id))
                           join_vars <- c('ids')
                           names(join_vars) <- id
+                          added_name <- paste0(id, "_list")
                           # each data frame
                           purrr::walk(data_frames, function(df) {
                             # if the id isn't there don't try to join it (the text/title versions of the data won't have the column)
                             if (id %in% colnames(self$data[[df]])) {
                               out_think <- dplyr::left_join(x = self$data[[df]], y =  look_up,  by = join_vars) |> dplyr::select(titles)
-                              added_name <- paste0(id, "_list")
                               self$data[[df]] <<- self$data[[df]] |> dplyr::mutate(!! sym(added_name) := out_think)
                             }
                           })
+                          # add the new list to the framework definition currentposition
+                          list_items <- data.frame(id = look_up[["titles"]], title = look_up[["titles"]],
+                                                   tooltip = look_up[["titles"]], visible = rep_len(TRUE, length.out = nrow(look_up)),
+                                                   other_signifier_id = rep_len("", length.out = nrow(look_up)))
+                          sensemakerframeworkrobject$add_list(title = self$sm_framework$get_signifier_title(id), tooltip = self$sm_framework$get_signifier_title(id), allow_na = FALSE,
+                                                              fragment = FALSE, required = TRUE, sticky = FALSE,
+                                                              items = list_items,  max_responses = 1, min_responses = 1,
+                                                              other_item_id = NULL, other_signifier_id = NULL, sig_class = "image_select",
+                                                              theader = NULL, id = added_name)
+
                         })
                         return(NULL)
                       }
