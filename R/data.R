@@ -246,7 +246,7 @@ Data <- R6::R6Class("Data",
                           items <- sort(region_file[["name"]])
                           item_df <- data.frame(id = items, title = items, tooltip = items, visible = rep_len(TRUE, length(items)), other_signifier_id = rep_len("", length(items)))
                           self$sm_framework$add_list(title = reg_title, tooltip = reg_title, allow_na = FALSE, fragment = FALSE, required = TRUE, sticky = FALSE, items = item_df,
-                                                    max_responses = 1, min_responses = 1, other_item_id = "", other_signifier_id = "", sig_class = "region", id = paste0(stones_id, "_", stone_id, "_Region"))
+                                                     max_responses = 1, min_responses = 1, other_item_id = "", other_signifier_id = "", sig_class = "region", id = paste0(stones_id, "_", stone_id, "_Region"))
 
                         })
 
@@ -305,106 +305,106 @@ Data <- R6::R6Class("Data",
                       },
 
 
-#' @description Add a multi_select MCQ interpretive column to one or more of the project data frames based on a column value in the data frame.
-#' @param ms_df - Data frame to add to the data sets, which must have the column names "new_id"	"sig_id"	"content_id"	"value". sig_id is the multiselect list id, content_id the list item ids.
-#' @param data_frame - Default NULL, the name of the data frame to add the data too; must be in the Data list and have FragmentID as column name. .
-#' @param add_to_data_list_dfs - Default TRUE, add to all of the standard fragment data frames in DATA with FragmentID as column name.
-#' @returns NULL - adds columns to the data frames.
-add_ms_column_to_dataframe = function(ms_df, data_frame = NULL, add_to_data_list_dfs = TRUE) {
+                      #' @description Add a multi_select MCQ interpretive column to one or more of the project data frames based on a column value in the data frame.
+                      #' @param ms_df - Data frame to add to the data sets, which must have the column names "new_id"	"sig_id"	"content_id"	"value". sig_id is the multiselect list id, content_id the list item ids.
+                      #' @param data_frame - Default NULL, the name of the data frame to add the data too; must be in the Data list and have FragmentID as column name. .
+                      #' @param add_to_data_list_dfs - Default TRUE, add to all of the standard fragment data frames in DATA with FragmentID as column name.
+                      #' @returns NULL - adds columns to the data frames.
+                      add_ms_column_to_dataframe = function(ms_df, data_frame = NULL, add_to_data_list_dfs = TRUE) {
 
-  stopifnot(is.logical(add_to_data_list_dfs))
-  stopifnot((!is.null(data_frame) & isFALSE(add_to_data_list_dfs)) | (is.null(data_frame) & isTRUE(add_to_data_list_dfs)))
-  stopifnot(is.data.frame(ms_df))
-  # The dataframe ms_df must have the columns "new_id"	"sig_id"	"content_id"	"value"
-  stopifnot(all(c("new_id",	"sig_id",	"content_id",	"value") %in% colnames(ms_df)))
-  if (!is.null(data_frame)) {
-    stopifnot(is.character(data_frame))
-    stopifnot(data_frame %in% self$get_export_data_list_names())
-  }
-   # add the col_name column if it isn't there
-   if (!("col_name" %in% colnames(ms_df))) {
-     ms_df <- ms_df |> dplyr::mutate(col_name = paste0(sig_id, "_", content_id))
-   }
+                        stopifnot(is.logical(add_to_data_list_dfs))
+                        stopifnot((!is.null(data_frame) & isFALSE(add_to_data_list_dfs)) | (is.null(data_frame) & isTRUE(add_to_data_list_dfs)))
+                        stopifnot(is.data.frame(ms_df))
+                        # The dataframe ms_df must have the columns "new_id"	"sig_id"	"content_id"	"value"
+                        stopifnot(all(c("new_id",	"sig_id",	"content_id",	"value") %in% colnames(ms_df)))
+                        if (!is.null(data_frame)) {
+                          stopifnot(is.character(data_frame))
+                          stopifnot(data_frame %in% self$get_export_data_list_names())
+                        }
+                        # add the col_name column if it isn't there
+                        if (!("col_name" %in% colnames(ms_df))) {
+                          ms_df <- ms_df |> dplyr::mutate(col_name = paste0(sig_id, "_", content_id))
+                        }
 
-  # get the data frames in the data list that have the multi-select mcq (as an id) in it and use these for transform.
+                        # get the data frames in the data list that have the multi-select mcq (as an id) in it and use these for transform.
 
-  if (is.null(data_frame)) {
-    df_list <<- NULL
-    purrr::walk(self$get_data_list_names(export_only = TRUE), function(df_name) {
-      if (all(unique(ms_df[["col_name"]]) %in% colnames(self$data[[df_name]]))) {
-        df_list <<- append(df_list, df_name)
-      }
+                        if (is.null(data_frame)) {
+                          df_list <<- NULL
+                          purrr::walk(self$get_data_list_names(export_only = TRUE), function(df_name) {
+                            if (all(unique(ms_df[["col_name"]]) %in% colnames(self$data[[df_name]]))) {
+                              df_list <<- append(df_list, df_name)
+                            }
 
 
-    })
-    data_frame <- df_list
-    df_list <<- NULL
-  }
+                          })
+                          data_frame <- df_list
+                          df_list <<- NULL
+                        }
 
-  # go through each of the new columns to add
-  purrr::walk(unique(ms_df[["new_id"]]), function(name) {
-    # filter out this data
-    mcq_values <- ms_df |> dplyr::filter(new_id == name)
-    # There should only be one value for the sig_id column now filtered
-    id <- unique(mcq_values[["sig_id"]])
-    stopifnot(length(id) == 1)
-    # go through each of the data frames and add the new column
-    purrr::walk(data_frame, function(df_name) {
+                        # go through each of the new columns to add
+                        purrr::walk(unique(ms_df[["new_id"]]), function(name) {
+                          # filter out this data
+                          mcq_values <- ms_df |> dplyr::filter(new_id == name)
+                          # There should only be one value for the sig_id column now filtered
+                          id <- unique(mcq_values[["sig_id"]])
+                          stopifnot(length(id) == 1)
+                          # go through each of the data frames and add the new column
+                          purrr::walk(data_frame, function(df_name) {
 
-    self$data[[df_name]] <<- self$data[[df_name]] |> dplyr::mutate(!! name := self$get_ms_value(self$data[[df_name]], id, mcq_values))
-    # now add the new mcq to the framework definition
-    if (!(name %in% self$sm_framework$get_list_ids())) {
-      items <- sort(unique(self$data[[df_name]][[name]]))
-      list_items <- data.frame(id = items, title = items, tooltip = items, visible = c(TRUE, TRUE), other_signifier_id = c("", ""))
+                            self$data[[df_name]] <<- self$data[[df_name]] |> dplyr::mutate(!! name := self$get_ms_value(self$data[[df_name]], id, mcq_values))
+                            # now add the new mcq to the framework definition
+                            if (!(name %in% self$sm_framework$get_list_ids())) {
+                              items <- sort(unique(self$data[[df_name]][[name]]))
+                              list_items <- data.frame(id = items, title = items, tooltip = items, visible = c(TRUE, TRUE), other_signifier_id = c("", ""))
 
-      self$sm_framework$add_list(title = name, tooltip = name, allow_na = FALSE, fragment = FALSE, required = TRUE, sticky = FALSE,items = list_items,
-                                 max_responses = 1, min_responses = 1, other_item_id = NULL, other_signifier_id = NULL, sig_class = "signifier",
-                                 theader = NULL, id = name)
-    }
-    })
-  })
-  return(NULL)
-},
+                              self$sm_framework$add_list(title = name, tooltip = name, allow_na = FALSE, fragment = FALSE, required = TRUE, sticky = FALSE,items = list_items,
+                                                         max_responses = 1, min_responses = 1, other_item_id = NULL, other_signifier_id = NULL, sig_class = "signifier",
+                                                         theader = NULL, id = name)
+                            }
+                          })
+                        })
+                        return(NULL)
+                      },
 
-#' @description Returns a list of mapped multi-select list values from a matching table and applies to a main fragment data dataframe. This is a bit of a helper function for the add_ms_column_to_dataframe function above, but could be useful for public use.
-#' @param df - A main fragment signified data frame such as the df1 or dat dataframe to apply a multi-select map process.
-#' @param id - The multi-select list signifier id to map.
-#' @param mcq_values - The mapping for the passed in id. Columns should have col_name a concatenation of the id and item id for each item for the list and a value column for the mapped value.
-#' @returns A vector containing for each row of the data frame df, the mapped value.
-get_ms_value = function(df, id, mcq_values) {
-  ret_vec <- vector(mode = "list", length = nrow(df))
+                      #' @description Returns a list of mapped multi-select list values from a matching table and applies to a main fragment data dataframe. This is a bit of a helper function for the add_ms_column_to_dataframe function above, but could be useful for public use.
+                      #' @param df - A main fragment signified data frame such as the df1 or dat dataframe to apply a multi-select map process.
+                      #' @param id - The multi-select list signifier id to map.
+                      #' @param mcq_values - The mapping for the passed in id. Columns should have col_name a concatenation of the id and item id for each item for the list and a value column for the mapped value.
+                      #' @returns A vector containing for each row of the data frame df, the mapped value.
+                      get_ms_value = function(df, id, mcq_values) {
+                        ret_vec <- vector(mode = "list", length = nrow(df))
 
-  data_values <- df[, self$sm_framework$get_list_column_names(id = id)]
+                        data_values <- df[, self$sm_framework$get_list_column_names(id = id)]
 
-  for (i in 1:nrow(df)) {
-    ret_vec[[i]] <- self$get_single_ms_value(data_values[i, ], mcq_values)
+                        for (i in 1:nrow(df)) {
+                          ret_vec[[i]] <- self$get_single_ms_value(data_values[i, ], mcq_values)
 
-  }
+                        }
 
-return(unlist(ret_vec))
+                        return(unlist(ret_vec))
 
-},
+                      },
 
-#' @description Returns a single value for the mapping of a multi-select row from the signifier data frame and a mapping file. This is a bit of a helper function for the get_ms_value function above, but could be useful for public use.
-#' @param dta - A single instance of a multi-select MCQ data columns - will contain a set of 1 or NA values.
-#' @param mcq_values - The mapping for the data for the list being processed. Columns should have col_name a concatenation of the id and item id for each item for the list and a value column for the mapped value.
-#' @returns A single value, which will either be "none" (if all the data values are NA), "multiple" (if the mapping maps to more than one value) or the value mapped.
-get_single_ms_value = function(dta, mcq_values) {
+                      #' @description Returns a single value for the mapping of a multi-select row from the signifier data frame and a mapping file. This is a bit of a helper function for the get_ms_value function above, but could be useful for public use.
+                      #' @param dta - A single instance of a multi-select MCQ data columns - will contain a set of 1 or NA values.
+                      #' @param mcq_values - The mapping for the data for the list being processed. Columns should have col_name a concatenation of the id and item id for each item for the list and a value column for the mapped value.
+                      #' @returns A single value, which will either be "none" (if all the data values are NA), "multiple" (if the mapping maps to more than one value) or the value mapped.
+                      get_single_ms_value = function(dta, mcq_values) {
 
-  long_df <- tidyr::gather(data = dta, key = col, sel, colnames(dta))
+                        long_df <- tidyr::gather(data = dta, key = col, sel, colnames(dta))
 
-  if (all(is.na(long_df[["sel"]]))) {
-    return("none")
-  }
-  long_df_sel <- long_df |> dplyr::filter(sel == 1)
-  mcq_values_selected <- mcq_values |> dplyr::filter(col_name %in% long_df_sel[["col"]]) |> dplyr::select(value)
-  if (length(unique(mcq_values_selected[["value"]])) == 1) {
-    return(unique(mcq_values_selected[["value"]]))
-  } else {
-      return("multiple")
-    }
+                        if (all(is.na(long_df[["sel"]]))) {
+                          return("none")
+                        }
+                        long_df_sel <- long_df |> dplyr::filter(sel == 1)
+                        mcq_values_selected <- mcq_values |> dplyr::filter(col_name %in% long_df_sel[["col"]]) |> dplyr::select(value)
+                        if (length(unique(mcq_values_selected[["value"]])) == 1) {
+                          return(unique(mcq_values_selected[["value"]]))
+                        } else {
+                          return("multiple")
+                        }
 
-},
+                      },
 
 
 
@@ -438,7 +438,7 @@ get_single_ms_value = function(dta, mcq_values) {
                             break
                           }
                         }
-                       # purrr::pwalk(list(names, xmins, xmaxs, ymins, ymaxs), function(name, xmin, xmax, ymin, ymax) {
+                        # purrr::pwalk(list(names, xmins, xmaxs, ymins, ymaxs), function(name, xmin, xmax, ymin, ymax) {
                         #  if (col_x >= xmin & col_x <= xmax &  col_y >= ymin & col_y <= ymax) {ret_value <<- name}
                         #})
                         return(ret_value)
@@ -970,7 +970,33 @@ get_single_ms_value = function(dta, mcq_values) {
                             }
                           })
                         }
+                      },
+                      #' @description
+                      #' Creates new list data and list definitions for image select signifier types - this function has side effects
+                      #' @returns NULL
+                      turn_imageselect_to_list = function() {
+                        # get the data frames to update and the image select ids
+                        data_frames <- self$get_export_data_list_names()
+                        is_ids <- self$sm_framework$get_imageselect_ids()
+                        # Each image select id
+                        purrr::walk(is_ids, function(id) {
+                          # data frame of ids and titles for the image select items to join into the dataframe
+                          look_up <- data.frame(ids = self$sm_framework$get_imageselect_items(id), titles = self$sm_framework$get_imageselect_items_titles(id))
+                          join_vars <- c('ids')
+                          names(join_vars) <- id
+                          # each data frame
+                          purrr::walk(data_frames, function(df) {
+                            # if the id isn't there don't try to join it (the text/title versions of the data won't have the column)
+                            if (id %in% colnames(self$data[[df]])) {
+                              out_think <- dplyr::left_join(x = self$data[[df]], y =  look_up,  by = join_vars) |> dplyr::select(titles)
+                              added_name <- paste0(id, "_list")
+                              self$data[[df]] <<- self$data[[df]] |> dplyr::mutate(!! sym(added_name) := out_think)
+                            }
+                          })
+                        })
+                        return(NULL)
                       }
+
                     ),
 
                     private = list(

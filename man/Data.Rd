@@ -154,6 +154,7 @@ triad_01_image <- pt$get_triad_background_image(fw_triads[[1]])
 \item \href{#method-Data-add_accumulation_data}{\code{Data$add_accumulation_data()}}
 \item \href{#method-Data-execute_queries}{\code{Data$execute_queries()}}
 \item \href{#method-Data-execute_data_query}{\code{Data$execute_data_query()}}
+\item \href{#method-Data-turn_imageselect_to_list}{\code{Data$turn_imageselect_to_list()}}
 \item \href{#method-Data-clone}{\code{Data$clone()}}
 }
 }
@@ -1080,6 +1081,16 @@ Executes a query on the database and either updates existing data frames or adds
 }
 \if{html}{\out{</div>}}
 }
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Data-turn_imageselect_to_list"></a>}}
+\if{latex}{\out{\hypertarget{method-Data-turn_imageselect_to_list}{}}}
+\subsection{Method \code{turn_imageselect_to_list()}}{
+Creates new list data and list definitions for image select signifier types - this function has side effects
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Data$turn_imageselect_to_list()}\if{html}{\out{</div>}}
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Data-clone"></a>}}
