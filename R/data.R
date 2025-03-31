@@ -990,7 +990,7 @@ Data <- R6::R6Class("Data",
                             # if the id isn't there don't try to join it (the text/title versions of the data won't have the column)
                             if (id %in% colnames(self$data[[df]])) {
                               out_think <- dplyr::left_join(x = self$data[[df]], y =  look_up,  by = join_vars) |> dplyr::select(titles)
-                              self$data[[df]] <<- self$data[[df]] |> dplyr::mutate(!! sym(added_name) := out_think)
+                              self$data[[df]] <<- unname(unlist(self$data[[df]] |> dplyr::mutate(!! sym(added_name) := out_think)))
                             }
                           })
                           # add the new list to the framework definition currentposition
