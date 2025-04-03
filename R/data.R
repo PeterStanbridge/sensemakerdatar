@@ -972,7 +972,7 @@ Data <- R6::R6Class("Data",
                         }
                       },
                       #' @description
-                      #' Creates new list data and list definitions for image select signifier types - this function has side effects
+                      #' Creates new list data and list definitions for image select signifier types - this function has side effects and will be removed once the imageselect widget made compatable with list definition widgets
                       #' @returns NULL
                       turn_imageselect_to_list = function() {
 
@@ -1000,10 +1000,10 @@ Data <- R6::R6Class("Data",
                                                    tooltip = look_up[["titles"]], visible = rep_len(TRUE, length.out = nrow(look_up)),
                                                    other_signifier_id = rep_len("", length.out = nrow(look_up)))
                           self$sm_framework$add_list(title = self$sm_framework$get_signifier_title(id), tooltip = self$sm_framework$get_signifier_title(id), allow_na = FALSE,
-                                                              fragment = FALSE, required = TRUE, sticky = FALSE,
-                                                              items = list_items,  max_responses = 1, min_responses = 1,
-                                                              other_item_id = NULL, other_signifier_id = NULL, sig_class = "image_select",
-                                                              theader = NULL, id = added_name)
+                                                     fragment = FALSE, required = TRUE, sticky = FALSE,
+                                                     items = list_items,  max_responses = 1, min_responses = 1,
+                                                     other_item_id = NULL, other_signifier_id = NULL, sig_class = "image_select",
+                                                     theader = NULL, id = added_name)
 
                         })
                         return(NULL)
