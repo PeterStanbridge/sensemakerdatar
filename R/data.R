@@ -975,6 +975,7 @@ Data <- R6::R6Class("Data",
                       #' Creates new list data and list definitions for image select signifier types - this function has side effects
                       #' @returns NULL
                       turn_imageselect_to_list = function() {
+
                         # get the data frames to update and the image select ids
                         data_frames <- self$get_export_data_list_names()
                         is_ids <- self$sm_framework$get_imageselect_ids()
@@ -985,12 +986,13 @@ Data <- R6::R6Class("Data",
                           join_vars <- c('ids')
                           names(join_vars) <- id
                           added_name <- paste0(id, "_list")
+
                           # each data frame
                           purrr::walk(data_frames, function(df) {
                             # if the id isn't there don't try to join it (the text/title versions of the data won't have the column)
                             if (id %in% colnames(self$data[[df]])) {
-                              out_think <- dplyr::left_join(x = self$data[[df]], y =  look_up,  by = join_vars) |> dplyr::select(titles)
-                              self$data[[df]] <<- unname(unlist(self$data[[df]] |> dplyr::mutate(!! sym(added_name) := out_think)))
+                              out_think <- unname(unlist(dplyr::left_join(x = self$data[[df]], y =  look_up,  by = join_vars) |> dplyr::select(titles)))
+                              self$data[[df]] <<-self$data[[df]] |> dplyr::mutate(!! sym(added_name) := out_think)
                             }
                           })
                           # add the new list to the framework definition currentposition
