@@ -2485,7 +2485,7 @@ Data <- R6::R6Class("Data",
                         for (i in 1:length(self$fragment_level_upload)) {
                           load_data <- self$fragment_level_upload[[i]]
                           # make sure that the column names are R compatable names
-                          purrr::walk(colnames(load_data), ~ {colnames(load_data)[colnames(load_data) == .x] <<- make.names(stringr::str_remove_all(.x, " "))})
+                         # purrr::walk(colnames(load_data), ~ {colnames(load_data)[colnames(load_data) == .x] <<- make.names(stringr::str_remove_all(.x, " "))})
                           colnames(load_data)[[1]] <- "FragmentID"
                           # stop if any of the columns already exist in the main data frame
                           if (any(unlist(purrr::map(colnames(load_data)[2:length(colnames(load_data))], ~ {.x %in% colnames(df)} )) == TRUE)) {
@@ -2516,7 +2516,7 @@ Data <- R6::R6Class("Data",
                           load_data <- self$FK_level_upload[[i]]
                           # make sure that the column names are R compatable names
                          # purrr::walk(colnames(load_data), ~ {colnames(load_data)[colnames(load_data) == .x] <<- make.names(stringr::str_remove_all(.x, " "))})
-                          df <-  dplyr::left_join(x = df, y = load_data, by = c(colnames(load_data)[[1]], colnames(load_data)[[1]]))
+                          df <-  dplyr::left_join(x = df, y = load_data, by = c(colnames(load_data)[[1]]))
                         }
 
 
