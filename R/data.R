@@ -2518,6 +2518,7 @@ Data <- R6::R6Class("Data",
                          # purrr::walk(colnames(load_data), ~ {colnames(load_data)[colnames(load_data) == .x] <<- make.names(stringr::str_remove_all(.x, " "))})
                           df <-  dplyr::left_join(x = df, y = load_data, by = c(colnames(load_data)[[1]]))
                         }
+                        return(df)
 
 
                       }
