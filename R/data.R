@@ -2515,7 +2515,7 @@ Data <- R6::R6Class("Data",
                         for (i in 1:length(self$FK_level_upload)) {
                           load_data <- self$FK_level_upload[[i]]
                           # make sure that the column names are R compatable names
-                          purrr::walk(colnames(load_data), ~ {colnames(load_data)[colnames(load_data) == .x] <<- make.names(stringr::str_remove_all(.x, " "))})
+                         # purrr::walk(colnames(load_data), ~ {colnames(load_data)[colnames(load_data) == .x] <<- make.names(stringr::str_remove_all(.x, " "))})
                           df <-  dplyr::left_join(x = df, y = load_data, by = c(colnames(load_data)[[1]], colnames(load_data)[[1]]))
                         }
 
