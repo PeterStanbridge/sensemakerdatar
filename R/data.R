@@ -2517,6 +2517,11 @@ Data <- R6::R6Class("Data",
                           # make sure that the column names are R compatable names
                          # purrr::walk(colnames(load_data), ~ {colnames(load_data)[colnames(load_data) == .x] <<- make.names(stringr::str_remove_all(.x, " "))})
                           df <-  dplyr::left_join(x = df, y = load_data, by = c(colnames(load_data)[[1]]))
+                          col_name <- colnames(load_data)[[2]]
+                          col_values <- sort(unique(load_data[[2]]))
+                          temp_items <- data.frame(id = col_values, title = col_values, tooltip = col_values, visible = rep_len("TRUE", length(col_values)), other_signifier_id = rep_len("", length(col_values)))
+                          self$sm_framework$add_list(title = col_name, tooltip = col_name, allow_na = FALSE, fragment = FALSE, required = TRUE, sticky = FALSE,
+                                             items = temp_items, max_responses = 1, min_responses = 1, other_item_id = NA, other_signifier_id = NA, id = col_name)
                         }
                         return(df)
 
