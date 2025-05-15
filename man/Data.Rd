@@ -97,6 +97,10 @@ triad_01_image <- pt$get_triad_background_image(fw_triads[[1]])
 \item{\code{FK_level_upload}}{dataframe of fragment level list updates to data}
 
 \item{\code{stop_words}}{- stop words specific to this framework to use in any NLP requirements.}
+
+\item{\code{col_names_to_remove}}{- column names to remove from exports.}
+
+\item{\code{sig_ids_to_remove}}{- Signifier ids to remove from exports.}
 }
 \if{html}{\out{</div>}}
 }
@@ -1086,7 +1090,7 @@ Executes a query on the database and either updates existing data frames or adds
 \if{html}{\out{<a id="method-Data-turn_imageselect_to_list"></a>}}
 \if{latex}{\out{\hypertarget{method-Data-turn_imageselect_to_list}{}}}
 \subsection{Method \code{turn_imageselect_to_list()}}{
-Creates new list data and list definitions for image select signifier types - this function has side effects
+Creates new list data and list definitions for image select signifier types - this function has side effects and will be removed once the imageselect widget made compatable with list definition widgets
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Data$turn_imageselect_to_list()}\if{html}{\out{</div>}}
 }
