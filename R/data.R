@@ -1912,7 +1912,7 @@ Data <- R6::R6Class("Data",
                         dashboard_signifiers <- dashboard_definition$layout$attribute_id[which(!is.na(dashboard_definition$layout$attribute_id) & dashboard_definition$layout$attribute_id != "00000000-0000-0000-0000-000000000000")]
                         framework_signifiers_missing <- framework_signifier_ids[which(!(framework_signifier_ids %in% dashboard_signifiers))]
                         self$sig_ids_to_remove <- framework_signifiers_missing
-                        self$col_names_to_remove <- sensemakerframeworkrobject$get_col_names_ids(framework_signifiers_missing)
+                          self$col_names_to_remove <- sensemakerframeworkrobject$get_col_names_ids(framework_signifiers_missing)
                        # purrr::walk(col_names, ~ {df <<- df |> dplyr::select(-.x)})
                       #  df <- df |>  dplyr::select(-!!col_names)
                        # df <- df |> dplyr::select(-any_of(col_names[[2]]))
