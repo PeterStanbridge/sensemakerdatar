@@ -48,7 +48,9 @@ triad_01_image <- pt$get_triad_background_image(fw_triads[[1]])
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
-\item{\code{export_data_list_names}}{List of the data list names that are standard export data frames. NOTE - this will be user (coder) extensible}
+\item{\code{export_data_list_names}}{List of the data lists that are standard export with ids. NOTE - this will be user (coder) extensible}
+
+\item{\code{title_data_list_names}}{List of the data lists that are standard export but titles not ids.}
 
 \item{\code{is_invalid}}{Boolean - TRUE if the attempt is invalid}
 
@@ -108,6 +110,7 @@ triad_01_image <- pt$get_triad_background_image(fw_triads[[1]])
 \subsection{Public methods}{
 \itemize{
 \item \href{#method-Data-new}{\code{Data$new()}}
+\item \href{#method-Data-add_freetext_as_filter}{\code{Data$add_freetext_as_filter()}}
 \item \href{#method-Data-add_stop_words}{\code{Data$add_stop_words()}}
 \item \href{#method-Data-add_export_data_list_names}{\code{Data$add_export_data_list_names()}}
 \item \href{#method-Data-add_data_data_frame}{\code{Data$add_data_data_frame()}}
@@ -219,6 +222,25 @@ The csv is downloaded or passed or read and processed to prepare data for analyt
 
 \subsection{Returns}{
 A new `signifier` R6 class object and fields type by signifier id, signifier ids by type, and
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Data-add_freetext_as_filter"></a>}}
+\if{latex}{\out{\hypertarget{method-Data-add_freetext_as_filter}{}}}
+\subsection{Method \code{add_freetext_as_filter()}}{
+Adds the data values from one or more freetext signifiers as a data filter (i.e. list). Only df1
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Data$add_freetext_as_filter(freetext_ids, max_count = 10)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{freetext_ids}}{- A vector of freetext ids to add as filters in the system}
+
+\item{\code{max_count}}{- default 10. The maximum number of unique values within any of the freetext values to be allowed to add as a filter.}
+}
+\if{html}{\out{</div>}}
 }
 }
 \if{html}{\out{<hr>}}

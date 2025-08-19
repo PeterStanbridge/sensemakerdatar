@@ -38,8 +38,10 @@
 #' triad_01_image <- pt$get_triad_background_image(fw_triads[[1]])
 Data <- R6::R6Class("Data",
                     public = list(
-                      #' @field export_data_list_names List of the data list names that are standard export data frames. NOTE - this will be user (coder) extensible
-                      export_data_list_names = c("df1", "dat", "df_keep", "title_data", "df_chat_titles"),
+                      #' @field export_data_list_names List of the data lists that are standard export with ids. NOTE - this will be user (coder) extensible
+                      export_data_list_names = c("df1", "dat", "df_keep"),
+                      #' @field title_data_list_names List of the data lists that are standard export but titles not ids.
+                      title_data_list_names = c("title_data", "df_chat_titles"),
                       #' @field is_invalid Boolean - TRUE if the attempt is invalid
                       is_invalid = FALSE,
                       #' @field has_zero_records Boolean - TRUE if the data retrieval returns no records
@@ -142,6 +144,42 @@ Data <- R6::R6Class("Data",
                                                            polymorphic_definition_json, fragment_level_csv, fragment_level_parsed,
                                                            FK_level_csv, FK_level_parsed, upload_na_identifier)
 
+                      },
+                      #' @description Adds the data values from one or more freetext signifiers as a data filter (i.e. list). Only df1
+                      #' @param freetext_ids - A vector of freetext ids to add as filters in the system
+                      #' @param max_count - default 10. The maximum number of unique values within any of the freetext values to be allowed to add as a filter.
+                      add_freetext_as_filter = function(freetext_ids, max_count = 10) {
+                        stopifnot(is.numeric(max_count))
+                        stopifnot(max_count > 0)
+                        # If freetext_ids passed in as null or blank, then use all.
+                        if (any(trimws(freetext_ids) == "") & !all(trimws(freetext_ids) == "")) {
+                          freetext_ids <- freetext_ids[which(trimws(freetext_ids) != "")]
+                        }
+                        # If freetext_ids passed in as null or blank, then use all.
+                        if (is.null(freetext_ids) || all(trimws(freetext_ids) == "")) {
+                          freetext_ids <- purrr::keep(self$sm_framework$get_freetext_ids(), function(freetext_id) {
+                            length(unique(self$data$df1[[freetext_id]])) < max_count
+                          })
+                        }
+                        # freetext_ids must be freetext
+                        stopifnot(all(freetext_ids %in% self$sm_framework$get_freetext_ids(keep_only_include = TRUE)))
+                        stopifnot(length(purrr::keep(freetext_ids, function(freetext_id) {
+                          length(unique(self$data$df1[[freetext_id]])) > max_count
+                        })) == 0)
+
+                        #we are all good to go
+                        # each freetext
+                        purrr::walk(freetext_ids, function(freetext_id) {
+                          # use df_keep for the text values
+                          freetext_values <- sort(unique(self$data[["df_keep"]][[freetext_id]]))
+                          temp_title <- self$sm_framework$get_signifier_title(freetext_id)
+                          temp_items <- data.frame(id = stringr::str_replace(freetext_values, "\\s{1,}", "_"), title = freetext_values, tooltip = freetext_values, visible = rep_len("TRUE", length(freetext_values)), other_signifier_id = rep_len("", length(freetext_values)))
+                          self$sm_framework$add_list(title = temp_title, tooltip = temp_title, allow_na = FALSE, fragment = FALSE, required = FALSE, sticky = FALSE, items = temp_items,  max_responses = 1, min_responses = 1, other_item_id = NULL, other_signifier_id = NULL, sig_class = "freetext_filter", theader = NULL, id = paste0(freetext_id, "_", "freetext_filter"))
+                          # now update each dataframe with the new freetext column as filter
+                          purrr::walk(self$get_export_data_list_names(), function(df_name) {
+                            self$data[[df_name]][[paste0(freetext_id, "_", "freetext_filter")]] <<- self$data[[df_name]][[freetext_id]]
+                          })
+                        })
                       },
                       #' @description Add stop words associated with the fragments in this framework data
                       #' @param stop_words - A vector of stopwords, setting to NULL will clear the stop_list
@@ -1912,11 +1950,12 @@ Data <- R6::R6Class("Data",
                         dashboard_signifiers <- dashboard_definition$layout$attribute_id[which(!is.na(dashboard_definition$layout$attribute_id) & dashboard_definition$layout$attribute_id != "00000000-0000-0000-0000-000000000000")]
                         framework_signifiers_missing <- framework_signifier_ids[which(!(framework_signifier_ids %in% dashboard_signifiers))]
                         self$sig_ids_to_remove <- framework_signifiers_missing
-                          self$col_names_to_remove <- sensemakerframeworkrobject$get_col_names_ids(framework_signifiers_missing)
-                       # purrr::walk(col_names, ~ {df <<- df |> dplyr::select(-.x)})
-                      #  df <- df |>  dplyr::select(-!!col_names)
-                       # df <- df |> dplyr::select(-any_of(col_names[[2]]))
-                        purrr::walk(framework_signifiers_missing, ~ {sensemakerframeworkrobject$change_signifier_include(.x, value = FALSE)}, sensemakerframeworkrobject)
+                        self$col_names_to_remove <- sensemakerframeworkrobject$get_col_names_ids(framework_signifiers_missing)
+                        df <- private$remove_the_signifiers(framework_signifiers_missing, df, sensemakerframeworkrobject)
+                        # purrr::walk(col_names, ~ {df <<- df |> dplyr::select(-.x)})
+                        #  df <- df |>  dplyr::select(-!!col_names)
+                        # df <- df |> dplyr::select(-any_of(col_names[[2]]))
+                        #purrr::walk(framework_signifiers_missing, ~ {sensemakerframeworkrobject$change_signifier_include(.x, value = FALSE)}, sensemakerframeworkrobject)
 
 
                         # if this is a combined dashboard, then get each mapping framework and process
@@ -2119,7 +2158,10 @@ Data <- R6::R6Class("Data",
                         framework_signifier_ids <- sensemakerframeworkrobject$get_all_signifier_ids(keep_only_include = TRUE)
                         dashboard_signifiers <- dashboard_definition$signifierID[which(!is.na(dashboard_definition$signifierID) & dashboard_definition$signifierID != "00000000-0000-0000-0000-000000000000")]
                         framework_signifiers_missing <- framework_signifier_ids[which(!(framework_signifier_ids %in% dashboard_signifiers))]
-                        purrr::walk(framework_signifiers_missing, ~ {sensemakerframeworkrobject$change_signifier_include(.x, value = FALSE)}, sensemakerframeworkrobject)
+                        self$sig_ids_to_remove <- framework_signifiers_missing
+                        self$col_names_to_remove <- sensemakerframeworkrobject$get_col_names_ids(framework_signifiers_missing)
+                        df <- private$remove_the_signifiers(framework_signifiers_missing, df, sensemakerframeworkrobject)
+                        #purrr::walk(framework_signifiers_missing, ~ {sensemakerframeworkrobject$change_signifier_include(.x, value = FALSE)}, sensemakerframeworkrobject)
 
                         # if this is a combined dashboard, then get each mapping framework and process
                         if (self$is_combined_dashboard()) {
@@ -2540,8 +2582,17 @@ Data <- R6::R6Class("Data",
                         return(df)
 
 
-                      }
+                      },
 
+                      # If a dashboard has restricted signifiers then get rid of them from the framework definition and remove the columns from the database.
+                      # sig_ids - the ones to remove
+                      remove_the_signifiers = function(sig_ids, df, sensemakerframeworkrobject) {
+                        purrr::walk(sig_ids, function(sig_id) {
+                          df <<- df |> select(-starts_with(sig_id))
+                          sensemakerframeworkrobject$remove_signifier_definition(tid = sig_id)
+                        })
+                        return(df)
+                      }
 
 
 
