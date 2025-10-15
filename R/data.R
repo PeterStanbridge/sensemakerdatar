@@ -217,6 +217,31 @@ Data <- R6::R6Class("Data",
                         self$data <- append(self$data, temp_list)
                         if (add_to_export_list_names) {self$add_export_data_list_names(name)}
                       },
+                      #' @description Set signifier_include to FALSE for signifier data columns that are all NA - checks df1
+                      #' @param signifier_types - default NULL, The signifier type to check. Must be a valid signifier type in used_signifier_types. If NULL all used signifier types
+                      remove_all_null_signifiers = function(signifier_types = NULL) {
+
+                        if (!is.null(signifier_types)) {
+                          stopifnot(signifier_types %in% self$sm_framework$get_used_signifier_types())
+                        } else {
+                          signifier_types <- self$sm_framework$get_used_signifier_types()
+                        }
+
+                        purrr::walk(signifier_types, function(signifier_type) {
+
+                          sig_ids <- self$sm_framework$get_signifier_ids_by_type(signifier_type, keep_only_include = TRUE)
+
+                          purrr::walk(sig_ids, function(sig_id){
+
+                            col_name <- self$sm_framework$get_a_col_name(sig_id)
+
+                            if (all(is.na(self$data[["df1"]][[col_name]]))) {
+
+                              self$sm_framework$change_signifier_include(sig_id, FALSE)
+                            }
+                          })
+                        })
+                      },
                       #' @description get the data lists names
                       #' @param export_only default FALSE, if TRUE return only those that are in the export list names
                       #' These are names of data entries that are standard SM data frames
@@ -285,7 +310,7 @@ Data <- R6::R6Class("Data",
                           self$add_column_to_dataframe(temp_df)
                           # Now add the values as a list in the framework definition
                           reg_title <-  paste(self$sm_framework$get_signifier_title(stones_id), self$sm_framework$get_stones_stone_title_by_id(stones_id, stone_id), "region")
-                          items <- sort(region_file[["name"]])
+                          items <- as.character(sort(region_file[["name"]]))
                           item_df <- data.frame(id = items, title = items, tooltip = items, visible = rep_len(TRUE, length(items)), other_signifier_id = rep_len("", length(items)))
                           self$sm_framework$add_list(title = reg_title, tooltip = reg_title, allow_na = FALSE, fragment = FALSE, required = TRUE, sticky = FALSE, items = item_df,
                                                      max_responses = 1, min_responses = 1, other_item_id = "", other_signifier_id = "", sig_class = "region", id = paste0(stones_id, "_", stone_id, "_Region"))
@@ -1462,8 +1487,7 @@ Data <- R6::R6Class("Data",
                                                                                           fragment = FALSE, required = FALSE, sticky = FALSE,
                                                                                           items = list_items,  max_responses = 1, min_responses = 1,
                                                                                           other_item_id = NULL, other_signifier_id = NULL, sig_class = "multi_select_item",
-                                                                                          theader = NULL, id = paste0(.y, "_", .x, "_selected"));
-                                                      sensemakerframeworkrobject$change_signifier_include(id = paste0(.y, "_", .x, "_selected"), value = FALSE)})},
+                                                                                          theader = NULL, id = paste0(.y, "_", .x, "_selected"))})},
                                     list_items)
 
                         # add the date and columns as filters to framework definition - side effects on the sensemakerframeworkrobject object
