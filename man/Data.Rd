@@ -114,6 +114,7 @@ triad_01_image <- pt$get_triad_background_image(fw_triads[[1]])
 \item \href{#method-Data-add_stop_words}{\code{Data$add_stop_words()}}
 \item \href{#method-Data-add_export_data_list_names}{\code{Data$add_export_data_list_names()}}
 \item \href{#method-Data-add_data_data_frame}{\code{Data$add_data_data_frame()}}
+\item \href{#method-Data-remove_all_null_signifiers}{\code{Data$remove_all_null_signifiers()}}
 \item \href{#method-Data-get_data_list_names}{\code{Data$get_data_list_names()}}
 \item \href{#method-Data-get_export_data_list_names}{\code{Data$get_export_data_list_names()}}
 \item \href{#method-Data-get_data_dataframe}{\code{Data$get_data_dataframe()}}
@@ -297,6 +298,23 @@ Add a new data frame name to the data list object
 \item{\code{name}}{- the name to give the data frame in the data list.}
 
 \item{\code{add_to_export_list_names}}{- if this is a standard data data frame then whether to add to the}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Data-remove_all_null_signifiers"></a>}}
+\if{latex}{\out{\hypertarget{method-Data-remove_all_null_signifiers}{}}}
+\subsection{Method \code{remove_all_null_signifiers()}}{
+Set signifier_include to FALSE for signifier data columns that are all NA - checks df1
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Data$remove_all_null_signifiers(signifier_types = NULL)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{signifier_types}}{- default NULL, The signifier type to check. Must be a valid signifier type in used_signifier_types. If NULL all used signifier types}
 }
 \if{html}{\out{</div>}}
 }
