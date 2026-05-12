@@ -14,6 +14,8 @@ A data list data object (normally data frame)
 
 NULL - adds columns to the data frames.
 
+List of data frames containing the original data frame with added columns all_present which is TRUE if each stone has been responded to otherwise FALSE and na_flags which show for each stone TRUE if the stone has been responded to otherwise FALSE
+
 A vector containing for each row of the data frame df, the mapped value.
 
 A single value, which will either be "none" (if all the data values are NA), "multiple" (if the mapping maps to more than one value) or the value mapped.
@@ -116,12 +118,14 @@ triad_01_image <- pt$get_triad_background_image(fw_triads[[1]])
 \item \href{#method-Data-add_data_data_frame}{\code{Data$add_data_data_frame()}}
 \item \href{#method-Data-remove_all_null_signifiers}{\code{Data$remove_all_null_signifiers()}}
 \item \href{#method-Data-get_data_list_names}{\code{Data$get_data_list_names()}}
+\item \href{#method-Data-mutate_column}{\code{Data$mutate_column()}}
 \item \href{#method-Data-get_export_data_list_names}{\code{Data$get_export_data_list_names()}}
 \item \href{#method-Data-get_data_dataframe}{\code{Data$get_data_dataframe()}}
 \item \href{#method-Data-add_stone_regions}{\code{Data$add_stone_regions()}}
 \item \href{#method-Data-add_column_to_dataframe}{\code{Data$add_column_to_dataframe()}}
 \item \href{#method-Data-add_fk_column_to_dataframe}{\code{Data$add_fk_column_to_dataframe()}}
 \item \href{#method-Data-add_ms_column_to_dataframe}{\code{Data$add_ms_column_to_dataframe()}}
+\item \href{#method-Data-get_stones_response_tables}{\code{Data$get_stones_response_tables()}}
 \item \href{#method-Data-get_ms_value}{\code{Data$get_ms_value()}}
 \item \href{#method-Data-get_single_ms_value}{\code{Data$get_single_ms_value()}}
 \item \href{#method-Data-get_stone_region}{\code{Data$get_stone_region()}}
@@ -338,6 +342,40 @@ These are names of data entries that are standard SM data frames}
 }
 }
 \if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Data-mutate_column"></a>}}
+\if{latex}{\out{\hypertarget{method-Data-mutate_column}{}}}
+\subsection{Method \code{mutate_column()}}{
+Mutate new column to the data frames
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Data$mutate_column(
+  data_frame_names = NULL,
+  code_string,
+  new_col_name,
+  all_export_only = FALSE,
+  add_new_to_export_only = TRUE,
+  add_mutated_to_framework = TRUE
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{data_frame_names}}{- default NULL, list of data frame names to update mutated column. Must be NULL if all_export_only not NULL. If any data frame is not in the list of export data frames, they will be created as new.}
+
+\item{\code{code_string}}{- a single character string with the code to execute the mutate}
+
+\item{\code{new_col_name}}{- a single character string with the name of the column to mutate.}
+
+\item{\code{all_export_only}}{- default FALSE, mutate all of the data frames to update mutated column. Must be FALSE if data_frames not NULL.}
+
+\item{\code{add_new_to_export_only}}{- default TRUE, any new data frames in the data_frames list will be added to the list of export data frames.}
+
+\item{\code{add_mutated_to_framework}}{- default TRUE, the new mutated column will be added as a list to the framework object.}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Data-get_export_data_list_names"></a>}}
 \if{latex}{\out{\hypertarget{method-Data-get_export_data_list_names}{}}}
 \subsection{Method \code{get_export_data_list_names()}}{
@@ -460,6 +498,31 @@ Add a multi_select MCQ interpretive column to one or more of the project data fr
 \item{\code{data_frame}}{- Default NULL, the name of the data frame to add the data too; must be in the Data list and have FragmentID as column name. .}
 
 \item{\code{add_to_data_list_dfs}}{- Default TRUE, add to all of the standard fragment data frames in DATA with FragmentID as column name.}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Data-get_stones_response_tables"></a>}}
+\if{latex}{\out{\hypertarget{method-Data-get_stones_response_tables}{}}}
+\subsection{Method \code{get_stones_response_tables()}}{
+Return a data frame of the stones giving which individual stones have been responded to by a response.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Data$get_stones_response_tables(
+  df = "df1",
+  stones_ids = NULL,
+  keep_only_include = TRUE
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{df}}{- Default "df1" - the name of the dataframe in the "data" list to check stones.}
+
+\item{\code{stones_ids}}{- Default NULL. If NULL, then all the stones otherwise a list of one or more stones IDs.}
+
+\item{\code{keep_only_include}}{- Default TRUE, if stones_ids is NULL only use the stones that have been set to use in the framework definition}
 }
 \if{html}{\out{</div>}}
 }

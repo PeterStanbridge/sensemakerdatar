@@ -249,6 +249,91 @@ Data <- R6::R6Class("Data",
                         if (export_only) {return(self$get_export_data_list_names())}
                         return(names(self$data))
                       },
+                      #' @description Mutate new column to the data frames
+                      #' @param data_frame_names - default NULL, list of data frame names to update mutated column. Must be NULL if all_export_only not NULL. If any data frame is not in the list of export data frames, they will be created as new.
+                      #' @param code_string - a single character string with the code to execute the mutate
+                      #' @param new_col_name - a single character string with the name of the column to mutate.
+                      #' @param all_export_only - default FALSE, mutate all of the data frames to update mutated column. Must be FALSE if data_frames not NULL.
+                      #' @param add_new_to_export_only - default TRUE, any new data frames in the data_frames list will be added to the list of export data frames.
+                      #' @param add_mutated_to_framework - default TRUE, the new mutated column will be added as a list to the framework object.
+                      #' @returns NULL
+                      mutate_column = function(data_frame_names = NULL, code_string, new_col_name, all_export_only = FALSE, add_new_to_export_only = TRUE, add_mutated_to_framework = TRUE) {
+
+                        stopifnot(((!is.null(data_frame_names) & isFALSE(all_export_only))) | (is.null(data_frame_names) & isTRUE(all_export_only)))
+                        stopifnot((isFALSE(all_export_only) & !is.null(data_frame_names)) | (isTRUE(all_export_only) & is.null(data_frame_names)))
+                        stopifnot(class(all_export_only) == "logical")
+                        stopifnot(class(add_mutated_to_framework) == "logical")
+                        if(!is.null(data_frame_names)) {
+                          valid_names <- sensemakerhelpersr::is_valid_name(data_frame_names)
+                          stopifnot(all(valid_names))
+                        }
+
+                        if (is.null(data_frame_names)) {
+                          df_to_use <- self$get_export_data_list_names()
+                        } else {
+                          df_to_use <- data_frame_names
+                        }
+
+                        new_dfs <- NULL
+                        if (!is.null(data_frame_names)) {
+                          new_dfs <- purrr::discard(df_to_use, ~ {.x %in% self$get_export_data_list_names()})
+                        }
+
+                        # Now mutate accross the data frames
+                        purrr::walk(df_to_use, function(df_name) {
+
+
+                          expr <- tryCatch(
+                            {
+                              rlang::parse_expr(code_string)
+                            },
+                            error = function(e) {
+                              stop(
+                                "The code string could not be parsed as valid R code:\n",
+                                conditionMessage(e),
+                                call. = FALSE
+                              )
+                            }
+                          )
+
+                          tryCatch(
+                            {
+                              if (df_name %in% new_dfs) {
+                                df <- self$data[["df1"]] %>%
+                                  mutate(
+                                    !!new_col_name := !!expr
+                                  )
+                                if (add_new_to_export_only) {
+                                  self$add_data_data_frame(data_frame = df, name = df_name, add_to_export_list_names = TRUE)
+                                }
+                              } else {
+                              self$data[[df_name]] <- self$data[[df_name]] %>%
+                                mutate(
+                                  !!new_col_name := !!expr
+                                )
+                              }
+                            },
+                            error = function(e) {
+                              stop(
+                                "The code string parsed successfully, but failed inside mutate():\n",
+                                conditionMessage(e),
+                                call. = FALSE
+                              )
+                            }
+                          )
+                        })
+
+                        # Add to the framework if requested.
+                        # get the unique values
+                        list_items <- sort(unique(fwd$data[[df_to_use[[1]]]][[new_col_name]]))
+                        list_items_df <- data.frame(id = list_items, title = list_items, tooltip = list_items,
+                                                 visible = rep_len(TRUE, length(list_items)), other_signifier_id = rep_len("", length(list_items)))
+                        self$sm_framework$add_list(title = new_col_name, tooltip = new_col_name, allow_na = FALSE, fragment = FALSE, required = TRUE, sticky = FALSE,
+                                                  items = list_items_df, max_responses = 1, min_responses = 1, other_item_id = "", other_signifier_id = "", sig_class = "signifier",
+                                                  theader = NULL, id = new_col_name)
+                      return(NULL)
+
+                      },
                       #' @description get the data list names that are standard export data data frames
                       #' @returns A vector of export data list names
                       get_export_data_list_names = function() {
@@ -269,7 +354,7 @@ Data <- R6::R6Class("Data",
                       #' @description Add stone regions to the data and framework definition from a file of region zones for a single stones id.
                       #' @param region_file - Default "dat", one of the data frames in the export data list (get_export_data_list_names method)
                       #' @param stones_id - Default NULL, a signifier id from the framework. Either this or the col_name must be provided.
-                      #' @returns
+                      #' @returns NULL
                       add_stone_regions = function(region_file, stones_id) {
                         stopifnot(stones_id %in% self$sm_framework$get_stones_ids())
                         stopifnot(!is.null(region_file))
@@ -316,13 +401,14 @@ Data <- R6::R6Class("Data",
                                                      max_responses = 1, min_responses = 1, other_item_id = "", other_signifier_id = "", sig_class = "region", id = paste0(stones_id, "_", stone_id, "_Region"))
 
                         })
+                        return(NULL)
 
                       },
                       #' @description Add a column to one or more of the project data frames based on one record per fragment.
                       #' @param df - Data frame to add to the data sets
                       #' @param data_frame - Default NULL, the name of the data frame to add the data too; must be in the Data list.
                       #' @param add_to_data_list_dfs - Default TRUE, add to all of the standard fragment data frames in DATA.
-                      #' @returns
+                      #' @returns NULL
                       add_column_to_dataframe = function(df, data_frame = NULL, add_to_data_list_dfs = TRUE) {
                         stopifnot(is.logical(add_to_data_list_dfs))
                         stopifnot((!is.null(data_frame) & isFALSE(add_to_data_list_dfs)) | (is.null(data_frame) & isTRUE(add_to_data_list_dfs)))
@@ -340,6 +426,7 @@ Data <- R6::R6Class("Data",
                             self$data[[df_name]] <<- dplyr::left_join(x = self$data[[df_name]], y = df, by = dplyr::join_by(FragmentID))
                           }
                         })
+                        return(NULL)
 
 
                       },
@@ -349,7 +436,7 @@ Data <- R6::R6Class("Data",
                       #' @param fk_column - The column name from the data frame to act as the foreign key lookup. Must also exist in df.
                       #' @param data_frame - Default NULL, the name of the data frame to add the data too; must be in the Data list and have FragmentID as column name. .
                       #' @param add_to_data_list_dfs - Default TRUE, add to all of the standard fragment data frames in DATA with FragmentID as column name.
-                      #' @returns
+                      #' @returns NULL
                       add_fk_column_to_dataframe = function(df, fk_column, data_frame = NULL, add_to_data_list_dfs = TRUE) {
 
                         stopifnot(is.logical(add_to_data_list_dfs))
@@ -364,11 +451,7 @@ Data <- R6::R6Class("Data",
                           # cannot have a value in the data frame being updated not in the df file. Otherwise a missing value to swap.
                           stopifnot(all(unique(self$data[[data_frame]][[fk_column]]) %in% unique(df[[fk_column]])))
                         }
-
-
-
-
-
+                        return(NULL)
                       },
 
 
@@ -432,6 +515,46 @@ Data <- R6::R6Class("Data",
                         })
                         return(NULL)
                       },
+                      # currentposition
+                      #' @description Return a data frame of the stones giving which individual stones have been responded to by a response.
+                      #' @param df - Default "df1" - the name of the dataframe in the "data" list to check stones.
+                      #' @param stones_ids - Default NULL. If NULL, then all the stones otherwise a list of one or more stones IDs.
+                      #' @param keep_only_include - Default TRUE, if stones_ids is NULL only use the stones that have been set to use in the framework definition
+                      #' @returns List of data frames containing the original data frame with added columns all_present which is TRUE if each stone has been responded to otherwise FALSE and na_flags which show for each stone TRUE if the stone has been responded to otherwise FALSE
+                      get_stones_response_tables = function(df = "df1", stones_ids = NULL, keep_only_include = TRUE) {
+                        # must be stones in the framework
+                        stopifnot(!is.null(self$sm_framework$get_stones_ids(keep_only_include = keep_only_include)))
+                        if (is.null(stones_ids)) {
+                          stones_ids <- self$sm_framework$get_stones_ids(keep_only_include = keep_only_include)
+                        } else {
+                          # stones must exist
+                          stopifnot(all(stones_ids %in% self$sm_framework$get_stones_ids(keep_only_include = keep_only_include)))
+                        }
+                        # data frame must be in the list of data frames and of export type (will have single row per response)
+                        stopifnot(df %in% self$get_data_list_names(export_only = TRUE))
+                        # create output list
+                        out_list <- vector("list", length = length(stones_ids))
+                        names(out_list) <- stones_ids
+                        purrr::walk(names(out_list), function(id) {
+                          col_names <- self$sm_framework$get_stones_compositional_column_names(id)
+                         temp_df <-  self$data[[df]] |> dplyr::select(all_of(purrr::keep(col_names,
+                                                                               ~ {stringr::str_ends(.x, pattern = "XRight")})))
+                         col_names <- colnames(temp_df)
+                         temp_df <-  temp_df |> dplyr::mutate(all_present = dplyr::if_all(tidyselect::all_of(col_names), ~ !is.na(.)))
+                         temp_df <- temp_df %>%
+                           rowwise() %>%
+                           mutate(
+                             na_flags = list(as.vector(unname(!is.na(c_across(all_of(col_names))))))
+                           ) %>%
+                           ungroup()
+                         temp_df[["FragmentID"]] <- self$data[[df]][["FragmentID"]]
+                         temp_df <-  temp_df |> dplyr::select(dplyr::all_of(c("FragmentID", "all_present", "na_flags")))
+                         temp_df <- dplyr::left_join(self$data[[df]], temp_df, by = "FragmentID")
+                         out_list[[id]] <<- temp_df
+                        })
+                        return(out_list)
+                      },
+
 
                       #' @description Returns a list of mapped multi-select list values from a matching table and applies to a main fragment data dataframe. This is a bit of a helper function for the add_ms_column_to_dataframe function above, but could be useful for public use.
                       #' @param df - A main fragment signified data frame such as the df1 or dat dataframe to apply a multi-select map process.
@@ -1062,7 +1185,7 @@ Data <- R6::R6Class("Data",
                               self$data[[df]] <<-self$data[[df]] |> dplyr::mutate(!! sym(added_name) := out_think)
                             }
                           })
-                          # add the new list to the framework definition currentposition
+                          # add the new list to the framework definition
                           list_items <- data.frame(id = look_up[["titles"]], title = look_up[["titles"]],
                                                    tooltip = look_up[["titles"]], visible = rep_len(TRUE, length.out = nrow(look_up)),
                                                    other_signifier_id = rep_len("", length.out = nrow(look_up)))
