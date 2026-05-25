@@ -3,7 +3,7 @@
 \docType{class}
 \name{Data}
 \alias{Data}
-\title{R6 class that contains and manipulates framework data.}
+\title{merge two of the standard data frames from two different framework definitions based on mapping of ids in the data_frame_names file.}
 \format{
 \code{\link{R6Class}} object.
 }
@@ -38,6 +38,12 @@ title versions, new columns for %age dyads, transform stone and triad data to ab
 proportion from %age values, add zones and if requested add frameworkr metadata.
 If there is a dashboard requested it will combine data if a combined dashboard, update
 frameworkr with additional signifier definitions and combine and filter data where appropriate.data
+}
+\details{
+R6 class that contains and manipulates framework data.
+
+
+The csv is downloaded or passed or read and processed to prepare data for analytical work
 }
 \examples{
 # The package vignettes include extensive examples of working with the
@@ -119,6 +125,7 @@ triad_01_image <- pt$get_triad_background_image(fw_triads[[1]])
 \item \href{#method-Data-remove_all_null_signifiers}{\code{Data$remove_all_null_signifiers()}}
 \item \href{#method-Data-get_data_list_names}{\code{Data$get_data_list_names()}}
 \item \href{#method-Data-mutate_column}{\code{Data$mutate_column()}}
+\item \href{#method-Data-merge_data_frames}{\code{Data$merge_data_frames()}}
 \item \href{#method-Data-get_export_data_list_names}{\code{Data$get_export_data_list_names()}}
 \item \href{#method-Data-get_data_dataframe}{\code{Data$get_data_dataframe()}}
 \item \href{#method-Data-add_stone_regions}{\code{Data$add_stone_regions()}}
@@ -221,10 +228,6 @@ Create a new `data` object.
 }
 \if{html}{\out{</div>}}
 }
-\subsection{Details}{
-The csv is downloaded or passed or read and processed to prepare data for analytical work
-}
-
 \subsection{Returns}{
 A new `signifier` R6 class object and fields type by signifier id, signifier ids by type, and
 }
@@ -371,6 +374,37 @@ Mutate new column to the data frames
 \item{\code{add_new_to_export_only}}{- default TRUE, any new data frames in the data_frames list will be added to the list of export data frames.}
 
 \item{\code{add_mutated_to_framework}}{- default TRUE, the new mutated column will be added as a list to the framework object.}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Data-merge_data_frames"></a>}}
+\if{latex}{\out{\hypertarget{method-Data-merge_data_frames}{}}}
+\subsection{Method \code{merge_data_frames()}}{
+For now, just the columns in the map_file are kept. Later more control will be given.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Data$merge_data_frames(
+  source_framework,
+  target_framework,
+  source_data,
+  target_data,
+  map_file
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{source_framework}}{- Framework data object - source.}
+
+\item{\code{target_framework}}{- Framework data object - target}
+
+\item{\code{source_data}}{- Source data dataframe e.g. source's data$df1}
+
+\item{\code{map_file}}{- CSV file name that must contain columns target_sig_id, source_sig_id, map or the dataframe itself. Not all of the signifiers included are mapped - e.g. FragmentID so the map column contains "Y" or "N" indicating whether it is mapped.}
+
+\item{\code{targt_data}}{- Target data dataframe e.g. target's data$df1}
 }
 \if{html}{\out{</div>}}
 }

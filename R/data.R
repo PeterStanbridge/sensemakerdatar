@@ -334,6 +334,89 @@ Data <- R6::R6Class("Data",
                       return(NULL)
 
                       },
+                      #' @title merge two of the standard data frames from two different framework definitions based on mapping of ids in the data_frame_names file.
+                      #' @description For now, just the columns in the map_file are kept. Later more control will be given.
+                      #' @param source_framework - Framework data object - source.
+                      #' @param target_framework - Framework data object - target
+                      #' @param source_data - Source data dataframe e.g. source's data$df1
+                      #' @param targt_data - Target data dataframe e.g. target's data$df1
+                      #' @param map_file - CSV file name that must contain columns target_sig_id, source_sig_id, map or the dataframe itself. Not all of the signifiers included are mapped - e.g. FragmentID so the map column contains "Y" or "N" indicating whether it is mapped.
+                      #' @returns NULL
+                      merge_data_frames = function(source_framework, target_framework, source_data, target_data, map_file) {
+
+
+                        if (!is.data.frame(map_file)) {
+                          stopifnot(rlang::is_character(map_file))
+                          stopifnot(file.exists(map_file))
+                          map_file <- read.csv(file = map_file, check.names = FALSE,stringsAsFactors = FALSE)
+
+                        }
+
+                        stopifnot(c("target_sig_id",	"source_sig_id",	"map") %in% colnames(map_file))
+
+                        # select the map file columns
+
+                        target_data_df <- target_data |> dplyr::select(all_of(starts_with(map_file[["target_sig_id"]])))
+                        source_data_df <- source_data |> dplyr::select(all_of(starts_with(map_file[["source_sig_id"]])))
+                        #source_data_df <- source_data_df |> dplyr::select(!contains("XR"))
+                        #source_data_df <- source_data_df |> dplyr::select(!contains("_Zone"))
+                        source_data_df <- source_data_df |> dplyr::select(!any_of(contains(c("_Zone", "XR"))))
+                        target_data_df <- target_data_df |> dplyr::select(!any_of(contains(c("_Zone", "XR"))))
+                        # target_data_df <- target_data_df |> dplyr::select(!contains(any_of(c("_Zone", "XR"))))
+
+                        source_ids <- unname(unlist(map_file |> dplyr::filter(map == "Y") |> select(source_sig_id)))
+                        target_ids <- unname(unlist(map_file |> dplyr::filter(map == "Y") |> select(target_sig_id)))
+
+                        for (i in seq_along(source_ids)) {
+                          source_id <- source_ids[[i]]
+                          target_id <- target_ids[[i]]
+                          source_type <- source_framework$sm_framework$get_signifier_type_by_id(source_id)
+                          if (source_type == "triad") {
+                            source_col_names <- source_framework$sm_framework$get_triad_all_column_names(source_id, delist = TRUE, exclude_na = FALSE)
+                            target_col_names <- target_framework$sm_framework$get_triad_all_column_names(target_id, delist = TRUE, exclude_na = FALSE)
+                            rename_map <- setNames(source_col_names, target_col_names)
+                            source_data_df <- source_data_df |> dplyr::rename(any_of(rename_map))
+                          }
+                          if (source_type == "dyad") {
+                            source_col_names <- source_framework$sm_framework$get_dyad_all_column_names(source_id, delist = TRUE, exclude_na = FALSE)
+                            target_col_names <- target_framework$sm_framework$get_dyad_all_column_names(target_id, delist = TRUE, exclude_na = FALSE)
+                            rename_map <- setNames(source_col_names, target_col_names)
+                            source_data_df <- source_data_df |> dplyr::rename(any_of(rename_map))
+                          }
+                          if (source_type == "freetext") {
+                            if (paste0(source_id, "_NA") %in% colnames(source_data_df)) {
+                              source_data_df <- source_data_df |> dplyr::select(!paste0(source_id, "_NA"))
+                            }
+                            if (paste0(target_id, "_NA") %in% colnames(target_data_df)) {
+                              target_data_df <- target_data_df |> dplyr::select(!paste0(target_id, "_NA"))
+                            }
+                            rename_map <- setNames(source_id, target_id)
+                            source_data_df <- source_data_df |> dplyr::rename(rename_map)
+                          }
+                          # List is the complicated one as we have to alter each of the values
+                          if (source_type == "list") {
+                            stopifnot(source_framework$sm_framework$get_list_max_responses(source_id) == 1)
+                            source_list_item_ids <- source_framework$sm_framework$get_list_items_ids(source_id)
+                            target_list_item_ids <- target_framework$sm_framework$get_list_items_ids(target_id)
+                            # make the NA stuff work currentposition
+                            if (paste0(source_id, "_NA") %in% colnames(source_data_df)) {
+                              source_data_df <- source_data_df |> dplyr::select(!paste0(source_id, "_NA"))
+                              target_data_df <- target_data_df |> dplyr::select(!paste0(target_id, "_NA"))
+                            }
+                            rename_map <- setNames(target_list_item_ids, source_list_item_ids)
+                            source_data_df <- source_data_df %>%
+                              mutate(
+                                "{source_id}" := rename_map[.data[[source_id]]]
+                              )
+                            # source_framework$sm_framework$get_list_column_names()
+                            rename_map <- setNames(source_id, target_id)
+                            source_data_df <- source_data_df |> dplyr::rename(any_of(rename_map))
+                          }
+
+                        }
+                        combined_df <- dplyr::bind_rows(target_data_df, source_data_df)
+                        return(combined_df)
+                      },
                       #' @description get the data list names that are standard export data data frames
                       #' @returns A vector of export data list names
                       get_export_data_list_names = function() {
@@ -1160,6 +1243,7 @@ Data <- R6::R6Class("Data",
                             }
                           })
                         }
+
                       },
                       #' @description
                       #' Creates new list data and list definitions for image select signifier types - this function has side effects and will be removed once the imageselect widget made compatable with list definition widgets
