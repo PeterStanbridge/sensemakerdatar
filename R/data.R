@@ -51,6 +51,9 @@ Data <- R6::R6Class("Data",
                       # this will be a list of lists containing the data.
                       #' @field data The full list of data objects keyed by the name of the field. NOTE - this will be user (coder) extensible
                       data = list(NULL),
+                      # this will be a list of constrainedmatrix summary tables for use in statistical and graphical processing
+                      #' @field data The full list of data objects keyed by the name of the field. NOTE - this will be user (coder) extensible
+                      constrainedmatrix_groupings = list(NULL),
                       # Common lists used from within the data list- all initially set to full dataset
                       #  #' @field df1 The full dataset for any given framework, thus if linked framework selected, will have only the linked framework data, not the full set
                       #  #' NOTE Depreciated
@@ -266,6 +269,35 @@ Data <- R6::R6Class("Data",
                           return(self$data[[name]])
                         }
                       },
+                      #' @description build the constrainedmatrix groupings tables from the full long version of the constrainedmatrix data. This is public because the scale and ranking data could be changed in the framework definition requiring a rebuild.
+                      #' @param df_constrainedmatrix - Default NULL, A df_constrainedmatrix entry or all of the entries - a named list containing one or more of the long form constrainedmatrix data. If NULL, self list will be used.
+                      #' @param sensemakerframeworkrobject - Default NULL, The sensemakerframeworkobject. If NULL, take the self$sm_framework.
+                      #' @returns
+                      build_connstrainedmatrix_groupings = function(df_constrainedmatrix = NULL, sensemakerframeworkrobject = NULL) {
+                        if (is.null(df_constrainedmatrix)) {
+                          df_constrainedmatrix <- self$data$df_constrainedmatrix
+                        }
+                        if (is.null(sensemakerframeworkrobject)) {
+                          sensemakerframeworkrobject <- self$sm_framework
+                        }
+                       stopifnot(all(names(df_constrainedmatrix) %in% names(self$data$df_constrainedmatrix)))
+
+                        self$constrainedmatrix_groupings <- vector("list", length = length(names(df_constrainedmatrix)))
+                        names(self$constrainedmatrix_groupings) <- names(df_constrainedmatrix)
+
+                        purrr::walk(names(df_constrainedmatrix), function(matrix_id) {
+                          self$constrainedmatrix_groupings[[matrix_id]] <<- df_constrainedmatrix[[matrix_id]] |> dplyr::group_by(row_id, col_id) %>%
+                            dplyr::summarize(total_value = sum(value, na.rm = TRUE), .groups = "drop_last") |>
+                            dplyr::mutate(proportion = total_value / sum(total_value, na.rm = TRUE)) |> ungroup() |>
+                            dplyr::mutate(flow_id = paste0(row_id, "_", col_id))
+                        })
+# ToDo  work out the reduce method as it is failing at times on the grouop
+                      #  self$constrainedmatrix_groupings <- purrr::reduce(names(df_constrainedmatrix), function(grpings, matrix_id) {
+                      #    grpings[[matrix_id]] <- df_constrainedmatrix[[matrix_id]] |> group_by(row_id, col_id) %>%
+                       #     summarize(total_value = sum(value, na.rm = TRUE), .groups = "drop_last")
+                       # }, .init = constrainedmatrix_groupings)
+                      },
+
                       #' @description Add stone regions to the data and framework definition from a file of region zones for a single stones id.
                       #' @param region_file - Default "dat", one of the data frames in the export data list (get_export_data_list_names method)
                       #' @param stones_id - Default NULL, a signifier id from the framework. Either this or the col_name must be provided.
@@ -740,7 +772,7 @@ Data <- R6::R6Class("Data",
                       #' @return The names in the data data.frame
                       get_framework_data_names = function(return_type = "system") {
                         if (!(return_type %in% c("user", "system", "both"))) {return(NULL)}
-                        system <- c("df1", "dat", "df_keep", "df_multi_select", "df_multi_select_full", "stone_data", "title_data", "title_use")
+                        system <- c("df1", "dat", "df_keep", "df_multi_select", "df_multi_select_full", "df_constrainedmatrix", "stone_data", "title_data", "title_use")
                         if (return_type == "system") {return(system)}
                         if (return_type == "both") {return(names(self$data))}
                         if (return_type == "user") {return(names(self$data[-pmatch(system, names(self$data))]))}
@@ -783,6 +815,17 @@ Data <- R6::R6Class("Data",
                           return(self$data[["df_multi_select_full"]])
                         } else {
                           return(self$data[["df_multi_select_full"]][[id]])
+                        }
+                      },
+                      #' @description
+                      #' Get the df_constrainedmatrix data
+                      #' @param id - Default NULL, return all constrainedmatrix dataframes otherwise return the one passed.
+                      #' @return A list of data frames if id is NULL otherwise a single data frame for the passed in id.
+                      get_df_constrainedmatrix_data = function(id = NULL) {
+                        if(is.null(id)) {
+                          return(self$data[["df_constrainedmatrix"]])
+                        } else {
+                          return(self$data[["df_constrainedmatrix"]][[id]])
                         }
                       },
                       #' @description
@@ -1093,8 +1136,8 @@ Data <- R6::R6Class("Data",
                                           fragment_level_csv, fragment_level_parsed, FK_level_csv, FK_level_parsed, upload_na_identifier) {
 
                         # populate the data class fields including the generic array "data" which can be extended by application developers
-                        self$data <- vector("list", length = 9)
-                        names(self$data) <- c("df1", "dat", "df_keep",  "df_multi_select", "df_multi_select_full", "stone_data", "title_data", "title_use", "df_chat_titles")
+                        self$data <- vector("list", length = 10)
+                        names(self$data) <- c("df1", "dat", "df_keep",  "df_multi_select", "df_multi_select_full", "stone_data", "title_data", "title_use", "df_chat_titles", "df_constrainedmatrix")
 
                         if (all(is.null(c(framework_id, dashboard_id)))) {
                           self$is_invalid <- TRUE
@@ -1549,7 +1592,9 @@ Data <- R6::R6Class("Data",
                         # multi-select MCQ data into new long form tables
                         #self$df_multi_select_full <- private$transform_multi_select(df, sensemakerframeworkrobject)
                         self$data[["df_multi_select_full"]] <- private$transform_multi_select(df, sensemakerframeworkrobject)
-
+                        self$data[["df_constrainedmatrix"]] <- private$transform_constrainedmatrix(df, sensemakerframeworkrobject)
+                       # self$constrainedmatrix_groupings <- self$build_connstrainedmatrix_groupings(self$data[["df_constrainedmatrix"]], sensemakerframeworkrobject)
+                        self$build_connstrainedmatrix_groupings(self$data[["df_constrainedmatrix"]], sensemakerframeworkrobject)
                         # ------------- Process stones ---------------
                         # Calculate stone ratios
                         self$stone_ratios <- private$getStoneRatios(df, sensemakerframeworkrobject)
@@ -2072,9 +2117,6 @@ Data <- R6::R6Class("Data",
                               max = max(ServerEntryDate))
                           if (difftime(min_max_date[, "max"], from_dte, units = c("days")) > 0) {return(df)}
                           if (difftime(to_dte, min_max_date[, "min"], units = c("days")) < 0) {return(df)}
-
-                          print("we are here doing the date filter")
-                          print(paste("from date", from_dte, "to date", to_dte))
                           qry <- paste0("ServerEntryDate >= ", "\"",  from_dte, "\"",  " & ServerEntryDate <= ", "\"", to_dte, "\"")
                           query_string <- ifelse(is.null(query_string), qry, paste0(query_string, " & ", qry))
 
@@ -2396,6 +2438,48 @@ Data <- R6::R6Class("Data",
                           multi_MCQs[[i]][["attributeKey"]] <- factor(multi_MCQs[[i]][["attributeKey"]], levels = multi_IDs[[i]])
                         }
                         return(multi_MCQs)
+                      },
+
+                      # put the constrainedmatrix data into long form structure ready for graphing and processing
+                      transform_constrainedmatrix = function(df, sensemakerframeworkrobject) {
+                        # No data at all so just return with the emmty tdf1
+                        if (nrow(df) == 0) {
+                          return(NULL)
+                        }
+                        constrainedmatrix_IDs <- sensemakerframeworkrobject$get_constrainedmatrix_ids()
+                        # No multi-select MCQs in project so return just the df
+                        if (is.null(constrainedmatrix_IDs)) {
+                          return(NULL)
+                        }
+
+                        constrainedmatrixes <- vector("list", length(constrainedmatrix_IDs))
+                        names(constrainedmatrixes) <- constrainedmatrix_IDs
+                        constrainedmatrix_out <- purrr::reduce(constrainedmatrix_IDs, function(cms, cm_id) {
+                          cols <- sensemakerframeworkrobject$get_constrainedmatrix_items_df_column_names(cm_id)
+                          data_all <- df |> tidyr::drop_na(any_of(cols)) |> dplyr::select(all_of(c("FragmentID", cols)))
+
+                          cms[[cm_id]] <- data_all %>%
+                            tidyr::pivot_longer(
+                              cols = dplyr::all_of(cols),
+                              names_to = c("matrix_id", "row_id", "col_id"),
+                              names_sep = "_",
+                              values_to = "value"
+                            ) %>%
+                            dplyr::mutate(
+                              value = as.integer(value),
+                              df_row_id = dplyr::row_number()) |>
+                            dplyr::select(
+                              df_row_id,
+                              FragmentID,
+                              matrix_id,
+                              row_id,
+                              col_id,
+                              value
+                            )
+
+                          return(cms)
+                        }, .init = constrainedmatrixes)
+                        return(constrainedmatrix_out)
                       },
 
                       # get the stone ratios of each of the stone canvases - note legacy commented out code still left here for now.
