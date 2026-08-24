@@ -288,7 +288,7 @@ Data <- R6::R6Class("Data",
                         purrr::walk(names(df_constrainedmatrix), function(matrix_id) {
                           self$constrainedmatrix_groupings[[matrix_id]] <<- df_constrainedmatrix[[matrix_id]] |> dplyr::group_by(row_id, col_id) %>%
                             dplyr::summarize(total_value = sum(value, na.rm = TRUE), .groups = "drop_last") |>
-                            dplyr::mutate(proportion = total_value / sum(total_value, na.rm = TRUE)) |> ungroup() |>
+                            dplyr::mutate(proportion = total_value / sum(total_value, na.rm = TRUE)) |> dplyr::ungroup() |>
                             dplyr::mutate(flow_id = paste0(row_id, "_", col_id))
                         })
 # ToDo  work out the reduce method as it is failing at times on the grouop
@@ -1409,7 +1409,12 @@ Data <- R6::R6Class("Data",
                         self$framework_title <- self$sm_framework$get_parent_framework_name()
                         # start processing data
                         #self$df1 <- private$process_data(df, sensemakerframeworkrobject)
-                        self$data[["df1"]] <- private$process_data(df, sensemakerframeworkrobject)
+                        df1 <- private$process_data(df, sensemakerframeworkrobject)
+
+                        # add the constrainedmatrix data if there are any (this is constrained matrix as lists)
+                        df1 <- private$add_constrainedmatrix(df1, self$sm_framework)
+
+                        self$data[["df1"]] <- df1
 
 
 
@@ -2438,6 +2443,49 @@ Data <- R6::R6Class("Data",
                           multi_MCQs[[i]][["attributeKey"]] <- factor(multi_MCQs[[i]][["attributeKey"]], levels = multi_IDs[[i]])
                         }
                         return(multi_MCQs)
+                      },
+
+                      # In this code we are going to turn the constrained matrix data into a standard single select mcq format.
+
+                      add_constrainedmatrix = function(data, framework) {
+
+                        # Only if there are any constrained matrix otherwise return the data back.
+                        if (is.null(framework$get_constrainedmatrix_ids())) {return(data)}
+
+                        cm_ids <- framework$get_constrainedmatrix_ids()
+                        for (cm_idx in seq_along(cm_ids)) {
+                          cm_id <- cm_ids[[cm_idx]]
+                          row_ids <- framework$get_constrainedmatrix_row_ids(cm_id)
+                          for (row_idx in seq_along(row_ids)) {
+                            row_id <- row_ids[[row_idx]]
+                            df_col_names <- framework$get_constrainedmatrix_items_df_column_names(cm_id, row_id)
+                            col_name <- paste0(cm_id, "_", row_id)
+                            col <- vector("list", length = nrow(data))
+                            for (frag_idx in seq_along(data[["FragmentID"]])) {
+                              if (any(is.na(data[frag_idx, df_col_names]))) {
+                                col[frag_idx] <- NA
+                              } else {
+                                if (all(data[frag_idx, df_col_names] == FALSE)) {
+                                  col[frag_idx] <- NA
+                                } else {
+                                  actual_col <- stringr::str_split_i(df_col_names[[which(data[frag_idx, df_col_names] == TRUE)]], "_", 3)
+                                  col[frag_idx] <- actual_col
+                                }
+                              }
+                            }
+                            data[[col_name]] <- unlist(col)
+                            col_title <- paste0(framework$get_signifier_title(cm_id), " : ", framework$get_constrainedmatrix_individual_row_item_title(cm_id, row_id))
+                            col_item_titles <- framework$get_constrainedmatrix_col_titles(cm_id)
+                            col_ids <- framework$get_constrainedmatrix_col_ids(cm_id)
+                            list_items <- data.frame(id = col_ids, title = col_item_titles, tooltip = col_item_titles, visible = rep_len(TRUE, length.out = length(col_ids)), other_signifier_id = rep_len(NA, length.out = length(col_ids)))
+                            framework$add_list(title = col_title, tooltip = col_title, allow_na = FALSE, fragment = FALSE, required = TRUE, sticky = FALSE,
+                                                      items = list_items, max_responses = 1, min_responses = 1, other_item_id = NULL, other_signifier_id = NULL, sig_class = "constrainedmatrix", id = col_name)
+
+                          }
+
+                        }
+                        return(data)
+
                       },
 
                       # put the constrainedmatrix data into long form structure ready for graphing and processing
