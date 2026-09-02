@@ -1621,6 +1621,9 @@ Data <- R6::R6Class("Data",
                         # add the constrainedmatrix data if there are any (this is constrained matrix as lists)
                         df1 <- private$add_constrainedmatrix(df1, self$sm_framework)
 
+                        # add levels to all the single select lists
+                        df1 <- private$apply_list_levels(df1, self$sm_framework)
+
                         self$data[["df1"]] <- df1
 
 
@@ -2693,6 +2696,16 @@ Data <- R6::R6Class("Data",
                         }
                         return(data)
 
+                      },
+
+                      apply_list_levels = function(data, framework) {
+
+                        list_ids <- framework$get_single_select_list_ids(sig_class = "signifier")
+                        for (list_id in list_ids) {
+                          list_item_ids <- framework$get_list_items_ids(list_id)
+                          data[[list_id]] <- factor(data[[list_id]], levels = list_item_ids, ordered = TRUE)
+                        }
+                        return(data)
                       },
 
                       # put the constrainedmatrix data into long form structure ready for graphing and processing
