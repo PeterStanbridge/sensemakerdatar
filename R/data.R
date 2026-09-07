@@ -1211,10 +1211,18 @@ Data <- R6::R6Class("Data",
                           df <- df %>% dplyr::filter(include == "Y")
                           queries <- df[["expression"]]
                           data_names <- df[["name"]]
+
+                          if ("execute_direct" %in% colnames(df)) {
+                            execute_direct <- df[["execute_direct"]]
+                          } else {
+                            execute_direct <- rep_len(x = "N", length.out = nrow(df))
+                          }
                         }
                         stopifnot(length(queries) == length(data_names))
                         stopifnot(length(queries) == length(unique(data_names)))
-                        purrr::walk2(queries, data_names, ~ {self$execute_data_query(.x, NULL, .y)})
+                       # purrr::walk2(queries, data_names, ~ {self$execute_data_query(.x, NULL, .y)})
+                        purrr::pwalk(list(queries, data_names, execute_direct), function(query, data_name, execute_direct) {
+                          self$execute_data_query(query, NULL, data_name, execute_direct)})
                       },
 
                       #' @description
@@ -1224,7 +1232,7 @@ Data <- R6::R6Class("Data",
                       #' @param data_frames - default NULL, values "ALL" or a list of data names in the data list.
                       #' @param data_name - default NULL, the name of the new data list data frame entry if query to create a new entry
                       #' @returns the filtered data frame (note: the internal dataframe list will be also updated in accordance with whether data_frames or data_name passed)
-                      execute_data_query = function(query, data_frames = NULL, data_name = NULL) {
+                      execute_data_query = function(query, data_frames = NULL, data_name = NULL, execute_direct) {
                         # one and only one of data_frames and data_name can be passed.
                         stopifnot((is.null(data_frames) & !is.null(data_name)) | (!is.null(data_frames) & is.null(data_name)))
                         # data_name should only have one entry. Name should not already exist.
@@ -1254,8 +1262,13 @@ Data <- R6::R6Class("Data",
                                  , error = function(e) { return("ERROR") })
 
                         # do the main query
-                        filtered_data_string <- parse(text = paste0("self$data[['df1']] %>% dplyr::filter(", query, ")"))
-                        filtered_data <- eval(filtered_data_string)
+                        if (execute_direct == "Y") {
+                          filtered_data_string <- parse(text = query)
+                          filtered_data <- eval(filtered_data_string)
+                        } else {
+                         filtered_data_string <- parse(text = paste0("self$data[['df1']] %>% dplyr::filter(", query, ")"))
+                          filtered_data <- eval(filtered_data_string)
+                        }
                         if (!is.null(data_name)) {
                           self$add_data_data_frame(data_frame = filtered_data, name = data_name, add_to_export_list_names = TRUE)
                           return(filtered_data)

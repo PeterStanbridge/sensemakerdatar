@@ -68,6 +68,8 @@ triad_01_image <- pt$get_triad_background_image(fw_triads[[1]])
 
 \item{\code{data}}{The full list of data objects keyed by the name of the field. NOTE - this will be user (coder) extensible}
 
+\item{\code{data}}{The full list of data objects keyed by the name of the field. NOTE - this will be user (coder) extensible}
+
 \item{\code{stone_ratios}}{Stone ratios of each of the stone canvases}
 
 \item{\code{sm_framework}}{the framework definition}
@@ -128,6 +130,7 @@ triad_01_image <- pt$get_triad_background_image(fw_triads[[1]])
 \item \href{#method-Data-merge_data_frames}{\code{Data$merge_data_frames()}}
 \item \href{#method-Data-get_export_data_list_names}{\code{Data$get_export_data_list_names()}}
 \item \href{#method-Data-get_data_dataframe}{\code{Data$get_data_dataframe()}}
+\item \href{#method-Data-build_connstrainedmatrix_groupings}{\code{Data$build_connstrainedmatrix_groupings()}}
 \item \href{#method-Data-add_stone_regions}{\code{Data$add_stone_regions()}}
 \item \href{#method-Data-add_column_to_dataframe}{\code{Data$add_column_to_dataframe()}}
 \item \href{#method-Data-add_fk_column_to_dataframe}{\code{Data$add_fk_column_to_dataframe()}}
@@ -157,6 +160,7 @@ triad_01_image <- pt$get_triad_background_image(fw_triads[[1]])
 \item \href{#method-Data-get_df_keep_data}{\code{Data$get_df_keep_data()}}
 \item \href{#method-Data-get_df_multi_select_data}{\code{Data$get_df_multi_select_data()}}
 \item \href{#method-Data-get_df_multi_select_full_data}{\code{Data$get_df_multi_select_full_data()}}
+\item \href{#method-Data-get_df_constrainedmatrix_data}{\code{Data$get_df_constrainedmatrix_data()}}
 \item \href{#method-Data-get_stone_data_data}{\code{Data$get_stone_data_data()}}
 \item \href{#method-Data-get_stones_ratio}{\code{Data$get_stones_ratio()}}
 \item \href{#method-Data-get_title_data_data}{\code{Data$get_title_data_data()}}
@@ -435,6 +439,28 @@ get the data object (data frame) from data list object
 
 \item{\code{as_tibble}}{- default FALSE, if TRUE, export as a tidyverse tibble object.
 for those that are standard export data frames or get_data_list_names function for all of them)}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Data-build_connstrainedmatrix_groupings"></a>}}
+\if{latex}{\out{\hypertarget{method-Data-build_connstrainedmatrix_groupings}{}}}
+\subsection{Method \code{build_connstrainedmatrix_groupings()}}{
+build the constrainedmatrix groupings tables from the full long version of the constrainedmatrix data. This is public because the scale and ranking data could be changed in the framework definition requiring a rebuild.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Data$build_connstrainedmatrix_groupings(
+  df_constrainedmatrix = NULL,
+  sensemakerframeworkrobject = NULL
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{df_constrainedmatrix}}{- Default NULL, A df_constrainedmatrix entry or all of the entries - a named list containing one or more of the long form constrainedmatrix data. If NULL, self list will be used.}
+
+\item{\code{sensemakerframeworkrobject}}{- Default NULL, The sensemakerframeworkobject. If NULL, take the self$sm_framework.}
 }
 \if{html}{\out{</div>}}
 }
@@ -952,6 +978,26 @@ A list of data frames if id is NULL otherwise a single data frame for the passed
 }
 }
 \if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Data-get_df_constrainedmatrix_data"></a>}}
+\if{latex}{\out{\hypertarget{method-Data-get_df_constrainedmatrix_data}{}}}
+\subsection{Method \code{get_df_constrainedmatrix_data()}}{
+Get the df_constrainedmatrix data
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Data$get_df_constrainedmatrix_data(id = NULL)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{id}}{- Default NULL, return all constrainedmatrix dataframes otherwise return the one passed.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+A list of data frames if id is NULL otherwise a single data frame for the passed in id.
+}
+}
+\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Data-get_stone_data_data"></a>}}
 \if{latex}{\out{\hypertarget{method-Data-get_stone_data_data}{}}}
 \subsection{Method \code{get_stone_data_data()}}{
@@ -1208,7 +1254,12 @@ Executes a list of queryies on the database and either updates existing data fra
 \subsection{Method \code{execute_data_query()}}{
 Executes a query on the database and either updates existing data frames or adds a new one
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Data$execute_data_query(query, data_frames = NULL, data_name = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Data$execute_data_query(
+  query,
+  data_frames = NULL,
+  data_name = NULL,
+  execute_direct
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
