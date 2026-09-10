@@ -1133,7 +1133,8 @@ Executes a list of queryies on the database and either updates existing data fra
   query_file = NULL,
   query_df = NULL,
   queries = NULL,
-  data_names = NULL
+  data_names = NULL,
+  add_source_column = FALSE
 )}\if{html}{\out{</div>}}
 }
 
@@ -1147,6 +1148,8 @@ Executes a list of queryies on the database and either updates existing data fra
 \item{\code{queries}}{- a vector of the queries to execute. In double quotes so internal quotes to be single.}
 
 \item{\code{data_names}}{- The names of the new data list data frame entries A vector the same length as queries}
+
+\item{\code{add_source_column}}{- add the query_file "name" value as a column to each data frame created (used in many stats functions)}
 }
 \if{html}{\out{</div>}}
 }
@@ -1161,7 +1164,8 @@ Executes a query on the database and either updates existing data frames or adds
   query,
   data_frames = NULL,
   data_name = NULL,
-  execute_direct
+  execute_direct,
+  add_source_column
 )}\if{html}{\out{</div>}}
 }
 
@@ -1173,6 +1177,8 @@ Executes a query on the database and either updates existing data frames or adds
 \item{\code{data_frames}}{- default NULL, values "ALL" or a list of data names in the data list.}
 
 \item{\code{data_name}}{- default NULL, the name of the new data list data frame entry if query to create a new entry}
+
+\item{\code{add_source_column}}{- add the query_file "name" value as a column to each data frame created (used in many stats functions)}
 }
 \if{html}{\out{</div>}}
 }
