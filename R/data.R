@@ -448,7 +448,7 @@ Data <- R6::R6Class("Data",
                         if (is.null(sensemakerframeworkrobject)) {
                           sensemakerframeworkrobject <- self$sm_framework
                         }
-                       stopifnot(all(names(df_constrainedmatrix) %in% names(self$data$df_constrainedmatrix)))
+                        stopifnot(all(names(df_constrainedmatrix) %in% names(self$data$df_constrainedmatrix)))
 
                         self$constrainedmatrix_groupings <- vector("list", length = length(names(df_constrainedmatrix)))
                         names(self$constrainedmatrix_groupings) <- names(df_constrainedmatrix)
@@ -459,11 +459,11 @@ Data <- R6::R6Class("Data",
                             dplyr::mutate(proportion = total_value / sum(total_value, na.rm = TRUE)) |> dplyr::ungroup() |>
                             dplyr::mutate(flow_id = paste0(row_id, "_", col_id))
                         })
-# ToDo  work out the reduce method as it is failing at times on the grouop
-                      #  self$constrainedmatrix_groupings <- purrr::reduce(names(df_constrainedmatrix), function(grpings, matrix_id) {
-                      #    grpings[[matrix_id]] <- df_constrainedmatrix[[matrix_id]] |> group_by(row_id, col_id) %>%
-                       #     summarize(total_value = sum(value, na.rm = TRUE), .groups = "drop_last")
-                       # }, .init = constrainedmatrix_groupings)
+                        # ToDo  work out the reduce method as it is failing at times on the grouop
+                        #  self$constrainedmatrix_groupings <- purrr::reduce(names(df_constrainedmatrix), function(grpings, matrix_id) {
+                        #    grpings[[matrix_id]] <- df_constrainedmatrix[[matrix_id]] |> group_by(row_id, col_id) %>%
+                        #     summarize(total_value = sum(value, na.rm = TRUE), .groups = "drop_last")
+                        # }, .init = constrainedmatrix_groupings)
                       },
 
                       #' @description Add stone regions to the data and framework definition from a file of region zones for a single stones id.
@@ -1193,8 +1193,9 @@ Data <- R6::R6Class("Data",
                       #' @param query_df - default NULL, a data frame previously read from a query_file file.
                       #' @param queries - a vector of the queries to execute. In double quotes so internal quotes to be single.
                       #' @param data_names - The names of the new data list data frame entries A vector the same length as queries
+                      #' @param add_source_column - add the query_file "name" value as a column to each data frame created (used in many stats functions)
                       #' @returns NULL
-                      execute_queries = function(query_file = NULL, query_df = NULL, queries = NULL, data_names = NULL) {
+                      execute_queries = function(query_file = NULL, query_df = NULL, queries = NULL, data_names = NULL, add_source_column = FALSE) {
                         # queries and data_names vectors must be the same length and data_names unique
                         if (!is.null(query_file)) {
                           stopifnot(file.exists(query_file))
@@ -1220,9 +1221,9 @@ Data <- R6::R6Class("Data",
                         }
                         stopifnot(length(queries) == length(data_names))
                         stopifnot(length(queries) == length(unique(data_names)))
-                       # purrr::walk2(queries, data_names, ~ {self$execute_data_query(.x, NULL, .y)})
+                        # purrr::walk2(queries, data_names, ~ {self$execute_data_query(.x, NULL, .y)})
                         purrr::pwalk(list(queries, data_names, execute_direct), function(query, data_name, execute_direct) {
-                          self$execute_data_query(query, NULL, data_name, execute_direct)})
+                          self$execute_data_query(query, NULL, data_name, execute_direct, add_source_column)})
                       },
 
                       #' @description
@@ -1231,8 +1232,9 @@ Data <- R6::R6Class("Data",
                       #' @param query - the query to execute. In double quotes so internal quotes to be single.
                       #' @param data_frames - default NULL, values "ALL" or a list of data names in the data list.
                       #' @param data_name - default NULL, the name of the new data list data frame entry if query to create a new entry
+                      #' @param add_source_column - add the query_file "name" value as a column to each data frame created (used in many stats functions)
                       #' @returns the filtered data frame (note: the internal dataframe list will be also updated in accordance with whether data_frames or data_name passed)
-                      execute_data_query = function(query, data_frames = NULL, data_name = NULL, execute_direct) {
+                      execute_data_query = function(query, data_frames = NULL, data_name = NULL, execute_direct, add_source_column) {
                         # one and only one of data_frames and data_name can be passed.
                         stopifnot((is.null(data_frames) & !is.null(data_name)) | (!is.null(data_frames) & is.null(data_name)))
                         # data_name should only have one entry. Name should not already exist.
@@ -1266,10 +1268,13 @@ Data <- R6::R6Class("Data",
                           filtered_data_string <- parse(text = query)
                           filtered_data <- eval(filtered_data_string)
                         } else {
-                         filtered_data_string <- parse(text = paste0("self$data[['df1']] %>% dplyr::filter(", query, ")"))
+                          filtered_data_string <- parse(text = paste0("self$data[['df1']] %>% dplyr::filter(", query, ")"))
                           filtered_data <- eval(filtered_data_string)
                         }
                         if (!is.null(data_name)) {
+                          if (add_source_column) {
+                            filtered_data <- filtered_data |> dplyr::mutate(source = data_name)
+                          }
                           self$add_data_data_frame(data_frame = filtered_data, name = data_name, add_to_export_list_names = TRUE)
                           return(filtered_data)
                         }
@@ -1821,7 +1826,7 @@ Data <- R6::R6Class("Data",
                         #self$df_multi_select_full <- private$transform_multi_select(df, sensemakerframeworkrobject)
                         self$data[["df_multi_select_full"]] <- private$transform_multi_select(df, sensemakerframeworkrobject)
                         self$data[["df_constrainedmatrix"]] <- private$transform_constrainedmatrix(df, sensemakerframeworkrobject)
-                       # self$constrainedmatrix_groupings <- self$build_connstrainedmatrix_groupings(self$data[["df_constrainedmatrix"]], sensemakerframeworkrobject)
+                        # self$constrainedmatrix_groupings <- self$build_connstrainedmatrix_groupings(self$data[["df_constrainedmatrix"]], sensemakerframeworkrobject)
                         self$build_connstrainedmatrix_groupings(self$data[["df_constrainedmatrix"]], sensemakerframeworkrobject)
                         # ------------- Process stones ---------------
                         # Calculate stone ratios
@@ -2702,7 +2707,7 @@ Data <- R6::R6Class("Data",
                             col_ids <- framework$get_constrainedmatrix_col_ids(cm_id)
                             list_items <- data.frame(id = col_ids, title = col_item_titles, tooltip = col_item_titles, visible = rep_len(TRUE, length.out = length(col_ids)), other_signifier_id = rep_len(NA, length.out = length(col_ids)))
                             framework$add_list(title = col_title, tooltip = col_title, allow_na = FALSE, fragment = FALSE, required = TRUE, sticky = FALSE,
-                                                      items = list_items, max_responses = 1, min_responses = 1, other_item_id = NULL, other_signifier_id = NULL, sig_class = "constrainedmatrix", id = col_name)
+                                               items = list_items, max_responses = 1, min_responses = 1, other_item_id = NULL, other_signifier_id = NULL, sig_class = "constrainedmatrix", id = col_name)
 
                           }
 
