@@ -199,7 +199,8 @@ Create a new `data` object.
   fragment_level_parsed = "",
   FK_level_csv = "",
   FK_level_parsed = "",
-  upload_na_identifier = ""
+  upload_na_identifier = "",
+  file_return_filter = NULL
 )}\if{html}{\out{</div>}}
 }
 
@@ -229,11 +230,13 @@ Create a new `data` object.
 \item{\code{FK_level_parsed}}{- an already parsed (read) csv as additional data columns linked by FK}
 
 \item{\code{upload_na_identifier}}{- The identifier in the csv files for NA values - this should be consistent through all files. Typically "" or "NA"}
+
+\item{\code{file_return_filter}}{- default NULL - a filter to apply to the data as soon as it is returned from the api or csv file.}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Returns}{
-A new `signifier` R6 class object and fields type by signifier id, signifier ids by type, and
+A new `signifier` R6 class object and fields type by signifier id, signifier ids by type
 }
 }
 \if{html}{\out{<hr>}}
@@ -1262,7 +1265,8 @@ Executes a query on the database and either updates existing data frames or adds
   data_frames = NULL,
   data_name = NULL,
   execute_direct,
-  add_source_column
+  add_source_column,
+  data_frame_name
 )}\if{html}{\out{</div>}}
 }
 
@@ -1276,6 +1280,8 @@ Executes a query on the database and either updates existing data frames or adds
 \item{\code{data_name}}{- default NULL, the name of the new data list data frame entry if query to create a new entry}
 
 \item{\code{add_source_column}}{- add the query_file "name" value as a column to each data frame created (used in many stats functions)}
+
+\item{\code{data_frame_name}}{- The name of the data frame to execute the query over. Must exist in the list of data frames.}
 }
 \if{html}{\out{</div>}}
 }

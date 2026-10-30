@@ -139,13 +139,14 @@ Data <- R6::R6Class("Data",
                       #' @param FK_level_csv - a csv file containing additional data columns linked by a FK - i.e. the id values of a signifier other than the fragmentID - e.g. county linked to city id
                       #' @param FK_level_parsed - an already parsed (read) csv as additional data columns linked by FK
                       #' @param upload_na_identifier - The identifier in the csv files for NA values - this should be consistent through all files. Typically "" or "NA"
-                      #' @return A new `signifier` R6 class object and fields type by signifier id, signifier ids by type, and
+                      #' @param file_return_filter - default NULL - a filter to apply to the data as soon as it is returned from the api or csv file.
+                      #' @return A new `signifier` R6 class object and fields type by signifier id, signifier ids by type
                       initialize = function(csvfilename = "", csvfiledf = "", framework_id = "", dashboard_id = "",
                                             token = "", sensemakerframeworkrobject = "", polymorphic_definition_json = "", fragment_level_csv = "",
-                                            fragment_level_parsed = "", FK_level_csv = "", FK_level_parsed = "", upload_na_identifier = "") {
+                                            fragment_level_parsed = "", FK_level_csv = "", FK_level_parsed = "", upload_na_identifier = "", file_return_filter = NULL) {
                         sensemakerdata <- private$get_data(csvfilename, csvfiledf, framework_id, dashboard_id, token, sensemakerframeworkrobject,
                                                            polymorphic_definition_json, fragment_level_csv, fragment_level_parsed,
-                                                           FK_level_csv, FK_level_parsed, upload_na_identifier)
+                                                           FK_level_csv, FK_level_parsed, upload_na_identifier, file_return_filter)
 
                       },
                       #' @description Adds the data values from one or more freetext signifiers as a data filter (i.e. list). Only df1
@@ -1218,12 +1219,26 @@ Data <- R6::R6Class("Data",
                           } else {
                             execute_direct <- rep_len(x = "N", length.out = nrow(df))
                           }
+
+                          if ("data_frame_name" %in% colnames(df)) {
+                            data_frame_name <- df[["data_frame_name"]]
+                          } else {
+                            data_frame_name <- rep_len(x = "df1", length.out = nrow(df))
+                          }
                         }
+                        loop <- 1:nrow(df)
+                        data_frame_name <- purrr::reduce2(data_frame_name, loop, function(internal_frame, df_name, i) {
+                          if (is.na(df_name)) {internal_frame[[i]] <-"df1"}
+                          return(internal_frame)
+                        }, .init = data_frame_name)
+
+
                         stopifnot(length(queries) == length(data_names))
                         stopifnot(length(queries) == length(unique(data_names)))
+                        stopifnot(all(data_frame_name %in% names(self$data)))
                         # purrr::walk2(queries, data_names, ~ {self$execute_data_query(.x, NULL, .y)})
-                        purrr::pwalk(list(queries, data_names, execute_direct), function(query, data_name, execute_direct) {
-                          self$execute_data_query(query, NULL, data_name, execute_direct, add_source_column)})
+                        purrr::pwalk(list(queries, data_names, execute_direct, data_frame_name), function(query, data_name, execute_direct, data_frame_name) {
+                          self$execute_data_query(query, NULL, data_name, execute_direct, add_source_column, data_frame_name)})
                       },
 
                       #' @description
@@ -1233,8 +1248,10 @@ Data <- R6::R6Class("Data",
                       #' @param data_frames - default NULL, values "ALL" or a list of data names in the data list.
                       #' @param data_name - default NULL, the name of the new data list data frame entry if query to create a new entry
                       #' @param add_source_column - add the query_file "name" value as a column to each data frame created (used in many stats functions)
+                      #' @param data_frame_name - The name of the data frame to execute the query over. Must exist in the list of data frames.
                       #' @returns the filtered data frame (note: the internal dataframe list will be also updated in accordance with whether data_frames or data_name passed)
-                      execute_data_query = function(query, data_frames = NULL, data_name = NULL, execute_direct, add_source_column) {
+                      execute_data_query = function(query, data_frames = NULL, data_name = NULL, execute_direct, add_source_column, data_frame_name) {
+                        stopifnot(data_frame_name %in% names(self$data))
                         # one and only one of data_frames and data_name can be passed.
                         stopifnot((is.null(data_frames) & !is.null(data_name)) | (!is.null(data_frames) & is.null(data_name)))
                         # data_name should only have one entry. Name should not already exist.
@@ -1268,7 +1285,7 @@ Data <- R6::R6Class("Data",
                           filtered_data_string <- parse(text = query)
                           filtered_data <- eval(filtered_data_string)
                         } else {
-                          filtered_data_string <- parse(text = paste0("self$data[['df1']] %>% dplyr::filter(", query, ")"))
+                          filtered_data_string <- parse(text = paste0("self$data[['", data_frame_name, "']] %>% dplyr::filter(", query, ")"))
                           filtered_data <- eval(filtered_data_string)
                         }
                         if (!is.null(data_name)) {
@@ -1358,7 +1375,7 @@ Data <- R6::R6Class("Data",
                                          "meta_started_location_altitudeAccuracy"),
                       # function handling the initialisation - get the data, process the data and load appropriate fields
                       get_data = function(csvfilename, csvfiledf, framework_id, dashboard_id, token, sensemakerframeworkrobject, polymorphic_definition_json,
-                                          fragment_level_csv, fragment_level_parsed, FK_level_csv, FK_level_parsed, upload_na_identifier) {
+                                          fragment_level_csv, fragment_level_parsed, FK_level_csv, FK_level_parsed, upload_na_identifier, file_return_filter) {
 
                         # populate the data class fields including the generic array "data" which can be extended by application developers
                         self$data <- vector("list", length = 10)
@@ -1614,9 +1631,29 @@ Data <- R6::R6Class("Data",
                           stop()
                         }
 
-
                         # apply dates as we wll need them for filtering
                         df <- private$apply_dates(df)
+
+
+                        # apply file return filters
+                        if (!is.null(file_return_filter)) {
+                          #currentposition
+                          if (trimws(file_return_filter) == "") {return(NULL)}
+                          # set up parse query and catch a parse error - return ERROR if there is one.
+                          parse_query <- function(file_return_filter) {
+                            return(parse(text = file_return_filter))
+                          }
+                          tryCatch(withCallingHandlers(parse_query(file_return_filter), error = function(e) {write.to.log(sys.calls())}
+                                                       , warning=function(w) {write.to.log(sys.calls())
+                                                         invokeRestart("muffleWarning")})
+                                   , error = function(e) { return("ERROR") })
+
+
+                            filtered_data_string <- parse(text = paste0("df %>% dplyr::filter(", file_return_filter, ")"))
+                            df <- eval(filtered_data_string)
+                          }
+
+
 
                         # assign the framework json definition to field
                         self$framework_definition_json <- sensemakerframeworkrobject$framework_json
