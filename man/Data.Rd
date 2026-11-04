@@ -29,6 +29,8 @@ Count of the number of non-responses by the respondent.
 The signifier ID associated with the column name else NULL
 
 the filtered data frame (note: the internal dataframe list will be also updated in accordance with whether data_frames or data_name passed)
+
+NULL - updates data as a side effect.
 }
 \description{
 The `data` class is the primary class for
@@ -68,7 +70,7 @@ triad_01_image <- pt$get_triad_background_image(fw_triads[[1]])
 
 \item{\code{data}}{The full list of data objects keyed by the name of the field. NOTE - this will be user (coder) extensible}
 
-\item{\code{data}}{The full list of data objects keyed by the name of the field. NOTE - this will be user (coder) extensible}
+\item{\code{constrainedmatrix_groupings}}{this will be a list of constrainedmatrix summary tables for use in statistical and graphical processing}
 
 \item{\code{stone_ratios}}{Stone ratios of each of the stone canvases}
 
@@ -177,6 +179,7 @@ triad_01_image <- pt$get_triad_background_image(fw_triads[[1]])
 \item \href{#method-Data-add_accumulation_data}{\code{Data$add_accumulation_data()}}
 \item \href{#method-Data-execute_queries}{\code{Data$execute_queries()}}
 \item \href{#method-Data-execute_data_query}{\code{Data$execute_data_query()}}
+\item \href{#method-Data-add_merged_titles}{\code{Data$add_merged_titles()}}
 \item \href{#method-Data-turn_imageselect_to_list}{\code{Data$turn_imageselect_to_list()}}
 \item \href{#method-Data-clone}{\code{Data$clone()}}
 }
@@ -200,7 +203,10 @@ Create a new `data` object.
   FK_level_csv = "",
   FK_level_parsed = "",
   upload_na_identifier = "",
-  file_return_filter = NULL
+  file_return_filter = NULL,
+  file_return_function_call = NULL,
+  file_return_function_call_parameters = NULL,
+  file_return_function_call_use_fw = FALSE
 )}\if{html}{\out{</div>}}
 }
 
@@ -232,6 +238,12 @@ Create a new `data` object.
 \item{\code{upload_na_identifier}}{- The identifier in the csv files for NA values - this should be consistent through all files. Typically "" or "NA"}
 
 \item{\code{file_return_filter}}{- default NULL - a filter to apply to the data as soon as it is returned from the api or csv file.}
+
+\item{\code{file_return_function_call}}{- default NULL - a function to call with parameters (following parameter) to call as soon as the data is returned from the api or csv file.}
+
+\item{\code{file_return_function_call_parameters}}{- default NULL - parameters if any to the function call.}
+
+\item{\code{file_return_function_call_use_fw}}{- default FALSE - if TRUE, pass the framework object as last parameter into the function call as "fw"}
 }
 \if{html}{\out{</div>}}
 }
@@ -1279,9 +1291,43 @@ Executes a query on the database and either updates existing data frames or adds
 
 \item{\code{data_name}}{- default NULL, the name of the new data list data frame entry if query to create a new entry}
 
+\item{\code{execute_direct}}{- Yes or No whether to execute the whole string as a tidyverse dplyr string or No, it is just the query part.}
+
 \item{\code{add_source_column}}{- add the query_file "name" value as a column to each data frame created (used in many stats functions)}
 
 \item{\code{data_frame_name}}{- The name of the data frame to execute the query over. Must exist in the list of data frames.}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Data-add_merged_titles"></a>}}
+\if{latex}{\out{\hypertarget{method-Data-add_merged_titles}{}}}
+\subsection{Method \code{add_merged_titles()}}{
+Executes a function on the data to create new column values by merging existing values in some of the list items.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Data$add_merged_titles(
+  data = self$data$df1,
+  source,
+  target,
+  merges,
+  title_fun = fw$get_list_item_title,
+  fw = NULL
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{data}}{- the data frame to update - default self$data$df1.}
+
+\item{\code{source}}{- The column name to be the source of merged titles.}
+
+\item{\code{target}}{- The new column name to create with the merged values}
+
+\item{\code{merges}}{- A list containing one ore more pairs of title (new merged value) and value (a vector of values that are merged)}
+
+\item{\code{title_fun}}{- A function name to get the titlesof the non-merged values as we are assuming in this function we will be outputting titles, not ids.}
 }
 \if{html}{\out{</div>}}
 }
