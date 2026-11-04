@@ -52,7 +52,7 @@ Data <- R6::R6Class("Data",
                       #' @field data The full list of data objects keyed by the name of the field. NOTE - this will be user (coder) extensible
                       data = list(NULL),
                       # this will be a list of constrainedmatrix summary tables for use in statistical and graphical processing
-                      #' @field data The full list of data objects keyed by the name of the field. NOTE - this will be user (coder) extensible
+                      #' @field constrainedmatrix_groupings this will be a list of constrainedmatrix summary tables for use in statistical and graphical processing
                       constrainedmatrix_groupings = list(NULL),
                       # Common lists used from within the data list- all initially set to full dataset
                       #  #' @field df1 The full dataset for any given framework, thus if linked framework selected, will have only the linked framework data, not the full set
@@ -140,13 +140,18 @@ Data <- R6::R6Class("Data",
                       #' @param FK_level_parsed - an already parsed (read) csv as additional data columns linked by FK
                       #' @param upload_na_identifier - The identifier in the csv files for NA values - this should be consistent through all files. Typically "" or "NA"
                       #' @param file_return_filter - default NULL - a filter to apply to the data as soon as it is returned from the api or csv file.
+                      #' @param file_return_function_call - default NULL - a function to call with parameters (following parameter) to call as soon as the data is returned from the api or csv file.
+                      #' @param file_return_function_call_parameters - default NULL - parameters if any to the function call.
+                      #' @param file_return_function_call_use_fw - default FALSE - if TRUE, pass the framework object as last parameter into the function call as "fw"
                       #' @return A new `signifier` R6 class object and fields type by signifier id, signifier ids by type
                       initialize = function(csvfilename = "", csvfiledf = "", framework_id = "", dashboard_id = "",
                                             token = "", sensemakerframeworkrobject = "", polymorphic_definition_json = "", fragment_level_csv = "",
-                                            fragment_level_parsed = "", FK_level_csv = "", FK_level_parsed = "", upload_na_identifier = "", file_return_filter = NULL) {
+                                            fragment_level_parsed = "", FK_level_csv = "", FK_level_parsed = "", upload_na_identifier = "", file_return_filter = NULL,
+                                            file_return_function_call = NULL, file_return_function_call_parameters = NULL, file_return_function_call_use_fw = FALSE) {
                         sensemakerdata <- private$get_data(csvfilename, csvfiledf, framework_id, dashboard_id, token, sensemakerframeworkrobject,
                                                            polymorphic_definition_json, fragment_level_csv, fragment_level_parsed,
-                                                           FK_level_csv, FK_level_parsed, upload_na_identifier, file_return_filter)
+                                                           FK_level_csv, FK_level_parsed, upload_na_identifier, file_return_filter, file_return_function_call,
+                                                           file_return_function_call_parameters, file_return_function_call_use_fw)
 
                       },
                       #' @description Adds the data values from one or more freetext signifiers as a data filter (i.e. list). Only df1
@@ -273,7 +278,7 @@ Data <- R6::R6Class("Data",
                       #' @description build the constrainedmatrix groupings tables from the full long version of the constrainedmatrix data. This is public because the scale and ranking data could be changed in the framework definition requiring a rebuild.
                       #' @param df_constrainedmatrix - Default NULL, A df_constrainedmatrix entry or all of the entries - a named list containing one or more of the long form constrainedmatrix data. If NULL, self list will be used.
                       #' @param sensemakerframeworkrobject - Default NULL, The sensemakerframeworkobject. If NULL, take the self$sm_framework.
-                      #' @returns
+                      #' @returns NULL
                       build_connstrainedmatrix_groupings = function(df_constrainedmatrix = NULL, sensemakerframeworkrobject = NULL) {
                         if (is.null(df_constrainedmatrix)) {
                           df_constrainedmatrix <- self$data$df_constrainedmatrix
@@ -302,7 +307,7 @@ Data <- R6::R6Class("Data",
                       #' @description Add stone regions to the data and framework definition from a file of region zones for a single stones id.
                       #' @param region_file - Default "dat", one of the data frames in the export data list (get_export_data_list_names method)
                       #' @param stones_id - Default NULL, a signifier id from the framework. Either this or the col_name must be provided.
-                      #' @returns
+                      #' @returns NULL
                       add_stone_regions = function(region_file, stones_id) {
                         stopifnot(stones_id %in% self$sm_framework$get_stones_ids())
                         stopifnot(!is.null(region_file))
@@ -355,7 +360,7 @@ Data <- R6::R6Class("Data",
                       #' @param df - Data frame to add to the data sets
                       #' @param data_frame - Default NULL, the name of the data frame to add the data too; must be in the Data list.
                       #' @param add_to_data_list_dfs - Default TRUE, add to all of the standard fragment data frames in DATA.
-                      #' @returns
+                      #' @returns NULL
                       add_column_to_dataframe = function(df, data_frame = NULL, add_to_data_list_dfs = TRUE) {
                         stopifnot(is.logical(add_to_data_list_dfs))
                         stopifnot((!is.null(data_frame) & isFALSE(add_to_data_list_dfs)) | (is.null(data_frame) & isTRUE(add_to_data_list_dfs)))
@@ -382,7 +387,7 @@ Data <- R6::R6Class("Data",
                       #' @param fk_column - The column name from the data frame to act as the foreign key lookup. Must also exist in df.
                       #' @param data_frame - Default NULL, the name of the data frame to add the data too; must be in the Data list and have FragmentID as column name. .
                       #' @param add_to_data_list_dfs - Default TRUE, add to all of the standard fragment data frames in DATA with FragmentID as column name.
-                      #' @returns
+                      #' @returns NULL
                       add_fk_column_to_dataframe = function(df, fk_column, data_frame = NULL, add_to_data_list_dfs = TRUE) {
 
                         stopifnot(is.logical(add_to_data_list_dfs))
@@ -1042,6 +1047,7 @@ Data <- R6::R6Class("Data",
                       #' @param data_frames - default NULL, values "ALL" or a list of data names in the data list.
                       #' @param data_name - default NULL, the name of the new data list data frame entry if query to create a new entry
                       #' @param add_source_column - add the query_file "name" value as a column to each data frame created (used in many stats functions)
+                      #' @param execute_direct - Yes or No whether to execute the whole string as a tidyverse dplyr string or No, it is just the query part.
                       #' @param data_frame_name - The name of the data frame to execute the query over. Must exist in the list of data frames.
                       #' @returns the filtered data frame (note: the internal dataframe list will be also updated in accordance with whether data_frames or data_name passed)
                       execute_data_query = function(query, data_frames = NULL, data_name = NULL, execute_direct, add_source_column, data_frame_name) {
@@ -1117,6 +1123,63 @@ Data <- R6::R6Class("Data",
                         }
                       },
                       #' @description
+                      #' Executes a function on the data to create new column values by merging existing values in some of the list items.
+                      #'
+                      #' @param data - the data frame to update - default self$data$df1.
+                      #' @param source - The column name to be the source of merged titles.
+                      #' @param target - The new column name to create with the merged values
+                      #' @param merges - A list containing one ore more pairs of title (new merged value) and value (a vector of values that are merged)
+                      #' @param title_fun - A function name to get the titlesof the non-merged values as we are assuming in this function we will be outputting titles, not ids.
+                      #' @returns NULL - updates data as a side effect.
+                      add_merged_titles = function(data = self$data$df1, source, target, merges,
+                                                   title_fun = fw$get_list_item_title, fw = NULL) {
+
+                        merge_lookup <- tibble::enframe(
+                          merges,
+                          name = "title",
+                          value = "id"
+                        ) |>
+                          tidyr::unnest_longer(id)
+
+                        if (anyDuplicated(merge_lookup$id)) {
+                          stop("Each ID must appear in only one merge group.")
+                        }
+
+                        ids <- unique(as.character(data[[source]]))
+                        title_lookup <- tibble::tibble(id = ids) |>
+                          dplyr::left_join(merge_lookup, by = "id") |>
+                          dplyr::mutate(
+                            title = purrr::map2_chr(id, title, \(id, title) {
+                              if (is.na(id)) return(NA_character_)
+                              if (!is.na(title)) return(title)
+                              do.call(title_fun, args = list(source, id), envir = self)
+                            })
+                          )
+
+                        data <-  data |>
+                          dplyr::mutate(
+                            "{target}" := title_lookup$title[
+                              match(.data[[source]], title_lookup$id)
+                            ]
+                          )
+                        # now add the new merged list into the framework object
+                        #currentposition
+                        if (!is.null(fw)) {
+                          list_items <- sort(unique(data[[target]]))
+                          item_len <- length(list_items)
+                          list_items <- data.frame(id = list_items, title = list_items,
+                                                   tooltip = list_items, visible = rep_len(TRUE, length.out = item_len),
+                                                   other_signifier_id = rep_len("", length.out = item_len))
+                          list_title <- target
+                          fw$add_list(title = list_title, tooltip = list_title, allow_na = FALSE,
+                                                     fragment = FALSE, required = TRUE, sticky = FALSE,
+                                                     items = list_items,  max_responses = 1, min_responses = 1,
+                                                     other_item_id = NULL, other_signifier_id = NULL, sig_class = "image_select",
+                                                     theader = NULL, id = list_title)
+                        }
+                        return(data)
+                      },
+                      #' @description
                       #' Creates new list data and list definitions for image select signifier types - this function has side effects and will be removed once the imageselect widget made compatable with list definition widgets
                       #' @returns NULL
                       turn_imageselect_to_list = function() {
@@ -1140,7 +1203,7 @@ Data <- R6::R6Class("Data",
                               self$data[[df]] <<-self$data[[df]] |> dplyr::mutate(!! sym(added_name) := out_think)
                             }
                           })
-                          # add the new list to the framework definition currentposition
+                          # add the new list to the framework definition
                           list_items <- data.frame(id = look_up[["titles"]], title = look_up[["titles"]],
                                                    tooltip = look_up[["titles"]], visible = rep_len(TRUE, length.out = nrow(look_up)),
                                                    other_signifier_id = rep_len("", length.out = nrow(look_up)))
@@ -1168,7 +1231,8 @@ Data <- R6::R6Class("Data",
                                          "meta_started_location_altitudeAccuracy"),
                       # function handling the initialisation - get the data, process the data and load appropriate fields
                       get_data = function(csvfilename, csvfiledf, framework_id, dashboard_id, token, sensemakerframeworkrobject, polymorphic_definition_json,
-                                          fragment_level_csv, fragment_level_parsed, FK_level_csv, FK_level_parsed, upload_na_identifier, file_return_filter) {
+                                          fragment_level_csv, fragment_level_parsed, FK_level_csv, FK_level_parsed, upload_na_identifier, file_return_filter,
+                                          file_return_function_call, file_return_function_call_parameters ,file_return_function_call_use_fw) {
 
                         # populate the data class fields including the generic array "data" which can be extended by application developers
                         self$data <- vector("list", length = 10)
@@ -1430,7 +1494,7 @@ Data <- R6::R6Class("Data",
 
                         # apply file return filters
                         if (!is.null(file_return_filter)) {
-                          #currentposition
+
                           if (trimws(file_return_filter) == "") {return(NULL)}
                           # set up parse query and catch a parse error - return ERROR if there is one.
                           parse_query <- function(file_return_filter) {
@@ -1442,9 +1506,52 @@ Data <- R6::R6Class("Data",
                                    , error = function(e) { return("ERROR") })
 
 
-                            filtered_data_string <- parse(text = paste0("df %>% dplyr::filter(", file_return_filter, ")"))
-                            df <- eval(filtered_data_string)
+                          filtered_data_string <- parse(text = paste0("df %>% dplyr::filter(", file_return_filter, ")"))
+                          df <- eval(filtered_data_string)
+                        }
+
+                        # apply file return function call currentposition
+                        if (!is.null(file_return_function_call)) {
+                          stopifnot(length(unique(c(length(file_return_function_call), length(file_return_function_call_parameters), length(file_return_function_call_use_fw)))) == 1)
+                          # go through each list item to run the function call
+                          for (i in seq_along(file_return_function_call)) {
+                            file_return_function_call_i <- file_return_function_call[[i]]
+                            file_return_function_call_parameters_i <- file_return_function_call_parameters[[i]]
+                            file_return_function_call_use_fw_i <- file_return_function_call_use_fw[[i]]
+                            if (!is.null(file_return_function_call_parameters_i)) {
+
+                              stopifnot(is.list(file_return_function_call_parameters_i))
+                              # for execution here the parameter data must exist
+                              stopifnot("data" %in% names(file_return_function_call_parameters_i))
+                              df_name_string <- file_return_function_call_parameters_i[["data"]]
+                              actual_dataframe <- get(df_name_string, envir = environment())
+                              file_return_function_call_parameters_i[["data"]] <- actual_dataframe
+                              if (file_return_function_call_use_fw_i) {
+                                file_return_function_call_parameters_i[["fw"]] <- sensemakerframeworkrobject
+                              }
+
+                              if (is.function(file_return_function_call_i)) {
+
+                                df <- do.call(file_return_function_call_i,
+                                              args = file_return_function_call_parameters_i, envir = environment())
+                              } else {
+                                if (exists(file_return_function_call_i, mode = "function", envir = private)) {
+                                  df <- do.call(file_return_function_call_i,
+                                                args = file_return_function_call_parameters_i, envir = private)
+                                } else {
+
+                                  df <- do.call(file_return_function_call_i,
+                                                args = file_return_function_call_parameters_i, envir = self)
+                                }
+                              }} else {
+                                if (exists(file_return_function_call_i, mode = "function", envir = private)) {
+                                  df <- do.call(file_return_function_call_i, envir = private)
+                                } else {
+                                  df <- do.call(file_return_function_call_i, envir = self)
+                                }
+                              }
                           }
+                        }
 
 
 
@@ -1455,7 +1562,8 @@ Data <- R6::R6Class("Data",
                         # data and framework definition
                         if (dashboard_id != "") {
 
-                          df <- do.call(paste0("process_dashboard_definition_", self$dashboard_version), args = list(df, framework_id, end_point, dashboard_id, token, is_demonstrator, sensemakerframeworkrobject), envir = private)
+                          df <- do.call(paste0("process_dashboard_definition_", self$dashboard_version),
+                                        args = list(df, framework_id, end_point, dashboard_id, token, is_demonstrator, sensemakerframeworkrobject), envir = private)
                         }
 
                         # assign the sensemaker framework
